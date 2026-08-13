@@ -192,7 +192,7 @@ class InventoryService {
             if (fabric) {
                 items = items.filter(i => i.subcategory && i.subcategory.toLowerCase().includes(fabric.toLowerCase()));
             }
-            return items.slice(0, 10);
+            return items.slice(0, 50);
         } catch (err) {
             console.error("API getProductsByFilters call failed, falling back to local DB:", err.message);
             let whereClauses = [];
@@ -234,7 +234,7 @@ class InventoryService {
                 LEFT JOIN sub_categories sc ON st.sub_category_id = sc.sub_category_id
                 LEFT JOIN categories c ON sc.category_id = c.category_id
                 ${whereClauseStr}
-                LIMIT 10
+                LIMIT 50
             `;
             return await db.all(query, params);
         }
