@@ -1,0 +1,25 @@
+# Ignore local scratch space containing API tokens, curl scripts, and docs
+scratch/
+
+# Ignore internal process documents and senior's instruction files
+instructions/
+
+# Ignore IDE configurations
+.idea/
+.vscode/
+.antigravity/
+
+# Ignore test logs and caches
+*.log
+.phpunit.cache/
+
+# Ignore node modules
+node_modules/
+
+# Ignore environment files with secrets (JWT tokens, DB passwords, API keys)
+.env
+.env.local
+.env.production
+
+# Ignore generated PDF ledger files
+*.pdf

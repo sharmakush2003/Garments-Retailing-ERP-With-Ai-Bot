@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: garments-retailing-erp-bot
+    env: node
+    buildCommand: npm install --legacy-peer-deps
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: USE_REDIS
+        value: "false"
+      - key: WHATSAPP_PROVIDER
+        value: AUTOBOTCHAT
+      - key: AUTOBOTCHAT_USERNAME
+        value: Digify_soft
+      - key: AUTOBOTCHAT_JWT_TOKEN
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
