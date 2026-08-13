@@ -4,8 +4,40 @@ const bodyParser = require('body-parser');
 const webhookRouter = require('./routes/webhook');
 const { useMemoryFallback } = require('./workers/messageWorker');
 
+// In-Memory Logger for remote diagnostics
+const logStore = [];
+const maxLogs = 100;
+function captureLog(type, args) {
+    const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' ');
+    const timestamp = new Date().toISOString();
+    logStore.push(`[${timestamp}] [${type}] ${message}`);
+    if (logStore.length > maxLogs) {
+        logStore.shift();
+    }
+}
+const originalLog = console.log;
+const originalError = console.error;
+const originalWarn = console.warn;
+
+console.log = (...args) => {
+    captureLog('INFO', args);
+    originalLog(...args);
+};
+console.error = (...args) => {
+    captureLog('ERROR', args);
+    originalError(...args);
+};
+console.warn = (...args) => {
+    captureLog('WARN', args);
+    originalWarn(...args);
+};
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+app.get('/logs', (req, res) => {
+    res.type('text/plain').send(logStore.join('\n'));
+});
 
 // Enable JSON body parsing
 app.use(bodyParser.json());
