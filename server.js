@@ -154,6 +154,18 @@ app.get('/api/mock/item-price', (req, res) => {
     res.json({ price: finalPrice });
 });
 
+// 4. Get all categories
+app.get('/api/mock/categories', (req, res) => {
+    const items = require('./mock_data/categories.json');
+    res.json(items);
+});
+
+// 5. Get all subcategories
+app.get('/api/mock/subcategories', (req, res) => {
+    const items = require('./mock_data/subcategories.json');
+    res.json(items);
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK', message: 'Digify Soft API Gateway is operational' });

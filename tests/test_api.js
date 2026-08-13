@@ -123,6 +123,24 @@ const server = app.listen(PORT, async () => {
         assert.strictEqual(res.data.status, 'Report received');
         console.log('✓ Test Case 9 Passed!');
 
+        // Test Case 10: Mock Categories API Endpoint
+        console.log('\n--- Running Test Case 10: Mock Categories API ---');
+        res = await axios.get(`http://localhost:${PORT}/api/mock/categories`);
+        console.log('Response Status:', res.status);
+        console.log('Response Body:', JSON.stringify(res.data, null, 2));
+        assert.strictEqual(res.status, 200);
+        assert.ok(res.data.some(c => c.name === 'Kurti'));
+        console.log('✓ Test Case 10 Passed!');
+
+        // Test Case 11: Mock Subcategories API Endpoint
+        console.log('\n--- Running Test Case 11: Mock Subcategories API ---');
+        res = await axios.get(`http://localhost:${PORT}/api/mock/subcategories`);
+        console.log('Response Status:', res.status);
+        console.log('Response Body:', JSON.stringify(res.data, null, 2));
+        assert.strictEqual(res.status, 200);
+        assert.ok(res.data.some(s => s.name === 'Festive'));
+        console.log('✓ Test Case 11 Passed!');
+
         console.log('\n======================================');
         console.log('★ ALL INTEGRATION TESTS PASSED ★');
         console.log('======================================');
