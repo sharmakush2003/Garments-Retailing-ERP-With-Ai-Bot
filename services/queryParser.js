@@ -12,9 +12,35 @@ class QueryParserService {
     static async parseMessage(messageText) {
         const text = messageText.toLowerCase().trim();
 
-                // 1. Detect interactive button/list clicks or quick commands
+        // 1. Detect interactive button/list clicks or category selections
+        if (text.includes('cat_kurti') || text.includes('1️⃣ kurti') || text.includes('kurti 👗') || text === 'kurti' || text === 'kurtis') {
+            return { intent: 'PRODUCT_FILTERED', args: { garmentType: 'KURTI' } };
+        }
+        if (text.includes('cat_shirt') || text.includes('2️⃣ shirt') || text.includes('shirt 👔') || text === 'shirt' || text === 'shirts') {
+            return { intent: 'PRODUCT_FILTERED', args: { garmentType: 'SHIRT' } };
+        }
+        if (text.includes('cat_pant') || text.includes('3️⃣ pant') || text.includes('pant 👖') || text === 'pant' || text === 'pants') {
+            return { intent: 'PRODUCT_FILTERED', args: { garmentType: 'PANT' } };
+        }
+        if (text.includes('cat_saree') || text.includes('4️⃣ saree') || text.includes('saree 🥻') || text === 'saree' || text === 'sarees') {
+            return { intent: 'PRODUCT_FILTERED', args: { garmentType: 'SAREE' } };
+        }
+
+        if (text.includes('stock_kurti') || (text.includes('kurti') && text.includes('stock') && !text.includes('check'))) {
+            return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'KURTI' } };
+        }
+        if (text.includes('stock_shirt') || (text.includes('shirt') && text.includes('stock') && !text.includes('check'))) {
+            return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'SHIRT' } };
+        }
+        if (text.includes('stock_pant') || (text.includes('pant') && text.includes('stock') && !text.includes('check'))) {
+            return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'PANT' } };
+        }
+        if (text.includes('stock_saree') || (text.includes('saree') && text.includes('stock') && !text.includes('check'))) {
+            return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'SAREE' } };
+        }
+
         if (text === 'btn_catalogue' || text.includes('catalogue') || text.includes('catalog') || text === '1' || text.includes('1️⃣')) {
-            return { intent: 'PRODUCT_FILTERED', args: {} };
+            return { intent: 'GUIDE_CATALOGUE', args: {} };
         }
         if (text === 'btn_stock' || text.includes('check stock') || text === '2') {
             return { intent: 'GUIDE_STOCK', args: {} };
@@ -197,8 +223,69 @@ class QueryParserService {
                     }
                 };
 
+            case 'GUIDE_CATALOGUE':
+                return {
+                    type: 'interactive',
+                    interactive: {
+                        type: 'list',
+                        header: {
+                            type: 'text',
+                            text: 'Products Catalog 📖'
+                        },
+                        body: {
+                            text: 'Please select a category to view the latest designs and collections:'
+                        },
+                        footer: {
+                            text: 'AutomateX ERP Gateway'
+                        },
+                        action: {
+                            button: 'Select Category 📂',
+                            sections: [
+                                {
+                                    title: 'Categories 🏷️',
+                                    rows: [
+                                        { id: 'cat_kurti', title: '1️⃣ Kurti 👗', description: 'Festive & Casual Kurtis' },
+                                        { id: 'cat_shirt', title: '2️⃣ Shirt 👔', description: 'Casual & Cotton Shirts' },
+                                        { id: 'cat_pant', title: '3️⃣ Pant 👖', description: 'Cotton & Denim Pants' },
+                                        { id: 'cat_saree', title: '4️⃣ Saree 🥻', description: 'Silk & Designer Sarees' }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                };
+
             case 'GUIDE_STOCK':
-                return `📦 *Stock Availability Check*\n\nPlease specify the item, color & size you are looking for!\n\n*Examples*:\n• "Blue L Kurti available hai?"\n• "Red Medium Shirt in stock?"\n• "Black XL Pant rate & stock"`;
+                return {
+                    type: 'interactive',
+                    interactive: {
+                        type: 'list',
+                        header: {
+                            type: 'text',
+                            text: 'Check Stock 📦'
+                        },
+                        body: {
+                            text: "Please select which product category's stock you would like to check:"
+                        },
+                        footer: {
+                            text: 'AutomateX ERP Gateway'
+                        },
+                        action: {
+                            button: 'Select Category 📂',
+                            sections: [
+                                {
+                                    title: 'Stock Categories 📦',
+                                    rows: [
+                                        { id: 'stock_kurti', title: '👗 Kurti Stock', description: 'Check availability for Kurtis' },
+                                        { id: 'stock_shirt', title: '👔 Shirt Stock', description: 'Check availability for Shirts' },
+                                        { id: 'stock_pant', title: '👖 Pant Stock', description: 'Check availability for Pants' },
+                                        { id: 'stock_saree', title: '🥻 Saree Stock', description: 'Check availability for Sarees' }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                };
 
             case 'INVENTORY_LOOKUP':
                 if (data && data.available_qty > 0) {
@@ -241,8 +328,12 @@ class QueryParserService {
             case 'PRODUCT_FILTERED':
                 if (data && data.length > 0) {
                     const list = data.map(i => `• *${i.sku_code}* (Fabric: ${i.subcategory || 'Cotton'} | Size: ${i.size} | Color: ${i.color}) - *₹${i.price}/pc* (Stock: ${i.available_qty})`).join('\n');
-                    const isCatalog = !context.args || (!context.args.maxPrice && !context.args.fabric && !context.args.garmentType);
-                    const title = isCatalog ? `📖 *Wholesale Product Catalog*` : `🔍 *Garments Search Results*`;
+                    const isCatalog = !context.args || (!context.args.maxPrice && !context.args.fabric);
+                    let title = `🔍 *Garments Search Results*`;
+                    if (isCatalog) {
+                        const cat = context.args && context.args.garmentType;
+                        title = cat ? `📖 *${cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase()} Catalog*` : `📖 *Wholesale Product Catalog*`;
+                    }
                     return `${title}\n\nWe found these styles matching your criteria:\n${list}`;
                 }
                 return `🔍 *Garments Search Results*\n\n⚠️ No matching products found for the requested price/fabric criteria.`;

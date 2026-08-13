@@ -71,19 +71,29 @@ async function sendOutboundWhatsAppMessage(phoneNumber, replyText, fallbackPhone
     try {
         const provider = process.env.WHATSAPP_PROVIDER || 'AUTOBOTCHAT';
 
+        let replyObj = replyText;
+        if (typeof replyText === 'string') {
+            try {
+                const parsedJson = JSON.parse(replyText);
+                if (parsedJson && (parsedJson.type === 'interactive' || parsedJson.interactive)) {
+                    replyObj = parsedJson;
+                }
+            } catch (e) {}
+        }
+
         if (provider === 'AUTOBOTCHAT' || provider === 'META') {
             const defaultJwt = ['eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.', 'eyJpYXQiOjE3NjA3MDY0NDYsImRhdGEiOnsidXNlcm5hbWUiOiJEaWdpZnlfc29mdCIsIm5hbWUiOiJEaWdpZnlfc29mdCJ9fQ.', 'lbhITMYPzs0RvDRf-YhqbJ5r63rFUPnInfTnIG_T998'].join('');
             const token = process.env.AUTOBOTCHAT_JWT_TOKEN || defaultJwt;
             const username = process.env.AUTOBOTCHAT_USERNAME || 'Digify_soft';
 
             let payload;
-            if (typeof replyText === 'object' && replyText.type === 'interactive') {
+            if (typeof replyObj === 'object' && replyObj.type === 'interactive') {
                 payload = {
                     messaging_product: 'whatsapp',
                     recipient_type: 'individual',
                     to: cleanPhone,
                     type: 'interactive',
-                    interactive: replyText.interactive
+                    interactive: replyObj.interactive
                 };
             } else {
                 payload = {
@@ -106,13 +116,13 @@ async function sendOutboundWhatsAppMessage(phoneNumber, replyText, fallbackPhone
             }
         } else {
             let payload;
-            if (typeof replyText === 'object' && replyText.type === 'interactive') {
+            if (typeof replyObj === 'object' && replyObj.type === 'interactive') {
                 payload = {
                     messaging_product: 'whatsapp',
                     recipient_type: 'individual',
                     to: cleanPhone,
                     type: 'interactive',
-                    interactive: replyText.interactive
+                    interactive: replyObj.interactive
                 };
             } else {
                 payload = {
