@@ -320,21 +320,66 @@ class QueryParserService {
 
             case 'DESIGN_AVAILABILITY':
                 if (data && data.length > 0) {
-                    const list = data.map(i => `• *${i.sku_code}* (${i.color} | ${i.size}): *${i.available_qty} pcs*`).join('\n');
-                    return `👗 *Design SKU Availability Matrix*\n\nHere are all active variations for this design:\n${list}`;
+                    const grouped = {};
+                    data.forEach(i => {
+                        const baseSku = i.sku_code.replace(/-[smlx]+$/i, '').replace(/-fs$/i, '').replace(/-freesize$/i, '');
+                        // Strip trailing size from name
+                        const baseName = (i.name || i.sku_code).replace(/\s+([sml]|xl|xxl|freesize|free size)$/i, '');
+                        if (!grouped[baseSku]) {
+                            grouped[baseSku] = {
+                                name: baseName,
+                                variants: []
+                            };
+                        }
+                        grouped[baseSku].variants.push(i);
+                    });
+
+                    const sections = Object.keys(grouped).map(baseSku => {
+                        const style = grouped[baseSku];
+                        const variantsList = style.variants.map(v => {
+                            const stock = v.available_qty !== undefined ? v.available_qty : 0;
+                            return `  • Size *${v.size}* (${v.color}) — *${stock} pcs* ready`;
+                        }).join('\n');
+                        return `🛍️ *${style.name}*\n🆔 SKU: \`${baseSku}\`\n${variantsList}`;
+                    }).join('\n\n');
+
+                    return `📦 *Stock Availability Matrix* 👗\n_________________________\n\n${sections}`;
                 }
                 return `👗 *Design Availability*: Design is currently out of stock.`;
 
             case 'PRODUCT_FILTERED':
                 if (data && data.length > 0) {
-                    const list = data.map(i => `• *${i.sku_code}* (Fabric: ${i.subcategory || 'Cotton'} | Size: ${i.size} | Color: ${i.color}) - *₹${i.price}/pc* (Stock: ${i.available_qty})`).join('\n');
+                    const grouped = {};
+                    data.forEach(i => {
+                        const baseSku = i.sku_code.replace(/-[smlx]+$/i, '').replace(/-fs$/i, '').replace(/-freesize$/i, '');
+                        const baseName = (i.name || i.sku_code).replace(/\s+([sml]|xl|xxl|freesize|free size)$/i, '');
+                        if (!grouped[baseSku]) {
+                            grouped[baseSku] = {
+                                name: baseName,
+                                subcategory: i.subcategory || 'Cotton',
+                                variants: []
+                            };
+                        }
+                        grouped[baseSku].variants.push(i);
+                    });
+
+                    const sections = Object.keys(grouped).map(baseSku => {
+                        const style = grouped[baseSku];
+                        const variantsList = style.variants.map(v => {
+                            const price = v.price !== undefined ? v.price : v.base_price;
+                            const stock = v.available_qty !== undefined ? v.available_qty : 0;
+                            return `  • Size *${v.size}* (${v.color}) — *₹${price}/pc* (Stock: *${stock}*)`;
+                        }).join('\n');
+                        return `🛍️ *${style.name}*\n🆔 SKU: \`${baseSku}\`\n🧵 Fabric: ${style.subcategory}\n${variantsList}`;
+                    }).join('\n\n');
+
                     const isCatalog = !context.args || (!context.args.maxPrice && !context.args.fabric);
                     let title = `🔍 *Garments Search Results*`;
                     if (isCatalog) {
                         const cat = context.args && context.args.garmentType;
-                        title = cat ? `📖 *${cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase()} Catalog*` : `📖 *Wholesale Product Catalog*`;
+                        title = cat ? `📖 *${cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase()} Catalog* 👗` : `📖 *Wholesale Product Catalog* 🛍️`;
                     }
-                    return `${title}\n\nWe found these styles matching your criteria:\n${list}`;
+                    return `${title}\n_________________________\n\n${sections}`;
                 }
                 return `🔍 *Garments Search Results*\n\n⚠️ No matching products found for the requested price/fabric criteria.`;
 
