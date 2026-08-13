@@ -13,8 +13,8 @@ class QueryParserService {
         const text = messageText.toLowerCase().trim();
 
                 // 1. Detect interactive button/list clicks or quick commands
-        if (text === 'btn_catalogue' || text.includes('new catalogue') || text === '1') {
-            return { intent: 'INVENTORY_LOOKUP', args: {} };
+        if (text === 'btn_catalogue' || text.includes('catalogue') || text.includes('catalog') || text === '1' || text.includes('1️⃣')) {
+            return { intent: 'PRODUCT_FILTERED', args: {} };
         }
         if (text === 'btn_stock' || text.includes('check stock') || text === '2') {
             return { intent: 'GUIDE_STOCK', args: {} };
@@ -241,7 +241,9 @@ class QueryParserService {
             case 'PRODUCT_FILTERED':
                 if (data && data.length > 0) {
                     const list = data.map(i => `• *${i.sku_code}* (Fabric: ${i.subcategory || 'Cotton'} | Size: ${i.size} | Color: ${i.color}) - *₹${i.price}/pc* (Stock: ${i.available_qty})`).join('\n');
-                    return `🔍 *Garments Search Results*\n\nWe found these styles matching your criteria:\n${list}`;
+                    const isCatalog = !context.args || (!context.args.maxPrice && !context.args.fabric && !context.args.garmentType);
+                    const title = isCatalog ? `📖 *Wholesale Product Catalog*` : `🔍 *Garments Search Results*`;
+                    return `${title}\n\nWe found these styles matching your criteria:\n${list}`;
                 }
                 return `🔍 *Garments Search Results*\n\n⚠️ No matching products found for the requested price/fabric criteria.`;
 
