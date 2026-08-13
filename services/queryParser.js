@@ -263,7 +263,7 @@ class QueryParserService {
                             button: 'View Options 📋',
                             sections: [
                                 {
-                                    title: '📋 Business Assistant Menu',
+                                    title: 'Assistant Menu 📋',
                                     rows: [
                                         { id: 'btn_catalogue', title: '1️⃣ New Catalogue ✨', description: 'Show new arrivals & collections' },
                                         { id: 'btn_stock', title: '2️⃣ Check Stock 📦', description: 'Check color & size availability' },
