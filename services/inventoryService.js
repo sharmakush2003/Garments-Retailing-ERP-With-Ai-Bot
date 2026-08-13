@@ -3,7 +3,7 @@
  * Handle inventory counts, reserved quantities, and custom tier pricing.
  */
 const axios = require('axios');
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 3000;
 const getBaseUrl = () => process.env.API_BASE_URL || `http://localhost:${PORT}`;
 
 class InventoryService {
