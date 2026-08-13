@@ -7,8 +7,6 @@ const assert = require('assert');
 const { getTenantDb } = require('../services/dbManager');
 const QueryParserService = require('../services/queryParser');
 const InventoryService = require('../services/inventoryService');
-const LedgerService = require('../services/ledgerService');
-const SalesService = require('../services/salesService');
 
 const PORT = 3002;
 
@@ -17,22 +15,6 @@ const server = app.listen(PORT, async () => {
     console.log(`[Test] Server is running on port ${PORT}`);
     try {
         const db = await getTenantDb('Co_102');
-        
-        // Seed order and dispatch record inside test database
-        await db.run(`
-            INSERT OR IGNORE INTO sales_orders (order_id, customer_id, order_status, total_amount)
-            VALUES (1, 1, 'Packed', 810.00)
-        `);
-
-        await db.run(`
-            INSERT OR IGNORE INTO order_items (order_item_id, order_id, sku_id, qty, price_per_item)
-            VALUES (1, 1, 1, 2, 405.00)
-        `);
-        
-        await db.run(`
-            INSERT OR IGNORE INTO order_dispatches (dispatch_id, order_id, transporter_name, lr_number, dispatch_date, estimated_delivery, status)
-            VALUES (1, 1, 'Jaipur Golden Transport', 'LR-987654', '2026-08-08', '2026-08-11', 'Packed')
-        `);
 
         // Test Case 1: Check Stock via Query Parser
         console.log('\n--- Running Test Case 1: Stock Enquiry ---');
@@ -47,74 +29,87 @@ const server = app.listen(PORT, async () => {
         assert.ok(replyText1.includes('Blue'));
         console.log('✓ Test Case 1 Passed!');
 
-        // Test Case 2: Check Outstanding Balance via Query Parser
-        console.log('\n--- Running Test Case 2: Outstanding Balance ---');
-        const parsed2 = await QueryParserService.parseMessage('What is my outstanding balance?');
-        assert.strictEqual(parsed2.intent, 'OUTSTANDING_LOOKUP');
-        
-        const outstandingData = await LedgerService.getCustomerOutstanding(db, 1);
-        const replyText2 = QueryParserService.formatResponse(parsed2.intent, outstandingData, { role: 'Customer', companyName: 'Aarav Creations' });
-        
-        console.log('Parsed intent:', parsed2.intent);
+        // Test Case 2: Colors Lookup Test
+        console.log('\n--- Running Test Case 2: Colors Lookup ---');
+        const parsed2 = await QueryParserService.parseMessage('What colours are available?');
+        assert.strictEqual(parsed2.intent, 'COLOURS_LOOKUP');
+        const filteredCols = await InventoryService.getProductsByFilters(db, parsed2.args);
+        const replyText2 = QueryParserService.formatResponse(parsed2.intent, filteredCols, { role: 'Customer' });
         console.log('Formatted response:', replyText2);
-        assert.ok(replyText2.includes('128450'));
+        assert.ok(replyText2.includes('Available Colours Matrix'));
         console.log('✓ Test Case 2 Passed!');
 
-        // Test Case 3: Book Order via Query Parser
-        console.log('\n--- Running Test Case 3: Order Booking ---');
-        const parsed3 = await QueryParserService.parseMessage('Book 5 pieces please');
-        assert.strictEqual(parsed3.intent, 'ORDER_BOOKING');
-        
-        const orderResult = await SalesService.createSalesOrder(db, 1, parsed3.args.items, 'Customer');
-        const replyText3 = QueryParserService.formatResponse(parsed3.intent, orderResult, { role: 'Customer', companyName: 'Aarav Creations' });
-        
-        console.log('Parsed intent:', parsed3.intent);
+        // Test Case 3: Sizes Lookup Test
+        console.log('\n--- Running Test Case 3: Sizes Lookup ---');
+        const parsed3 = await QueryParserService.parseMessage('What sizes do you have?');
+        assert.strictEqual(parsed3.intent, 'SIZES_LOOKUP');
+        const filteredSizes = await InventoryService.getProductsByFilters(db, parsed3.args);
+        const replyText3 = QueryParserService.formatResponse(parsed3.intent, filteredSizes, { role: 'Customer' });
         console.log('Formatted response:', replyText3);
-        assert.ok(replyText3.includes('booked') || replyText3.includes('created') || replyText3.includes('Successfully'));
+        assert.ok(replyText3.includes('Available Sizes Matrix'));
         console.log('✓ Test Case 3 Passed!');
 
-        // Test Case 4: Dispatch Tracking via Query Parser
-        console.log('\n--- Running Test Case 4: Dispatch/LR Status ---');
-        const parsed4 = await QueryParserService.parseMessage('Has my order #1 shipped?');
-        assert.strictEqual(parsed4.intent, 'ORDER_TRACKING');
-        
-        const trackingData = await SalesService.getDispatchTracking(db, parsed4.args.orderId);
-        const replyText4 = QueryParserService.formatResponse(parsed4.intent, trackingData, { role: 'Customer', companyName: 'Aarav Creations' });
-        
-        console.log('Parsed intent:', parsed4.intent);
+        // Test Case 4: Price Lookup
+        console.log('\n--- Running Test Case 4: Wholesale Rate check ---');
+        const parsed4 = await QueryParserService.parseMessage('What is the wholesale price?');
+        assert.strictEqual(parsed4.intent, 'PRICE_LOOKUP');
+        const skuObj = await InventoryService.getStockAvailability(db, parsed4.args.skuCode, parsed4.args);
+        const priceVal = await InventoryService.getItemPrice(db, skuObj.sku_id, 1);
+        const replyText4 = QueryParserService.formatResponse(parsed4.intent, priceVal, { role: 'Customer', companyName: 'Aarav Creations' });
         console.log('Formatted response:', replyText4);
-        assert.ok(replyText4.includes('Jaipur Golden Transport'));
+        assert.ok(replyText4.includes('Wholesale Price'));
         console.log('✓ Test Case 4 Passed!');
 
-        // Test Case 5: WhatsApp Webhook Immediate HTTP 200 Response
-        console.log('\n--- Running Test Case 5: WhatsApp Webhook Ingestion ---');
+        // Test Case 5: Filtered Product Lookup Test
+        console.log('\n--- Running Test Case 5: Filtered Product Lookup ---');
+        const parsed5 = await QueryParserService.parseMessage('Show me cotton shirts under 500');
+        assert.strictEqual(parsed5.intent, 'PRODUCT_FILTERED');
+        assert.strictEqual(parsed5.args.maxPrice, 500);
+        assert.strictEqual(parsed5.args.fabric, 'cotton');
+        assert.strictEqual(parsed5.args.garmentType, 'SHIRT');
+        const filteredProds = await InventoryService.getProductsByFilters(db, parsed5.args);
+        const replyText5 = QueryParserService.formatResponse(parsed5.intent, filteredProds, { role: 'Customer' });
+        console.log('Formatted response:', replyText5);
+        assert.ok(replyText5.includes('Garments Search Results'));
+        console.log('✓ Test Case 5 Passed!');
+
+        // Test Case 6: Hinglish Stock Lookup
+        console.log('\n--- Running Test Case 6: Hinglish Stock Lookup ---');
+        const parsed6 = await QueryParserService.parseMessage('Bhai, Kurti ka XL mein kitna maal hai?');
+        assert.strictEqual(parsed6.intent, 'INVENTORY_LOOKUP');
+        assert.strictEqual(parsed6.args.size, 'XL');
+        console.log('Parsed intent:', parsed6.intent);
+        console.log('✓ Test Case 6 Passed!');
+
+        // Test Case 7: WhatsApp Webhook Immediate HTTP 200 Response
+        console.log('\n--- Running Test Case 7: WhatsApp Webhook Ingestion ---');
         let res = await axios.post(`http://localhost:${PORT}/webhook`, {
             number: '919045099111',
-            message: 'Send ledger statement'
+            message: 'Check stock'
         });
         console.log('Response Status:', res.status);
         console.log('Response Body:', JSON.stringify(res.data, null, 2));
         assert.strictEqual(res.status, 200);
         assert.strictEqual(res.data.status, 'Accepted');
-        console.log('✓ Test Case 5 Passed!');
+        console.log('✓ Test Case 7 Passed!');
 
-        // Test Case 6: AutobotChat Webhook Ingestion
-        console.log('\n--- Running Test Case 6: AutobotChat Webhook Ingestion ---');
+        // Test Case 8: AutobotChat Webhook Ingestion
+        console.log('\n--- Running Test Case 8: AutobotChat Webhook Ingestion ---');
         res = await axios.post(`http://localhost:${PORT}/webhook`, {
             sender_id: '919045099111',
             from: '919876543210',
             text: {
-                body: 'What is my outstanding balance?'
+                body: 'Blue Kurti size L available?'
             }
         });
         console.log('Response Status:', res.status);
         console.log('Response Body:', JSON.stringify(res.data, null, 2));
         assert.strictEqual(res.status, 200);
         assert.strictEqual(res.data.status, 'Accepted');
-        console.log('✓ Test Case 6 Passed!');
+        console.log('✓ Test Case 8 Passed!');
 
-        // Test Case 7: AutobotChat Delivery Report Webhook
-        console.log('\n--- Running Test Case 7: AutobotChat Delivery Report Webhook ---');
+        // Test Case 9: AutobotChat Delivery Report Webhook
+        console.log('\n--- Running Test Case 9: AutobotChat Delivery Report Webhook ---');
         res = await axios.post(`http://localhost:${PORT}/webhook`, {
             id: '43227',
             receiver: '919045099111',
@@ -126,46 +121,7 @@ const server = app.listen(PORT, async () => {
         console.log('Response Body:', JSON.stringify(res.data, null, 2));
         assert.strictEqual(res.status, 200);
         assert.strictEqual(res.data.status, 'Report received');
-        console.log('✓ Test Case 7 Passed!');
-
-        // Test Case 8: Hinglish Stock Lookup
-        console.log('\n--- Running Test Case 8: Hinglish Stock Lookup ---');
-        const parsed8 = await QueryParserService.parseMessage('Bhai, 102 ka XL mein kitna maal hai?');
-        assert.strictEqual(parsed8.intent, 'INVENTORY_LOOKUP');
-        assert.strictEqual(parsed8.args.size, 'XL');
-        console.log('Parsed intent:', parsed8.intent);
-        console.log('✓ Test Case 8 Passed!');
-
-        // Test Case 9: Repeat Order
-        console.log('\n--- Running Test Case 9: Repeat Order ---');
-        const parsed9 = await QueryParserService.parseMessage('Repeat my last order');
-        assert.strictEqual(parsed9.intent, 'REPEAT_ORDER');
-        const lastOrder = await SalesService.getLastOrder(db, 1);
-        const replyText9 = QueryParserService.formatResponse(parsed9.intent, lastOrder, { role: 'Customer', companyName: 'Aarav Creations' });
-        console.log('Formatted response:', replyText9);
-        assert.ok(replyText9.includes('Repeat Previous Order'));
         console.log('✓ Test Case 9 Passed!');
-
-        // Test Case 10: Owner Dashboard Report
-        console.log('\n--- Running Test Case 10: Owner Report (Sales) ---');
-        const parsed10 = await QueryParserService.parseMessage('What is today\'s sales?');
-        assert.strictEqual(parsed10.intent, 'OWNER_REPORT');
-        assert.strictEqual(parsed10.args.reportType, 'SALES');
-        const OwnerService = require('../services/ownerService');
-        const salesValue = await OwnerService.getTodaySales(db);
-        const replyText10 = QueryParserService.formatResponse(parsed10.intent, { type: 'SALES', value: salesValue }, { role: 'Owner', companyName: 'Aarav Creations' });
-        console.log('Formatted response:', replyText10);
-        assert.ok(replyText10.includes('Today\'s Sales'));
-        console.log('✓ Test Case 10 Passed!');
-
-        // Test Case 11: Multi-item Booking Parser
-        console.log('\n--- Running Test Case 11: Multi-item Booking Parser ---');
-        const parsed11 = await QueryParserService.parseMessage('Book 20 blue and 10 white');
-        assert.strictEqual(parsed11.intent, 'ORDER_BOOKING');
-        assert.strictEqual(parsed11.args.items.length, 2);
-        assert.strictEqual(parsed11.args.items[0].qty, 20);
-        assert.strictEqual(parsed11.args.items[1].qty, 10);
-        console.log('✓ Test Case 11 Passed!');
 
         console.log('\n======================================');
         console.log('★ ALL INTEGRATION TESTS PASSED ★');

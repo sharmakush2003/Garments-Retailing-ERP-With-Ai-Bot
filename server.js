@@ -92,28 +92,21 @@ app.get('/', (req, res) => {
 
 // --- Mock REST API Endpoints for ERP Customer Journey ---
 
-// 1. New Catalogue / New Arrivals
-app.get('/api/mock/new-arrivals', (req, res) => {
-    res.json([
-        { sku_id: 1, sku_code: 'KURTI-FES-01-BLU-L', color: 'Blue', size: 'L', base_price: 500.00, available_qty: 50 },
-        { sku_id: 2, sku_code: 'KURTI-FES-01-RED-M', color: 'Red', size: 'M', base_price: 500.00, available_qty: 35 },
-        { sku_id: 3, sku_code: 'KURTI-FES-01-GRN-S', color: 'Green', size: 'S', base_price: 500.00, available_qty: 20 },
-        { sku_id: 4, sku_code: 'SAREE-SIL-02-RED-FS', color: 'Red', size: 'Free Size', base_price: 1200.00, available_qty: 15 },
-        { sku_id: 5, sku_code: 'SHIRT-COT-01-WHT-L', color: 'White', size: 'L', base_price: 450.00, available_qty: 40 },
-        { sku_id: 6, sku_code: 'SHIRT-COT-01-BLK-XL', color: 'Black', size: 'XL', base_price: 450.00, available_qty: 25 },
-        { sku_id: 7, sku_code: 'PANT-DEN-01-BLU-L', color: 'Blue', size: 'L', base_price: 750.00, available_qty: 30 }
-    ]);
+// 1. Get all products (with optional filters)
+app.get('/api/mock/products', (req, res) => {
+    let items = require('./mock_data/products.json');
+    const { category, subcategory, color, size, maxPrice } = req.query;
+
+    if (category) items = items.filter(i => i.category.toLowerCase() === category.toLowerCase());
+    if (subcategory) items = items.filter(i => i.subcategory.toLowerCase() === subcategory.toLowerCase());
+    if (color) items = items.filter(i => i.color.toLowerCase() === color.toLowerCase());
+    if (size) items = items.filter(i => i.size.toLowerCase() === size.toLowerCase());
+    if (maxPrice) items = items.filter(i => i.price <= parseFloat(maxPrice));
+
+    res.json(items);
 });
 
-// 2. Fastest/Top Selling products
-app.get('/api/mock/fastest-selling', (req, res) => {
-    res.json([
-        { sku_id: 1, sku_code: 'KURTI-FES-01-BLU-L', color: 'Blue', size: 'L', base_price: 500.00, total_sold: 150 },
-        { sku_id: 5, sku_code: 'SHIRT-COT-01-WHT-L', color: 'White', size: 'L', base_price: 450.00, total_sold: 80 }
-    ]);
-});
-
-// 3. Stock availability search
+// 2. Stock availability search
 app.get('/api/mock/stock-availability', (req, res) => {
     let { skuIdOrCode, color, size, garmentType } = req.query;
 
@@ -124,15 +117,7 @@ app.get('/api/mock/stock-availability', (req, res) => {
     if (size === 'null' || size === 'undefined') size = null;
     if (garmentType === 'null' || garmentType === 'undefined') garmentType = null;
 
-    const items = [
-        { sku_id: 1, sku_code: 'KURTI-FES-01-BLU-L', color: 'Blue', size: 'L', physical_qty: 50, reserved_qty: 0, available_qty: 50 },
-        { sku_id: 2, sku_code: 'KURTI-FES-01-RED-M', color: 'Red', size: 'M', physical_qty: 35, reserved_qty: 0, available_qty: 35 },
-        { sku_id: 3, sku_code: 'KURTI-FES-01-GRN-S', color: 'Green', size: 'S', physical_qty: 20, reserved_qty: 0, available_qty: 20 },
-        { sku_id: 4, sku_code: 'SAREE-SIL-02-RED-FS', color: 'Red', size: 'Free Size', physical_qty: 15, reserved_qty: 0, available_qty: 15 },
-        { sku_id: 5, sku_code: 'SHIRT-COT-01-WHT-L', color: 'White', size: 'L', physical_qty: 40, reserved_qty: 0, available_qty: 40 },
-        { sku_id: 6, sku_code: 'SHIRT-COT-01-BLK-XL', color: 'Black', size: 'XL', physical_qty: 25, reserved_qty: 0, available_qty: 25 },
-        { sku_id: 7, sku_code: 'PANT-DEN-01-BLU-L', color: 'Blue', size: 'L', physical_qty: 30, reserved_qty: 0, available_qty: 30 }
-    ];
+    const items = require('./mock_data/products.json');
 
     if (skuIdOrCode) {
         const match = items.find(i => i.sku_id === parseInt(skuIdOrCode) || i.sku_code.toLowerCase().includes(skuIdOrCode.toLowerCase()));
@@ -143,7 +128,7 @@ app.get('/api/mock/stock-availability', (req, res) => {
         const match = items.find(i => {
             const colorOk = !color || i.color.toLowerCase().includes(color.toLowerCase()) || color.toLowerCase().includes(i.color.toLowerCase());
             const sizeOk = !size || i.size.toLowerCase() === size.toLowerCase();
-            const typeOk = !garmentType || i.sku_code.toLowerCase().includes(garmentType.toLowerCase()) || garmentType.toLowerCase().includes(i.sku_code.toLowerCase());
+            const typeOk = !garmentType || i.category.toLowerCase() === garmentType.toLowerCase() || i.sku_code.toLowerCase().includes(garmentType.toLowerCase());
             return colorOk && sizeOk && typeOk;
         });
         if (match) return res.json(match);
@@ -152,11 +137,12 @@ app.get('/api/mock/stock-availability', (req, res) => {
     res.status(404).json({ error: 'Item not found' });
 });
 
-// 4. Item Price Lookup
+// 3. Item Price Lookup
 app.get('/api/mock/item-price', (req, res) => {
     const { skuId, tierId } = req.query;
-    const basePrices = { 1: 500.00, 2: 500.00, 3: 500.00, 4: 1200.00, 5: 450.00, 6: 450.00, 7: 750.00 };
-    const base = basePrices[skuId] || 480.00;
+    const items = require('./mock_data/products.json');
+    const matchedItem = items.find(i => i.sku_id === parseInt(skuId));
+    const base = matchedItem ? matchedItem.price : 480.00;
     
     // Apply discount for VIP (tier 1)
     let finalPrice = base;
@@ -166,97 +152,6 @@ app.get('/api/mock/item-price', (req, res) => {
         finalPrice = base * 0.96; // 4% discount for tier 2
     }
     res.json({ price: finalPrice });
-});
-
-// 5. Active Discount Scheme Lookup
-app.post('/api/mock/active-scheme', (req, res) => {
-    const { subtotal, totalQty } = req.body;
-    if (subtotal >= 800.00) {
-        res.json({
-            scheme_id: 1,
-            name: 'Festive 10%',
-            discountAmount: subtotal * 0.10
-        });
-    } else {
-        res.json(null);
-    }
-});
-
-// 6. Customer Outstanding Balance and Credit Details
-app.get('/api/mock/customer-outstanding', (req, res) => {
-    const { customerId } = req.query;
-    const customers = {
-        1: { customer_id: 1, name: 'Aarav Wholesalers', credit_limit: 500000.00, used_credit: 360000.00, outstanding_balance: 128450.00 },
-        2: { customer_id: 2, name: 'Kush Sharma Retailers', credit_limit: 250000.00, used_credit: 110000.00, outstanding_balance: 45600.00 }
-    };
-    const customer = customers[customerId] || customers[1];
-    res.json(customer);
-});
-
-// 7. Customer Transactions
-app.get('/api/mock/customer-transactions', (req, res) => {
-    const { customerId } = req.query;
-    res.json([
-        { txn_id: 1, txn_type: 'Invoice', amount: 810.00, reference_id: 'INV-001', created_at: '2026-08-08 11:00:00' },
-        { txn_id: 2, txn_type: 'Payment', amount: 5000.00, reference_id: 'PAY-Razorpay-11', created_at: '2026-08-09 15:30:00' }
-    ]);
-});
-
-// 8. Create Sales Order
-app.post('/api/mock/create-sales-order', (req, res) => {
-    const { customerId, items, role } = req.body;
-    let subtotal = 0;
-    let totalQty = 0;
-    const itemPrices = { 1: 450.00, 2: 480.00, 3: 500.00, 4: 1200.00, 5: 400.00, 6: 420.00, 7: 750.00 };
-    
-    items.forEach(i => {
-        const price = itemPrices[i.sku_id] || 450.00;
-        subtotal += price * i.qty;
-        totalQty += i.qty;
-    });
-
-    const discount = subtotal >= 800.00 ? subtotal * 0.10 : 0.00;
-    const finalTotal = subtotal - discount;
-    const orderStatus = (finalTotal + 128450.00 > 500000.00) ? 'Pending_Approval' : 'Pending_Payment';
-
-    res.json({
-        success: true,
-        order_id: 2,
-        customer_name: parseInt(customerId) === 2 ? 'Kush Sharma Retailers' : 'Aarav Wholesalers',
-        subtotal,
-        discount,
-        final_total: finalTotal,
-        scheme_applied: discount > 0 ? 'Festive 10%' : 'None',
-        order_status: orderStatus
-    });
-});
-
-// 9. Dispatch Status/LR Tracking
-app.get('/api/mock/dispatch-tracking', (req, res) => {
-    const { orderId } = req.query;
-    res.json({
-        dispatch_id: 1,
-        order_id: parseInt(orderId) || 1,
-        transporter_name: 'Jaipur Golden Transport',
-        lr_number: 'LR-987654',
-        dispatch_date: '2026-08-08',
-        estimated_delivery: '2026-08-11',
-        status: 'Packed'
-    });
-});
-
-// 10. Repeat Last Order
-app.get('/api/mock/last-order', (req, res) => {
-    const { customerId } = req.query;
-    res.json({
-        order_id: 1,
-        total_amount: 810.00,
-        order_status: 'Packed',
-        created_at: '2026-08-08 11:00:00',
-        items: [
-            { sku_id: 1, sku_code: 'KURTI-FES-01-BLU-L', color: 'Blue', size: 'L', qty: 2, price_per_item: 405.00 }
-        ]
-    });
 });
 
 // Health check endpoint

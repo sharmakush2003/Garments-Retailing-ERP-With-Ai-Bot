@@ -11,8 +11,6 @@ if (process.env.USE_REDIS === 'true') {
 
 const { getTenantDb } = require('../services/dbManager');
 const InventoryService = require('../services/inventoryService');
-const LedgerService = require('../services/ledgerService');
-const SalesService = require('../services/salesService');
 const QueryParserService = require('../services/queryParser');
 const axios = require('axios');
 const EventEmitter = require('events');
@@ -172,26 +170,17 @@ async function processMessageJob(data) {
 
     // 3. Execute deterministic ERP business services
     try {
-        // Guest users (unregistered numbers) can check stock & rates
-        // but NOT personal data (balance, orders, ledger)
-        const GUEST_BLOCKED_INTENTS = ['OUTSTANDING_LOOKUP', 'LEDGER_REQUEST', 'ORDER_BOOKING', 'ORDER_TRACKING', 'REPEAT_ORDER'];
-        if (role === 'Guest' && GUEST_BLOCKED_INTENTS.includes(parsed.intent)) {
-            const replyText = `👋 Welcome to *Aarav Creations*!\n\nYou can check our *stock availability* and *rates* freely.\n\nFor your personal account info (balance, orders, ledger), please contact us:\n📞 *+91 90450 99111*\n\nWe'll register your number and get you set up! 🙏`;
-            console.log(`[Worker] Guest user ${phoneNumber} blocked from ${parsed.intent} — sending welcome msg`);
-            await sendOutboundWhatsAppMessage(phoneNumber, replyText, fallbackPhone);
-            return { replyText, filePath: null };
-        }
-
-        if (parsed.intent === 'OWNER_REPORT' && role !== 'Owner') {
-            const replyText = `❌ *Access Denied*: You do not have permission to view owner/manager reports.`;
-            console.log(`[Worker] User ${phoneNumber} with role ${role} blocked from OWNER_REPORT`);
-            await sendOutboundWhatsAppMessage(phoneNumber, replyText, fallbackPhone);
-            return { replyText, filePath: null };
-        }
-
         switch (parsed.intent) {
             case 'INVENTORY_LOOKUP':
                 resultData = await InventoryService.getStockAvailability(db, parsed.args.skuCode, parsed.args);
+                break;
+            case 'COLOURS_LOOKUP':
+            case 'SIZES_LOOKUP':
+            case 'DESIGN_AVAILABILITY':
+                resultData = await InventoryService.getProductsByFilters(db, parsed.args);
+                break;
+            case 'PRODUCT_FILTERED':
+                resultData = await InventoryService.getProductsByFilters(db, parsed.args);
                 break;
             case 'PRICE_LOOKUP':
                 // For price lookup, resolve base/tier price
@@ -202,52 +191,6 @@ async function processMessageJob(data) {
                     resultData = 0.00;
                 }
                 break;
-            case 'OUTSTANDING_LOOKUP':
-                resultData = await LedgerService.getCustomerOutstanding(db, customerId);
-                break;
-            case 'LEDGER_REQUEST':
-                filePath = await LedgerService.generateLedgerPDF(db, customerId);
-                resultData = { filePath };
-                break;
-            case 'ORDER_TRACKING':
-                resultData = await SalesService.getDispatchTracking(db, parsed.args.orderId);
-                break;
-            case 'ORDER_BOOKING':
-                resultData = await SalesService.createSalesOrder(db, customerId, parsed.args.items, role);
-                break;
-            case 'REPEAT_ORDER':
-                resultData = await SalesService.getLastOrder(db, customerId);
-                break;
-            case 'NEW_ARRIVALS':
-                resultData = await InventoryService.getNewArrivals(db);
-                break;
-            case 'TOP_SELLING':
-                resultData = await InventoryService.getFastestSelling(db);
-                break;
-            case 'OWNER_REPORT': {
-                const OwnerService = require('../services/ownerService');
-                const reportType = parsed.args.reportType;
-                if (reportType === 'SALES') {
-                    resultData = { type: 'SALES', value: await OwnerService.getTodaySales(db) };
-                } else if (reportType === 'COLLECTION') {
-                    resultData = { type: 'COLLECTION', value: await OwnerService.getTodayCollection(db) };
-                } else if (reportType === 'LOW_STOCK') {
-                    resultData = { type: 'LOW_STOCK', list: await OwnerService.getLowStock(db) };
-                } else if (reportType === 'DEAD_STOCK') {
-                    resultData = { type: 'DEAD_STOCK', list: await OwnerService.getDeadStock(db) };
-                } else if (reportType === 'TOP_SELLING') {
-                    resultData = { type: 'TOP_SELLING', list: await OwnerService.getTopSellingProducts(db) };
-                } else if (reportType === 'CREDIT_BREACH') {
-                    resultData = { type: 'CREDIT_BREACH', list: await OwnerService.getCreditBreachers(db) };
-                } else if (reportType === 'HIGH_OUTSTANDING') {
-                    resultData = { type: 'HIGH_OUTSTANDING', list: await OwnerService.getHighOutstanding(db) };
-                } else if (reportType === 'PROFIT') {
-                    resultData = { type: 'PROFIT', value: await OwnerService.getTodayProfit(db) };
-                } else if (reportType === 'INACTIVE_CUSTOMERS') {
-                    resultData = { type: 'INACTIVE_CUSTOMERS', list: await OwnerService.getInactiveCustomersThisMonth(db) };
-                }
-                break;
-            }
         }
     } catch (err) {
         console.error(`[Worker] ERP Service execution failed for intent ${parsed.intent}:`, err.message);
@@ -259,7 +202,7 @@ async function processMessageJob(data) {
     const replyText = QueryParserService.formatResponse(
         parsed.intent, 
         resultData, 
-        { role, companyName: 'Aarav Creations' }
+        { role, companyName: 'Aarav Creations', args: parsed.args }
     );
 
     // 5. Send reply via Meta Cloud WhatsApp API

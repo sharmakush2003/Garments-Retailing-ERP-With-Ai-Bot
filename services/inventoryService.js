@@ -135,7 +135,7 @@ class InventoryService {
      */
     static async getNewArrivals(db, limit = 5) {
         try {
-            const res = await axios.get(`${getBaseUrl()}/api/mock/new-arrivals`);
+            const res = await axios.get(`${getBaseUrl()}/api/mock/products`);
             return res.data.slice(0, limit);
         } catch (err) {
             console.error("API new-arrivals call failed, falling back to local DB:", err.message);
@@ -156,7 +156,7 @@ class InventoryService {
      */
     static async getFastestSelling(db, limit = 5) {
         try {
-            const res = await axios.get(`${getBaseUrl()}/api/mock/fastest-selling`);
+            const res = await axios.get(`${getBaseUrl()}/api/mock/products`);
             return res.data.slice(0, limit);
         } catch (err) {
             console.error("API fastest-selling call failed, falling back to local DB:", err.message);
@@ -179,12 +179,19 @@ class InventoryService {
      */
     static async getProductsByFilters(db, filters = {}) {
         try {
-            const res = await axios.get(`${getBaseUrl()}/api/mock/new-arrivals`);
+            const { color, size, garmentType, maxPrice, fabric } = filters;
+            const res = await axios.get(`${getBaseUrl()}/api/mock/products`, {
+                params: {
+                    category: garmentType,
+                    color,
+                    size,
+                    maxPrice
+                }
+            });
             let items = res.data;
-            const { color, size, garmentType } = filters;
-            if (color) items = items.filter(i => i.color.toLowerCase() === color.toLowerCase());
-            if (size) items = items.filter(i => i.size.toLowerCase() === size.toLowerCase());
-            if (garmentType) items = items.filter(i => i.sku_code.toLowerCase().includes(garmentType.toLowerCase()));
+            if (fabric) {
+                items = items.filter(i => i.subcategory && i.subcategory.toLowerCase().includes(fabric.toLowerCase()));
+            }
             return items.slice(0, 10);
         } catch (err) {
             console.error("API getProductsByFilters call failed, falling back to local DB:", err.message);
