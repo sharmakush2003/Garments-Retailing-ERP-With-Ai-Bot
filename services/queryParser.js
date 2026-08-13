@@ -12,24 +12,24 @@ class QueryParserService {
     static async parseMessage(messageText) {
         const text = messageText.toLowerCase().trim();
 
-        // 1. Detect interactive button/list clicks or quick commands
-        if (text === 'btn_stock' || text.includes('check stock') || text === '1') {
+        // 1. Detect interactive button/list clicks or quick commands (Aligned with Customer Journey Step 1)
+        if (text === 'btn_catalogue' || text.includes('new catalogue') || text === '1') {
+            return { intent: 'NEW_ARRIVALS', args: {} };
+        }
+        if (text === 'btn_stock' || text.includes('check stock') || text === '2') {
             return { intent: 'GUIDE_STOCK', args: {} };
         }
-        if (text === 'btn_price' || text.includes('wholesale rates') || text.includes('rate list')) {
+        if (text === 'btn_price' || text.includes('check price') || text.includes('wholesale rates') || text.includes('rate list') || text === '3') {
             return { intent: 'PRICE_LOOKUP', args: { skuCode: 'KURTI-FES-01-BLU-L' } };
         }
-        if (text === 'btn_balance' || text.includes('check balance') || text === '2') {
+        if (text === 'btn_order' || text.includes('place order') || text.includes('book order') || text === '4') {
+            return { intent: 'GUIDE_ORDER', args: {} };
+        }
+        if (text === 'btn_balance' || text.includes('outstanding') || text.includes('check balance') || text === '5') {
             return { intent: 'OUTSTANDING_LOOKUP', args: {} };
         }
-        if (text === 'btn_ledger' || text.includes('download ledger') || text.includes('send ledger') || text === '3') {
-            return { intent: 'LEDGER_REQUEST', args: {} };
-        }
-        if (text === 'btn_track' || text.includes('track order') || text === '4') {
+        if (text === 'btn_track' || text.includes('dispatch status') || text.includes('track order') || text === '6') {
             return { intent: 'ORDER_TRACKING', args: { orderId: 1 } };
-        }
-        if (text === 'btn_order' || text.includes('book order')) {
-            return { intent: 'GUIDE_ORDER', args: {} };
         }
 
         // 2. Detect Owner Reports
@@ -254,33 +254,23 @@ class QueryParserService {
                             text: context.companyName || 'Aarav Creations Wholesale'
                         },
                         body: {
-                            text: `👋 Welcome to *${context.companyName || 'Aarav Creations'}* Wholesale Garments! 🙏\n\nPlease select an ERP service from our menu below:`
+                            text: `👋 Welcome to *${context.companyName || 'Aarav Creations'}* Wholesale Garments! 🙏\n\nHow may I help you today? Please select an option:`
                         },
                         footer: {
                             text: 'AutomateX ERP Gateway'
                         },
                         action: {
-                            button: 'View ERP Options 📋',
+                            button: 'View Options 📋',
                             sections: [
                                 {
-                                    title: '📦 Stock & Pricing',
+                                    title: '📋 Business Assistant Menu',
                                     rows: [
-                                        { id: 'btn_stock', title: 'Check Stock 📦', description: 'Check kurti, shirt & pant stock' },
-                                        { id: 'btn_price', title: 'Wholesale Rates 🏷️', description: 'View wholesale tier rates' }
-                                    ]
-                                },
-                                {
-                                    title: '💰 Accounts & Ledger',
-                                    rows: [
-                                        { id: 'btn_balance', title: 'Check Balance 💰', description: 'View balance & credit limit' },
-                                        { id: 'btn_ledger', title: 'Download Ledger 📄', description: 'Get instant PDF account statement' }
-                                    ]
-                                },
-                                {
-                                    title: '🚚 Orders & Tracking',
-                                    rows: [
-                                        { id: 'btn_track', title: 'Track Order 🚚', description: 'Check transport LR & delivery' },
-                                        { id: 'btn_order', title: 'Book Order 🛒', description: 'Book a new wholesale order' }
+                                        { id: 'btn_catalogue', title: '1️⃣ New Catalogue ✨', description: 'Show new arrivals & collections' },
+                                        { id: 'btn_stock', title: '2️⃣ Check Stock 📦', description: 'Check color & size availability' },
+                                        { id: 'btn_price', title: '3️⃣ Check Price 🏷️', description: 'Get wholesale tier rates' },
+                                        { id: 'btn_order', title: '4️⃣ Place Order 🛒', description: 'Place a wholesale booking' },
+                                        { id: 'btn_balance', title: '5️⃣ Outstanding 💳', description: 'Check balance & credit limit' },
+                                        { id: 'btn_track', title: '6️⃣ Dispatch Status 🚚', description: 'Track transport LR & delivery' }
                                     ]
                                 }
                             ]
