@@ -2,31 +2,51 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const axios = require('axios');
+
+const PORT = process.env.PORT || 10000;
+const getBaseUrl = () => process.env.API_BASE_URL || `http://localhost:${PORT}`;
 
 class LedgerService {
     /**
      * Get Customer Credit and Outstanding balance details.
      */
     static async getCustomerOutstanding(db, customerId) {
-        const query = `
-            SELECT customer_id, name, credit_limit, used_credit, outstanding_balance 
-            FROM customers 
-            WHERE customer_id = ?
-        `;
-        return await db.get(query, [customerId]);
+        try {
+            const res = await axios.get(`${getBaseUrl()}/api/mock/customer-outstanding`, {
+                params: { customerId }
+            });
+            return res.data;
+        } catch (err) {
+            console.error("API customer-outstanding call failed, falling back to local DB:", err.message);
+            const query = `
+                SELECT customer_id, name, credit_limit, used_credit, outstanding_balance 
+                FROM customers 
+                WHERE customer_id = ?
+            `;
+            return await db.get(query, [customerId]);
+        }
     }
 
     /**
      * Retrieves financial ledger transactions for a customer.
      */
     static async getTransactions(db, customerId) {
-        const query = `
-            SELECT txn_id, txn_type, amount, reference_id, created_at 
-            FROM financial_transactions 
-            WHERE customer_id = ? 
-            ORDER BY created_at DESC
-        `;
-        return await db.all(query, [customerId]);
+        try {
+            const res = await axios.get(`${getBaseUrl()}/api/mock/customer-transactions`, {
+                params: { customerId }
+            });
+            return res.data;
+        } catch (err) {
+            console.error("API customer-transactions call failed, falling back to local DB:", err.message);
+            const query = `
+                SELECT txn_id, txn_type, amount, reference_id, created_at 
+                FROM financial_transactions 
+                WHERE customer_id = ? 
+                ORDER BY created_at DESC
+            `;
+            return await db.all(query, [customerId]);
+        }
     }
 
     /**
