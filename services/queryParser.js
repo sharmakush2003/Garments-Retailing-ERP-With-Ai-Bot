@@ -199,13 +199,13 @@ class QueryParserService {
                         type: 'list',
                         header: {
                             type: 'text',
-                            text: context.companyName || 'Aarav Creations Wholesale'
+                            text: context.companyName || 'Kaira Wholesale'
                         },
                         body: {
-                            text: `👋 Welcome to *${context.companyName || 'Aarav Creations'}* Wholesale Garments! 🙏\n\nHow may I help you today? Please select an option:`
+                            text: `👋 Welcome to *${context.companyName || 'Kaira'}* Wholesale Garments! 🙏\n\nHow may I help you today? Please select an option:`
                         },
                         footer: {
-                            text: 'AutomateX ERP Gateway'
+                            text: 'Digify Soft Solutions Kaira Chatbot'
                         },
                         action: {
                             button: 'View Options 📋',
@@ -236,7 +236,7 @@ class QueryParserService {
                             text: 'Please select a category to view the latest designs and collections:'
                         },
                         footer: {
-                            text: 'AutomateX ERP Gateway'
+                            text: 'Digify Soft Solutions Kaira Chatbot'
                         },
                         action: {
                             button: 'Select Category 📂',
@@ -268,7 +268,7 @@ class QueryParserService {
                             text: "Please select which product category's stock you would like to check:"
                         },
                         footer: {
-                            text: 'AutomateX ERP Gateway'
+                            text: 'Digify Soft Solutions Kaira Chatbot'
                         },
                         action: {
                             button: 'Select Category 📂',
@@ -385,10 +385,10 @@ class QueryParserService {
 
             case 'PRICE_LOOKUP':
                 const rate = typeof data === 'number' || typeof data === 'string' ? data : (data && data.price ? data.price : 480);
-                return `🏷️ *Wholesale Rate Card - ${context.companyName || 'Aarav Creations'}*\n\n📌 *Item*: Kurti Festive Collection\n🆔 *SKU*: KURTI-FES-BLU-L\n\n💰 *Wholesale Price*: *₹${rate}* / piece\n📊 *Your Customer Tier*: *${role}*\n📦 *Minimum Order Qty (MOQ)*: 12 pieces\n\n🔥 *Volume Tier Schemes*:\n• 50+ pcs: *5% Flat Discount* (₹${Math.round(rate * 0.95)}/pc)\n• 100+ pcs: *10% Festive Offer* (₹${Math.round(rate * 0.90)}/pc)\n\n💬 Reply *"Book 12 pcs"* to place your wholesale order!`;
+                return `🏷️ *Wholesale Rate Card - ${context.companyName || 'Kaira'}*\n\n📌 *Item*: Kurti Festive Collection\n🆔 *SKU*: KURTI-FES-BLU-L\n\n💰 *Wholesale Price*: *₹${rate}* / piece\n📊 *Your Customer Tier*: *${role}*\n📦 *Minimum Order Qty (MOQ)*: 12 pieces\n\n🔥 *Volume Tier Schemes*:\n• 50+ pcs: *5% Flat Discount* (₹${Math.round(rate * 0.95)}/pc)\n• 100+ pcs: *10% Festive Offer* (₹${Math.round(rate * 0.90)}/pc)\n\n💬 Reply *"Book 12 pcs"* to place your wholesale order!`;
 
             default:
-                return `Welcome to Aarav Creations support. How may I help you today?\n1. Check Stock\n2. Check Price\n3. View Catalogue`;
+                return `Welcome to Kaira support. How may I help you today?\n1. Check Stock\n2. Check Price\n3. View Catalogue`;
         }
     }
 }

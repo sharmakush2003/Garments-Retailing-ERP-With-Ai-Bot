@@ -103,7 +103,7 @@ async function getMasterDb() {
     // Seed master tenant mock records
     await masterDb.run(`
         INSERT OR IGNORE INTO tenants (tenant_id, company_name, db_host, db_name, db_user, db_password_hash)
-        VALUES ('Co_102', 'Aarav Creations', 'localhost', 'tenant_102', 'root', 'password')
+        VALUES ('Co_102', 'Kaira', 'localhost', 'tenant_102', 'root', 'password')
     `);
 
     // Retailer customers registered on WhatsApp

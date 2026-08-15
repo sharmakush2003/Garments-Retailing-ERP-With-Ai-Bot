@@ -54,7 +54,7 @@ app.get('/', (req, res) => {
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Digify Soft ERP - AutomateX AI Gateway</title>
+            <title>Digify Soft Solutions - Kaira Chatbot</title>
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <style>
                 body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
@@ -70,7 +70,7 @@ app.get('/', (req, res) => {
         <body>
             <div class="card">
                 <div class="status"><div class="pulse"></div> 24/7 ONLINE & OPERATIONAL</div>
-                <h1>Digify Soft ERP — AutomateX Gateway</h1>
+                <h1>Digify Soft Solutions — Kaira Chatbot</h1>
                 <p>Wholesale Garment ERP WhatsApp Automation Engine</p>
                 <div class="info-box">
                     <span class="label">Webhook Endpoint:</span>
@@ -179,7 +179,7 @@ if (process.env.USE_REDIS !== 'true') {
 if (require.main === module) {
     app.listen(PORT, () => {
         console.log(`=======================================================`);
-        console.log(`   DIGIFY SOFT ERP - AUTOMATEX GATEWAY IS RUNNING     `);
+        console.log(`   DIGIFY SOFT SOLUTIONS - KAIRA CHATBOT IS RUNNING   `);
         console.log(`   Server port: ${PORT}                               `);
         console.log(`   Webhook URL: http://localhost:${PORT}/webhook      `);
         console.log(`=======================================================`);

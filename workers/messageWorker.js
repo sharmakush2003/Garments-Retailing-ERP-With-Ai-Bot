@@ -212,7 +212,7 @@ async function processMessageJob(data) {
     const replyText = QueryParserService.formatResponse(
         parsed.intent, 
         resultData, 
-        { role, companyName: 'Aarav Creations', args: parsed.args }
+        { role, companyName: 'Kaira', args: parsed.args }
     );
 
     // 5. Send reply via Meta Cloud WhatsApp API

@@ -22,7 +22,7 @@ const server = app.listen(PORT, async () => {
         assert.strictEqual(parsed1.intent, 'INVENTORY_LOOKUP');
         
         const stockData = await InventoryService.getStockAvailability(db, parsed1.args.skuCode, parsed1.args);
-        const replyText1 = QueryParserService.formatResponse(parsed1.intent, stockData, { role: 'Customer', companyName: 'Aarav Creations' });
+        const replyText1 = QueryParserService.formatResponse(parsed1.intent, stockData, { role: 'Customer', companyName: 'Kaira' });
         
         console.log('Parsed intent:', parsed1.intent);
         console.log('Formatted response:', replyText1);
@@ -55,7 +55,7 @@ const server = app.listen(PORT, async () => {
         assert.strictEqual(parsed4.intent, 'PRICE_LOOKUP');
         const skuObj = await InventoryService.getStockAvailability(db, parsed4.args.skuCode, parsed4.args);
         const priceVal = await InventoryService.getItemPrice(db, skuObj.sku_id, 1);
-        const replyText4 = QueryParserService.formatResponse(parsed4.intent, priceVal, { role: 'Customer', companyName: 'Aarav Creations' });
+        const replyText4 = QueryParserService.formatResponse(parsed4.intent, priceVal, { role: 'Customer', companyName: 'Kaira' });
         console.log('Formatted response:', replyText4);
         assert.ok(replyText4.includes('Wholesale Price'));
         console.log('✓ Test Case 4 Passed!');
