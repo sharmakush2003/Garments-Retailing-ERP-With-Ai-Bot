@@ -199,13 +199,13 @@ class QueryParserService {
                         type: 'list',
                         header: {
                             type: 'text',
-                            text: context.companyName || 'Kaira Wholesale'
+                            text: `${context.companyName || 'Kaira'} 💁‍♀️`
                         },
                         body: {
-                            text: `👋 Welcome to *${context.companyName || 'Kaira'}* Wholesale Garments! 🙏\n\nHow may I help you today? Please select an option:`
+                            text: `👋 Welcome to *Digifys Soft Solutions Garments*! 🙏\n\nI am *Kaira* 💁‍♀️, your helper today. How can I help you, dear? Please select an option below: ✨`
                         },
                         footer: {
-                            text: 'Digify Soft Solutions Kaira Chatbot'
+                            text: 'Digify Soft Solutions Kaira 💁‍♀️ Chatbot'
                         },
                         action: {
                             button: 'View Options 📋',
@@ -233,10 +233,10 @@ class QueryParserService {
                             text: 'Products Catalog 📖'
                         },
                         body: {
-                            text: 'Please select a category to view the latest designs and collections:'
+                            text: 'Please select a category to see our latest beautiful designs and collections, dear! 🌸✨'
                         },
                         footer: {
-                            text: 'Digify Soft Solutions Kaira Chatbot'
+                            text: 'Digify Soft Solutions Kaira 💁‍♀️ Chatbot'
                         },
                         action: {
                             button: 'Select Category 📂',
@@ -265,10 +265,10 @@ class QueryParserService {
                             text: 'Check Stock 📦'
                         },
                         body: {
-                            text: "Please select which product category's stock you would like to check:"
+                            text: "Please select which category's stock details you want to see, dear! 💖👇"
                         },
                         footer: {
-                            text: 'Digify Soft Solutions Kaira Chatbot'
+                            text: 'Digify Soft Solutions Kaira 💁‍♀️ Chatbot'
                         },
                         action: {
                             button: 'Select Category 📂',
@@ -292,31 +292,31 @@ class QueryParserService {
                     const reqQty = context.args && context.args.requestedQty;
                     if (reqQty) {
                         if (data.available_qty >= reqQty) {
-                            return `📦 *Stock Availability Status*\n\n👗 *Product*: ${data.name}\n✅ *Status*: Available!\n\nYes, we have *${reqQty} Pieces* in stock of *${data.sku_code}* (Ready Stock: ${data.available_qty} pcs).\n🚚 *Dispatch*: Ready for Immediate Dispatch (1-2 Days).`;
+                            return `📦 *Stock Status for You!* ✨\n\n👗 *Product*: ${data.name}\n✅ *Status*: Available, dear! 💖\n\nYes, we have *${reqQty} Pieces* in stock of *${data.sku_code}* (Ready Stock: ${data.available_qty} pcs). 🌸\n🚚 *Dispatch*: Ready for immediate dispatch in 1-2 days! ✨`;
                         } else {
                             const shortfall = reqQty - data.available_qty;
-                            return `📦 *Stock Availability Status*\n\n👗 *Product*: ${data.name}\n⚠️ *Status*: Partial Stock Available\n\nWe have *${data.available_qty} Pieces* in stock (shortfall of *${shortfall} Pieces*).\n🔄 *Replenishment*: Expected fresh production batch ready in 3-4 days.`;
+                            return `📦 *Stock Status for You!* ✨\n\n👗 *Product*: ${data.name}\n⚠️ *Status*: Oh, partial stock available!\n\nWe have *${data.available_qty} Pieces* ready (shortfall of *${shortfall} Pieces*). 🌸\n🔄 *Replenishment*: Fresh new batch will be ready in 3-4 days! 💖`;
                         }
                     }
-                    return `📦 *Stock Availability Status*\n\n👗 *Product*: ${data.name}\n🎨 *Color*: ${data.color}\n📏 *Size*: ${data.size}\n🆔 *SKU*: ${data.sku_code}\n\n✅ *Current Ready Stock*: *${data.available_qty} Pieces*\n🚚 *Dispatch Status*: Ready for Immediate Dispatch (1-2 Days)\n🏬 *Warehouse*: Central Depot (Jaipur)\n\n💬 Reply *"Book 10 pcs"* to reserve stock now!`;
+                    return `📦 *Stock Status for You!* ✨\n\n👗 *Product*: ${data.name}\n🎨 *Color*: ${data.color}\n📏 *Size*: ${data.size}\n🆔 *SKU*: ${data.sku_code}\n\n✅ *Current Ready Stock*: *${data.available_qty} Pieces* 🌸\n🚚 *Dispatch Status*: Ready for immediate dispatch in 1-2 days! ✨\n🏬 *Warehouse*: Central Depot (Jaipur)\n\n💬 Reply *"Book 10 pcs"* to reserve this stock for you! 💖`;
                 }
-                return `❌ *Stock Availability Status*\n\n👗 *Item*: ${data ? data.sku_code || 'Garment' : 'Requested Combination'}\n⚠️ *Status*: Currently Out of Stock!\n\n💡 *Recommendation*: Similar styles are available in stock. Reply *"Check Stock"* to view alternatives.`;
+                return `❌ *Stock Status for You!* ✨\n\n👗 *Item*: ${data ? data.sku_code || 'Garment' : 'Requested Combination'}\n⚠️ *Status*: Currently out of stock, so sorry! 🥺\n\n💡 *Recommendation*: Similar gorgeous styles are available. Reply *"Check Stock"* to see them! 🌸`;
 
             case 'COLOURS_LOOKUP':
                 if (data && data.length > 0) {
                     const colors = [...new Set(data.map(i => i.color))].join(', ');
                     const matrix = data.map(i => `• *${i.color}*: ${i.available_qty} pcs ready (Size: ${i.size})`).join('\n');
-                    return `🎨 *Available Colours Matrix*\n\nWe have the following colours in stock:\n${matrix}\n\nTotal unique colors: ${colors}`;
+                    return `🎨 *Available Colours Matrix* 🌸\n\nHere are the lovely colours we have in stock:\n${matrix}\n\nTotal unique colors: ${colors} ✨`;
                 }
-                return `🎨 *Available Colours*: No color variations found.`;
+                return `🎨 *Available Colours*: No color variations found, sorry dear! 🥺`;
 
             case 'SIZES_LOOKUP':
                 if (data && data.length > 0) {
                     const sizes = [...new Set(data.map(i => i.size))].join(', ');
                     const matrix = data.map(i => `• *Size ${i.size}*: ${i.available_qty} pcs ready (Color: ${i.color})`).join('\n');
-                    return `📏 *Available Sizes Matrix*\n\nWe have the following sizes in stock:\n${matrix}\n\nTotal unique sizes: ${sizes}`;
+                    return `📏 *Available Sizes Matrix* ✨\n\nHere are the sizes we have in stock for you:\n${matrix}\n\nTotal unique sizes: ${sizes} 🌸`;
                 }
-                return `📏 *Available Sizes*: No size variations found.`;
+                return `📏 *Available Sizes*: No size variations found, sorry dear! 🥺`;
 
             case 'DESIGN_AVAILABILITY':
                 if (data && data.length > 0) {
@@ -343,9 +343,9 @@ class QueryParserService {
                         return `🛍️ *${style.name}*\n🆔 SKU: \`${baseSku}\`\n${variantsList}`;
                     }).join('\n\n');
 
-                    return `📦 *Stock Availability Matrix* 👗\n_________________________\n\n${sections}`;
+                    return `📦 *Stock Availability Matrix* 👗✨\n_________________________\n\nHere is our stock, dear:\n\n${sections}`;
                 }
-                return `👗 *Design Availability*: Design is currently out of stock.`;
+                return `👗 *Design Availability*: Oh, that design is out of stock right now! 🥺`;
 
             case 'PRODUCT_FILTERED':
                 if (data && data.length > 0) {
@@ -374,21 +374,21 @@ class QueryParserService {
                     }).join('\n\n');
 
                     const isCatalog = !context.args || (!context.args.maxPrice && !context.args.fabric);
-                    let title = `🔍 *Garments Search Results*`;
+                    let title = `🔍 *Garments Search Results* 🌸`;
                     if (isCatalog) {
                         const cat = context.args && context.args.garmentType;
-                        title = cat ? `📖 *${cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase()} Catalog* 👗` : `📖 *Wholesale Product Catalog* 🛍️`;
+                        title = cat ? `📖 *${cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase()} Catalog* 👗✨` : `📖 *Wholesale Product Catalog* 🛍️✨`;
                     }
-                    return `${title}\n_________________________\n\n${sections}`;
+                    return `${title}\n_________________________\n\nHere is our catalog for you, dear! 🌸:\n\n${sections}`;
                 }
-                return `🔍 *Garments Search Results*\n\n⚠️ No matching products found for the requested price/fabric criteria.`;
+                return `🔍 *Garments Search Results* 🌸\n\n⚠️ So sorry, no matching products found for the requested criteria! 🥺`;
 
             case 'PRICE_LOOKUP':
                 const rate = typeof data === 'number' || typeof data === 'string' ? data : (data && data.price ? data.price : 480);
-                return `🏷️ *Wholesale Rate Card - ${context.companyName || 'Kaira'}*\n\n📌 *Item*: Kurti Festive Collection\n🆔 *SKU*: KURTI-FES-BLU-L\n\n💰 *Wholesale Price*: *₹${rate}* / piece\n📊 *Your Customer Tier*: *${role}*\n📦 *Minimum Order Qty (MOQ)*: 12 pieces\n\n🔥 *Volume Tier Schemes*:\n• 50+ pcs: *5% Flat Discount* (₹${Math.round(rate * 0.95)}/pc)\n• 100+ pcs: *10% Festive Offer* (₹${Math.round(rate * 0.90)}/pc)\n\n💬 Reply *"Book 12 pcs"* to place your wholesale order!`;
+                return `🏷️ *Wholesale Rate Card - ${context.companyName || 'Kaira'}* 💁‍♀️✨\n\n📌 *Item*: Kurti Festive Collection\n🆔 *SKU*: KURTI-FES-BLU-L\n\n💰 *Wholesale Price*: *₹${rate}* / piece\n📊 *Your Customer Tier*: *${role}* 🌸\n📦 *Minimum Order Qty (MOQ)*: 12 pieces\n\n🔥 *Volume Tier Schemes*:\n• 50+ pcs: *5% Flat Discount* (₹${Math.round(rate * 0.95)}/pc)\n• 100+ pcs: *10% Festive Offer* (₹${Math.round(rate * 0.90)}/pc)\n\n💬 Reply *"Book 12 pcs"* to place your order with me! 💖`;
 
             default:
-                return `Welcome to Kaira support. How may I help you today?\n1. Check Stock\n2. Check Price\n3. View Catalogue`;
+                return `Welcome to Kaira support! 💁‍♀️ How may I help you today, dear? 🌸\n1. Check Stock 📦\n2. Check Price 🏷️\n3. View Catalogue 📖`;
         }
     }
 }
