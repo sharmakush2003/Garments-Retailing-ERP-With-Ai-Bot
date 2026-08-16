@@ -45,8 +45,22 @@ class QueryParserService {
         if (text === 'btn_stock' || text.includes('check stock') || text === '2') {
             return { intent: 'GUIDE_STOCK', args: {} };
         }
+        // Specific category price list selections
+        if (text.includes('price_kurti') || (text.includes('kurti') && text.includes('price') && !text.includes('check'))) {
+            return { intent: 'PRICE_LOOKUP', args: { garmentType: 'KURTI', skuCode: 'KURTI-FES-BLU-L' } };
+        }
+        if (text.includes('price_shirt') || (text.includes('shirt') && text.includes('price') && !text.includes('check'))) {
+            return { intent: 'PRICE_LOOKUP', args: { garmentType: 'SHIRT', skuCode: 'SHIRT-COT-WHT-L' } };
+        }
+        if (text.includes('price_pant') || (text.includes('pant') && text.includes('price') && !text.includes('check'))) {
+            return { intent: 'PRICE_LOOKUP', args: { garmentType: 'PANT', skuCode: 'PANT-DEN-BLU-L' } };
+        }
+        if (text.includes('price_saree') || (text.includes('saree') && text.includes('price') && !text.includes('check'))) {
+            return { intent: 'PRICE_LOOKUP', args: { garmentType: 'SAREE', skuCode: 'SAREE-SIL-RED-FS' } };
+        }
+
         if (text === 'btn_price' || text.includes('check price') || text.includes('wholesale rates') || text.includes('rate list') || text === '3') {
-            return { intent: 'PRICE_LOOKUP', args: { skuCode: 'KURTI-FES-BLU-L' } };
+            return { intent: 'GUIDE_PRICE', args: {} };
         }
         if (text === 'btn_ledger' || text === '4' || text.includes('4️⃣')) {
             return { intent: 'OLD_LEDGER_STATUS', args: {} };
@@ -118,8 +132,8 @@ class QueryParserService {
         // Pricing Rate queries
         if (text.includes('rate') || text.includes('price') || text.includes('bhao') || text.includes('price list')) {
             return {
-                intent: 'PRICE_LOOKUP',
-                args: { skuCode: 'KURTI-FES-BLU-L' }
+                intent: 'GUIDE_PRICE',
+                args: {}
             };
         }
 
@@ -242,7 +256,7 @@ class QueryParserService {
                             text: `${context.companyName || 'Kaira'} 💁‍♀️`
                         },
                         body: {
-                            text: `👋 Welcome to *Digifys Soft Solutions Garments*! 🙏\n\nI am *Kaira* 💁‍♀️, your helper today. How can I help you, dear? Please select an option below: ✨`
+                            text: `👋 Welcome to *Digifys Soft Solutions Garments*! 🙏\n\nI am *Kaira* 💁‍♀️, your helper today. How can I help you, dear? Please select an option below: ✨\n\n⚠️ *Note:* I am Kaira, your AI chatbot helper 🤖, so I can sometimes make little mistakes. If you are taking any final or financial decisions, please verify them manually once! 🌸💖`
                         },
                         footer: {
                             text: 'Digify Soft Solutions Kaira 💁‍♀️ Chatbot'
@@ -332,7 +346,39 @@ class QueryParserService {
                     }
                 };
 
-            case 'INVENTORY_LOOKUP':
+            case 'GUIDE_PRICE':
+                return {
+                    type: 'interactive',
+                    interactive: {
+                        type: 'list',
+                        header: {
+                            type: 'text',
+                            text: 'Check Prices 🏷️'
+                        },
+                        body: {
+                            text: 'Please select which category\'s wholesale rates you want to see, dear! 💖👇'
+                        },
+                        footer: {
+                            text: 'Digify Soft Solutions Kaira 💁‍♀️ Chatbot'
+                        },
+                        action: {
+                            button: 'Select Category 📂',
+                            sections: [
+                                {
+                                    title: 'Price Categories 🏷️',
+                                    rows: [
+                                        { id: 'price_kurti', title: '👗 Kurti Price Card', description: 'Wholesale rates for Kurtis' },
+                                        { id: 'price_shirt', title: '👔 Shirt Price Card', description: 'Wholesale rates for Shirts' },
+                                        { id: 'price_pant', title: '👖 Pant Price Card', description: 'Wholesale rates for Pants' },
+                                        { id: 'price_saree', title: '🥻 Saree Price Card', description: 'Wholesale rates for Sarees' }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                };
+ 
+             case 'INVENTORY_LOOKUP':
                 if (data && data.available_qty > 0) {
                     const reqQty = context.args && context.args.requestedQty;
                     if (reqQty) {
@@ -429,8 +475,10 @@ class QueryParserService {
                 return `🔍 *Garments Search Results* 🌸\n\n⚠️ So sorry, no matching products found for the requested criteria! 🥺`;
 
             case 'PRICE_LOOKUP':
-                const rate = typeof data === 'number' || typeof data === 'string' ? data : (data && data.price ? data.price : 480);
-                return `🏷️ *Wholesale Rate Card - ${context.companyName || 'Kaira'}* 💁‍♀️✨\n\n📌 *Item*: Kurti Festive Collection\n🆔 *SKU*: KURTI-FES-BLU-L\n\n💰 *Wholesale Price*: *₹${rate}* / piece\n📊 *Your Customer Tier*: *${role}* 🌸\n📦 *Minimum Order Qty (MOQ)*: 12 pieces\n\n🔥 *Volume Tier Schemes*:\n• 50+ pcs: *5% Flat Discount* (₹${Math.round(rate * 0.95)}/pc)\n• 100+ pcs: *10% Festive Offer* (₹${Math.round(rate * 0.90)}/pc)\n\n💬 Reply *"Book 12 pcs"* to place your order with me! 💖`;
+                const rate = typeof data === 'number' || typeof data === 'string' ? data : (data && data.price !== undefined ? data.price : 480);
+                const itemName = data && data.name ? data.name : 'Kurti Festive Collection';
+                const skuCode = data && data.sku_code ? data.sku_code : 'KURTI-FES-BLU-L';
+                return `🏷️ *Wholesale Rate Card - ${context.companyName || 'Kaira'}* 💁‍♀️✨\n\n📌 *Item*: ${itemName}\n🆔 *SKU*: ${skuCode}\n\n💰 *Wholesale Price*: *₹${rate}* / piece\n📊 *Your Customer Tier*: *${role}* 🌸\n📦 *Minimum Order Qty (MOQ)*: 12 pieces\n\n🔥 *Volume Tier Schemes*:\n• 50+ pcs: *5% Flat Discount* (₹${Math.round(rate * 0.95)}/pc)\n• 100+ pcs: *10% Festive Offer* (₹${Math.round(rate * 0.90)}/pc)\n\n💬 Reply *"Book 12 pcs"* to place your order with me! 💖`;
 
             case 'OLD_SHIPMENT_INQUIRY':
                 if (data && data.length > 0) {

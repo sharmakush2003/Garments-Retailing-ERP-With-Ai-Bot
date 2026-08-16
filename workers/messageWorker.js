@@ -196,9 +196,14 @@ async function processMessageJob(data) {
                 // For price lookup, resolve base/tier price
                 const sku = await InventoryService.getStockAvailability(db, parsed.args.skuCode, parsed.args);
                 if (sku) {
-                    resultData = await InventoryService.getItemPrice(db, sku.sku_id, customerId || 1);
+                    const price = await InventoryService.getItemPrice(db, sku.sku_id, customerId || 1);
+                    resultData = {
+                        price: price,
+                        sku_code: sku.sku_code,
+                        name: sku.name
+                    };
                 } else {
-                    resultData = 0.00;
+                    resultData = { price: 0.00, sku_code: 'Unknown', name: 'Unknown Item' };
                 }
                 break;
             case 'OLD_SHIPMENT_INQUIRY':
