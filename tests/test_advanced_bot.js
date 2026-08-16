@@ -72,6 +72,38 @@ const server = app.listen(PORT, async () => {
         assert.ok(fileRes.data.byteLength > 0, 'Served static file should contain data');
         console.log('✓ Test Case 3 Passed!');
 
+        // --- Test Case 4: WhatsApp Flow Submission webhook ---
+        console.log('\n--- Running Test Case 4: WhatsApp Flow Submission Ingestion ---');
+        const flowPayload = {
+            sender_id: '919876543210',
+            type: 'interactive',
+            interactive: {
+                type: 'nfm_reply',
+                nfm_reply: {
+                    name: 'flow',
+                    body: 'Sent',
+                    response_json: JSON.stringify({
+                        screen: 'ORDER_SCREEN',
+                        values: {
+                            garment_type: 'KURTI',
+                            size: 'M',
+                            qty: '12',
+                            color: 'RED',
+                            notes: 'Simulated order notes'
+                        }
+                    })
+                }
+            }
+        };
+
+        const flowRes = await axios.post(`http://localhost:${PORT}/webhook`, flowPayload);
+        console.log('Flow Webhook Response Status:', flowRes.status);
+        console.log('Flow Webhook Response Data:', JSON.stringify(flowRes.data, null, 2));
+
+        assert.strictEqual(flowRes.status, 200);
+        assert.strictEqual(flowRes.data.status, 'Accepted');
+        console.log('✓ Test Case 4 Passed!');
+
         // Clean up test files
         if (fs.existsSync(invoicePath)) fs.unlinkSync(invoicePath);
         if (fs.existsSync(ledgerPath)) fs.unlinkSync(ledgerPath);

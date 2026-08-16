@@ -39,6 +39,7 @@ Available Intents:
 - 'LAST_INVOICE_COPY': Asking for a copy of the latest or last invoice.
 - 'SHIPMENT_TRACKING': Tracking active shipments ("where has it reached", "status of order").
 - 'OUTSTANDING_LOOKUP': Querying credit limit, due balance, or outstanding amount.
+- 'ORDER_FLOW_TRIGGER': User wants to book or place a new order / purchase garments.
 
 Parameters to extract in 'args' object (use null if not mentioned):
 - 'skuCode': Standardized style code (e.g. "KURTI-FES-BLU-L") or numeric style/design code (e.g. "102", "110").
@@ -158,6 +159,7 @@ Available Intents:
 - 'LAST_INVOICE_COPY': Asking for a copy of the latest or last invoice.
 - 'SHIPMENT_TRACKING': Tracking active shipments ("where has it reached", "status of order").
 - 'OUTSTANDING_LOOKUP': Querying credit limit, due balance, or outstanding amount.
+- 'ORDER_FLOW_TRIGGER': User wants to book or place a new order / purchase garments.
 
 Parameters to extract in 'args' object (use null if not mentioned):
 - 'skuCode': Standardized style code (e.g. "KURTI-FES-BLU-L") or numeric style/design code (e.g. "102", "110").
@@ -550,6 +552,40 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                                     ]
                                 }
                             ]
+                        }
+                    }
+                };
+
+            case 'ORDER_FLOW_TRIGGER':
+                return {
+                    type: 'interactive',
+                    interactive: {
+                        type: 'flow',
+                        header: {
+                            type: 'text',
+                            text: 'Book Wholesale Order'
+                        },
+                        body: {
+                            text: 'Tap the button below to choose items, sizes, and submit your order instantly! 📋👗'
+                        },
+                        footer: {
+                            text: 'Digify Soft Solutions Order Flow'
+                        },
+                        action: {
+                            name: 'flow',
+                            parameters: {
+                                flow_message_version: '3',
+                                flow_token: `order_token_${Date.now()}`,
+                                flow_id: process.env.META_FLOW_ID || '1234567890',
+                                flow_cta: 'Open Order Form 📋',
+                                flow_action: 'navigate',
+                                flow_action_payload: {
+                                    screen: 'ORDER_SCREEN',
+                                    data: {
+                                        company: context.companyName || 'Kaira'
+                                    }
+                                }
+                            }
                         }
                     }
                 };
