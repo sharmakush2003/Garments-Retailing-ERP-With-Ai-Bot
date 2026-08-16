@@ -1,4 +1,5 @@
 const path = require('path');
+const axios = require('axios');
 
 /**
  * Query Parser Service
@@ -7,9 +8,258 @@ const path = require('path');
  */
 class QueryParserService {
     /**
+     * Parses Hinglish/English/Vernacular text queries using Gemini or OpenAI API.
+     */
+    static async parseMessageWithLLM(messageText) {
+        const geminiKey = process.env.GEMINI_API_KEY;
+        const openaiKey = process.env.OPENAI_API_KEY;
+        const groqKey = process.env.GROQ_API_KEY;
+
+        if (!geminiKey && !openaiKey && !groqKey) {
+            return null;
+        }
+
+        const systemInstruction = `
+You are an expert NLP parser for a Wholesale Garments Retailing ERP chatbot.
+Your job is to parse Hinglish/English/Vernacular text queries from retailers and salespersons into a structured JSON representation of intents and arguments.
+
+Available Intents:
+- 'GREETING': Welcoming messages, "hi", "hello", "namaste", "help", "menu".
+- 'GUIDE_CATALOGUE': Asking for general catalog or collection.
+- 'GUIDE_STOCK': Asking to check stock or inventory in general.
+- 'GUIDE_PRICE': Asking to check price or rate list in general.
+- 'INVENTORY_LOOKUP': Looking up stock availability for a specific style/SKU, color, size, or category.
+- 'COLOURS_LOOKUP': Querying what colors are available for an item or generally.
+- 'SIZES_LOOKUP': Querying what sizes are available for an item or generally.
+- 'DESIGN_AVAILABILITY': Asking about design/collection availability.
+- 'PRODUCT_FILTERED': Searching for garments filtered by price, fabric (e.g. cotton, silk, denim), and/or garment type (kurti, shirt, pant, saree).
+- 'PRICE_LOOKUP': Looking up the price for a specific SKU/style.
+- 'OLD_SHIPMENT_INQUIRY': Asking about past shipment history or historical dispatches.
+- 'OLD_LEDGER_STATUS': Asking for statement of account, ledger, or balance sheet.
+- 'LAST_INVOICE_COPY': Asking for a copy of the latest or last invoice.
+- 'SHIPMENT_TRACKING': Tracking active shipments ("where has it reached", "status of order").
+- 'OUTSTANDING_LOOKUP': Querying credit limit, due balance, or outstanding amount.
+
+Parameters to extract in 'args' object (use null if not mentioned):
+- 'skuCode': Standardized style code (e.g. "KURTI-FES-BLU-L") or numeric style/design code (e.g. "102", "110").
+- 'color': Standardized color code, map Hinglish/Hindi words to English codes: RED (lal), BLU (neela/neeli), GRN (hara/hari), WHT (safed), BLK (kala), YLW (peela), PNK (gulabi), or direct English color.
+- 'size': Standardized size code: XS, S, M, L, XL, XXL.
+- 'garmentType': KURTI, SHIRT, PANT, SAREE, or DRESS.
+- 'requestedQty': Integer number of pieces/quantity requested (e.g. "Book 12 pcs" -> 12).
+- 'maxPrice': Numeric maximum price filter (e.g. "under 500" -> 500).
+- 'fabric': Material name (e.g. "cotton", "silk", "denim").
+
+Return ONLY a valid JSON object matching this schema:
+{
+  "intent": "INTENT_NAME",
+  "args": {
+    "skuCode": string or null,
+    "color": string or null,
+    "size": string or null,
+    "garmentType": string or null,
+    "requestedQty": number or null,
+    "maxPrice": number or null,
+    "fabric": string or null
+  }
+}
+Do not include any markdown formatting, comments, or extra text in your output. Just return the raw JSON object.
+`;
+
+        try {
+            if (geminiKey && geminiKey !== 'your_gemini_api_key_here') {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+                const prompt = `${systemInstruction}\n\nUser Query: "${messageText}"`;
+                const response = await axios.post(url, {
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        responseMimeType: "application/json"
+                    }
+                }, { timeout: 8000 });
+
+                if (response.data && response.data.candidates && response.data.candidates[0].content.parts[0].text) {
+                    const cleanText = response.data.candidates[0].content.parts[0].text.trim();
+                    return JSON.parse(cleanText);
+                }
+            } else if (openaiKey && openaiKey !== 'your_openai_api_key_here') {
+                const url = 'https://api.openai.com/v1/chat/completions';
+                const response = await axios.post(url, {
+                    model: 'gpt-4o-mini',
+                    messages: [
+                        { role: 'system', content: systemInstruction },
+                        { role: 'user', content: messageText }
+                    ],
+                    response_format: { type: "json_object" }
+                }, {
+                    headers: {
+                        Authorization: `Bearer ${openaiKey}`
+                    },
+                    timeout: 8000
+                });
+
+                if (response.data && response.data.choices && response.data.choices[0].message.content) {
+                    return JSON.parse(response.data.choices[0].message.content.trim());
+                }
+            } else if (groqKey && groqKey !== 'your_groq_api_key_here') {
+                const url = 'https://api.groq.com/openai/v1/chat/completions';
+                const response = await axios.post(url, {
+                    model: 'llama-3.3-70b-versatile',
+                    messages: [
+                        { role: 'system', content: systemInstruction },
+                        { role: 'user', content: messageText }
+                    ],
+                    response_format: { type: "json_object" }
+                }, {
+                    headers: {
+                        Authorization: `Bearer ${groqKey}`
+                    },
+                    timeout: 8000
+                });
+
+                if (response.data && response.data.choices && response.data.choices[0].message.content) {
+                    return JSON.parse(response.data.choices[0].message.content.trim());
+                }
+            }
+        } catch (error) {
+            console.error('[LLM NLU Parser] LLM NLU parser failed, falling back to Regex:', error.message);
+        }
+
+        return null;
+    }
+
+    /**
+     * Parses incoming WhatsApp voice/audio base64 data using Gemini API multimodal capabilities.
+     */
+    static async parseAudioMessage(base64AudioData, mimeType = 'audio/ogg') {
+        const geminiKey = process.env.GEMINI_API_KEY;
+        if (!geminiKey || geminiKey === 'your_gemini_api_key_here') {
+            console.warn('[LLM NLU Parser] Gemini key not configured for voice parsing.');
+            return null;
+        }
+
+        const systemInstruction = `
+You are an expert NLP parser for a Wholesale Garments Retailing ERP chatbot.
+Listen to this audio query and parse it into a structured JSON representation of intents and arguments.
+
+Available Intents:
+- 'GREETING': Welcoming messages, "hi", "hello", "namaste", "help", "menu".
+- 'GUIDE_CATALOGUE': Asking for general catalog or collection.
+- 'GUIDE_STOCK': Asking to check stock or inventory in general.
+- 'GUIDE_PRICE': Asking to check price or rate list in general.
+- 'INVENTORY_LOOKUP': Looking up stock availability for a specific style/SKU, color, size, or category.
+- 'COLOURS_LOOKUP': Querying what colors are available for an item or generally.
+- 'SIZES_LOOKUP': Querying what sizes are available for an item or generally.
+- 'DESIGN_AVAILABILITY': Asking about design/collection availability.
+- 'PRODUCT_FILTERED': Searching for garments filtered by price, fabric (e.g. cotton, silk, denim), and/or garment type (kurti, shirt, pant, saree).
+- 'PRICE_LOOKUP': Looking up the price for a specific SKU/style.
+- 'OLD_SHIPMENT_INQUIRY': Asking about past shipment history or historical dispatches.
+- 'OLD_LEDGER_STATUS': Asking for statement of account, ledger, or balance sheet.
+- 'LAST_INVOICE_COPY': Asking for a copy of the latest or last invoice.
+- 'SHIPMENT_TRACKING': Tracking active shipments ("where has it reached", "status of order").
+- 'OUTSTANDING_LOOKUP': Querying credit limit, due balance, or outstanding amount.
+
+Parameters to extract in 'args' object (use null if not mentioned):
+- 'skuCode': Standardized style code (e.g. "KURTI-FES-BLU-L") or numeric style/design code (e.g. "102", "110").
+- 'color': Standardized color code, map Hinglish/Hindi words to English codes: RED (lal), BLU (neela/neeli), GRN (hara/hari), WHT (safed), BLK (kala), YLW (peela), PNK (gulabi), or direct English color.
+- 'size': Standardized size code: XS, S, M, L, XL, XXL.
+- 'garmentType': KURTI, SHIRT, PANT, SAREE, or DRESS.
+- 'requestedQty': Integer number of pieces/quantity requested (e.g. "Book 12 pcs" -> 12).
+- 'maxPrice': Numeric maximum price filter (e.g. "under 500" -> 500).
+- 'fabric': Material name (e.g. "cotton", "silk", "denim").
+
+Return ONLY a valid JSON object matching this schema:
+{
+  "intent": "INTENT_NAME",
+  "args": {
+    "skuCode": string or null,
+    "color": string or null,
+    "size": string or null,
+    "garmentType": string or null,
+    "requestedQty": number or null,
+    "maxPrice": number or null,
+    "fabric": string or null
+  }
+}
+Do not include any markdown formatting, comments, or extra text in your output. Just return the raw JSON object.
+`;
+
+        try {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+            const response = await axios.post(url, {
+                contents: [
+                    {
+                        parts: [
+                            { text: systemInstruction },
+                            {
+                                inlineData: {
+                                    mimeType: mimeType,
+                                    data: base64AudioData
+                                }
+                            }
+                        ]
+                    }
+                ],
+                generationConfig: {
+                    responseMimeType: "application/json"
+                }
+            }, { timeout: 15000 });
+
+            if (response.data && response.data.candidates && response.data.candidates[0].content.parts[0].text) {
+                const cleanText = response.data.candidates[0].content.parts[0].text.trim();
+                return JSON.parse(cleanText);
+            }
+        } catch (error) {
+            console.error('[LLM NLU Parser] Gemini voice note parsing failed:', error.message);
+        }
+
+        return null;
+    }
+
+    /**
+     * Transcribes WhatsApp voice notes to text using Groq's Whisper model (whisper-large-v3).
+     */
+    static async transcribeAudioWithGroq(audioBuffer, apiKey) {
+        if (!apiKey || apiKey === 'your_groq_api_key_here') {
+            console.warn('[Groq Speech-to-Text] Groq key not configured for audio transcription.');
+            return null;
+        }
+
+        try {
+            const boundary = '----WebKitFormBoundary7MA4YWxkTrZu0gW';
+            const body = Buffer.concat([
+                Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="audio.ogg"\r\nContent-Type: audio/ogg\r\n\r\n`),
+                audioBuffer,
+                Buffer.from(`\r\n--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nwhisper-large-v3\r\n--${boundary}--\r\n`)
+            ]);
+
+            const response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', body, {
+                headers: {
+                    Authorization: `Bearer ${apiKey}`,
+                    'Content-Type': `multipart/form-data; boundary=${boundary}`
+                },
+                timeout: 12000
+            });
+
+            if (response.data && response.data.text) {
+                return response.data.text.trim();
+            }
+        } catch (error) {
+            console.error('[Groq Speech-to-Text] Whisper transcription failed:', error.message);
+        }
+        return null;
+    }
+
+
+    /**
      * Parse incoming message text into structured intent and parameters.
      */
     static async parseMessage(messageText) {
+        // Try LLM parsing if configured
+        const llmResult = await this.parseMessageWithLLM(messageText);
+        if (llmResult && llmResult.intent) {
+            console.log('[QueryParserService] Successfully parsed query using LLM:', llmResult);
+            return llmResult;
+        }
+
         const text = messageText.toLowerCase().trim();
 
         // 1. Detect interactive button/list clicks or category selections

@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
+const path = require('path');
 const webhookRouter = require('./routes/webhook');
 const { useMemoryFallback } = require('./workers/messageWorker');
 
@@ -42,6 +43,9 @@ app.get('/logs', (req, res) => {
 // Enable JSON body parsing
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// Serve generated PDF documents statically
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // Register routes
 app.use('/webhook', webhookRouter);

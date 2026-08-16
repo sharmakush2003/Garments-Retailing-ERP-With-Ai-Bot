@@ -63,35 +63,60 @@ router.post('/', injectTenantContext, async (req, res) => {
             return res.status(200).json({ status: 'Report received' });
         }
 
+        let isAudio = false;
+        let audioUrl = null;
+        let mediaId = null;
+
         // Structure check for Meta Cloud message payload
         if (req.body.entry && req.body.entry[0].changes && req.body.entry[0].changes[0].value.messages) {
             const message = req.body.entry[0].changes[0].value.messages[0];
             number = message.from;
-            messageText = message.text ? message.text.body : '';
+            if (message.type === 'audio' || message.type === 'voice') {
+                isAudio = true;
+                mediaId = (message.audio || message.voice).id;
+            } else {
+                messageText = message.text ? message.text.body : '';
+            }
         } else if (req.body.sender_id) {
             // AutobotChat webhook format:
             // sender_id = customer's phone number
             number = req.body.sender_id;
-            if (typeof req.body.text === 'object' && req.body.text !== null) {
-                messageText = req.body.text.body || '';
-            } else if (typeof req.body.text === 'string') {
-                messageText = req.body.text;
-            } else {
-                messageText = req.body.message || '';
+            if (req.body.media_type === 'audio' || req.body.media_type === 'voice' || req.body.audio) {
+                isAudio = true;
+                audioUrl = req.body.media_url || req.body.audio;
             }
-        } else if (req.body.from && req.body.text && req.body.text.body) {
+            if (!isAudio) {
+                if (typeof req.body.text === 'object' && req.body.text !== null) {
+                    messageText = req.body.text.body || '';
+                } else if (typeof req.body.text === 'string') {
+                    messageText = req.body.text;
+                } else {
+                    messageText = req.body.message || '';
+                }
+            }
+        } else if (req.body.from) {
             number = req.body.from;
-            messageText = req.body.text.body;
-        } else if (req.body.number && req.body.message) {
+            if (req.body.type === 'audio' || req.body.type === 'voice') {
+                isAudio = true;
+                mediaId = req.body.audio ? req.body.audio.id : (req.body.voice ? req.body.voice.id : null);
+            } else if (req.body.text && req.body.text.body) {
+                messageText = req.body.text.body;
+            }
+        } else if (req.body.number) {
             number = req.body.number;
-            messageText = req.body.message;
+            if (req.body.audio || req.body.voice || req.body.message_type === 'audio') {
+                isAudio = true;
+                audioUrl = req.body.audio || req.body.voice || req.body.message;
+            } else {
+                messageText = req.body.message;
+            }
         }
 
         // DEBUG: Print full incoming payload to understand AutobotChat format
         console.log('[Webhook] RAW PAYLOAD:', JSON.stringify(req.body, null, 2));
 
-        if (!number || !messageText) {
-            console.log('[Webhook] Could not parse number/message from payload above');
+        if (!number || (!messageText && !isAudio)) {
+            console.log('[Webhook] Could not parse number/message or audio from payload above');
             return res.status(400).json({ error: 'Missing phone number or message content' });
         }
 
@@ -102,6 +127,9 @@ router.post('/', injectTenantContext, async (req, res) => {
             phoneNumber: number,
             fallbackPhone,
             messageText,
+            isAudio,
+            audioUrl,
+            mediaId,
             tenantContext: {
                 tenantId: req.tenantContext.tenantId,
                 role: req.tenantContext.role,

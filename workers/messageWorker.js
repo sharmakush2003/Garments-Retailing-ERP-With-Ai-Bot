@@ -12,8 +12,11 @@ if (process.env.USE_REDIS === 'true') {
 const { getTenantDb } = require('../services/dbManager');
 const InventoryService = require('../services/inventoryService');
 const QueryParserService = require('../services/queryParser');
+const PDFGeneratorService = require('../services/pdfGenerator');
 const axios = require('axios');
 const EventEmitter = require('events');
+const path = require('path');
+const fs = require('fs');
 
 const QUEUE_NAME = 'whatsapp-messages';
 const redisOptions = {
@@ -66,7 +69,7 @@ function useMemoryFallback() {
     messageQueue = memoryQueueFallback;
 }
 
-async function sendOutboundWhatsAppMessage(phoneNumber, replyText, fallbackPhone = null) {
+async function sendOutboundWhatsAppMessage(phoneNumber, replyText, fallbackPhone = null, pdfUrl = null, pdfName = null) {
     const cleanPhone = (phoneNumber || '').toString().replace(/\D/g, '');
     try {
         const provider = process.env.WHATSAPP_PROVIDER || 'AUTOBOTCHAT';
@@ -81,11 +84,14 @@ async function sendOutboundWhatsAppMessage(phoneNumber, replyText, fallbackPhone
             } catch (e) {}
         }
 
-        if (provider === 'AUTOBOTCHAT' || provider === 'META') {
-            const defaultJwt = ['eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.', 'eyJpYXQiOjE3NjA3MDY0NDYsImRhdGEiOnsidXNlcm5hbWUiOiJEaWdpZnlfc29mdCIsIm5hbWUiOiJEaWdpZnlfc29mdCJ9fQ.', 'lbhITMYPzs0RvDRf-YhqbJ5r63rFUPnInfTnIG_T998'].join('');
-            const token = process.env.AUTOBOTCHAT_JWT_TOKEN || defaultJwt;
-            const username = process.env.AUTOBOTCHAT_USERNAME || 'Digify_soft';
+        const defaultJwt = ['eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.', 'eyJpYXQiOjE3NjA3MDY0NDYsImRhdGEiOnsidXNlcm5hbWUiOiJEaWdpZnlfc29mdCIsIm5hbWUiOiJEaWdpZnlfc29mdCJ9fQ.', 'lbhITMYPzs0RvDRf-YhqbJ5r63rFUPnInfTnIG_T998'].join('');
+        const token = process.env.AUTOBOTCHAT_JWT_TOKEN || defaultJwt;
+        const username = process.env.AUTOBOTCHAT_USERNAME || 'Digify_soft';
+        const metaToken = process.env.META_ACCESS_TOKEN || 'MOCK_TOKEN';
+        const wabaId = process.env.META_WABA_ID || 'MOCK_WABA';
 
+        // 1. Deliver the main text/interactive message
+        if (provider === 'AUTOBOTCHAT' || provider === 'META') {
             let payload;
             if (typeof replyObj === 'object' && replyObj.type === 'interactive') {
                 payload = {
@@ -134,22 +140,55 @@ async function sendOutboundWhatsAppMessage(phoneNumber, replyText, fallbackPhone
                 };
             }
 
-            const token = process.env.META_ACCESS_TOKEN || 'MOCK_TOKEN';
-            const wabaId = process.env.META_WABA_ID || 'MOCK_WABA';
-
-            if (token !== 'MOCK_TOKEN') {
+            if (metaToken !== 'MOCK_TOKEN') {
                 await axios.post(
                     `https://graph.facebook.com/v19.0/${wabaId}/messages`, 
                     payload, 
-                    { headers: { Authorization: `Bearer ${token}` } }
+                    { headers: { Authorization: `Bearer ${metaToken}` } }
                 );
+            }
+        }
+
+        // 2. Deliver the document (PDF) message if URL is provided
+        if (pdfUrl) {
+            console.log(`[Worker] Sending outbound PDF document to ${cleanPhone}: ${pdfUrl}`);
+            const docPayload = {
+                messaging_product: 'whatsapp',
+                recipient_type: 'individual',
+                to: cleanPhone,
+                type: 'document',
+                document: {
+                    link: pdfUrl,
+                    filename: pdfName || 'document.pdf',
+                    caption: pdfName ? `Here is your ${pdfName.replace('.pdf', '').replace(/_/g, ' ')}` : 'Requested PDF Document'
+                }
+            };
+
+            if (provider === 'AUTOBOTCHAT' || provider === 'META') {
+                if (token && token !== 'MOCK_TOKEN') {
+                    await axios.post(
+                        `https://wa20.nuke.co.in/v6/api/whatsapp/24/${username}/messages`, 
+                        docPayload, 
+                        { headers: { Authorization: `Bearer ${token}` } }
+                    );
+                    console.log(`[Worker] Sent PDF attachment via AutobotChat to ${cleanPhone}`);
+                }
+            } else {
+                if (metaToken !== 'MOCK_TOKEN') {
+                    await axios.post(
+                        `https://graph.facebook.com/v19.0/${wabaId}/messages`, 
+                        docPayload, 
+                        { headers: { Authorization: `Bearer ${metaToken}` } }
+                    );
+                    console.log(`[Worker] Sent PDF attachment via Meta WABA to ${cleanPhone}`);
+                }
             }
         }
     } catch (err) {
         const errData = err.response ? err.response.data : null;
         if (errData && errData.message && errData.message.includes('#100') && fallbackPhone && fallbackPhone !== phoneNumber) {
             console.warn(`[Worker] Recipient ${cleanPhone} restricted by Meta (#100). Retrying outbound delivery to WABA contact number ${fallbackPhone}...`);
-            await sendOutboundWhatsAppMessage(fallbackPhone, replyText, null);
+            await sendOutboundWhatsAppMessage(fallbackPhone, replyText, null, pdfUrl, pdfName);
         } else if (errData && errData.message && errData.message.includes('#100')) {
             console.warn(`[Worker] Meta WABA Delivery Warning for ${cleanPhone}: Recipient phone number is not an active WhatsApp account or blocked by Meta policy (#100 Invalid parameter).`);
         } else {
@@ -171,12 +210,80 @@ async function processMessageJob(data) {
     // 1. Get database instance for tenant
     const db = await getTenantDb(tenantId);
 
-    // 2. Parse text to extract intent & arguments
-    const parsed = await QueryParserService.parseMessage(messageText);
+    // 2. Parse text/audio to extract intent & arguments
+    let parsed = null;
+    let messageTextToParse = messageText;
+
+    if (data.isAudio) {
+        console.log(`[Worker] Processing incoming voice note...`);
+        try {
+            let downloadUrl = data.audioUrl;
+            const headers = {};
+
+            // If we have Meta mediaId, fetch the temporary download URL from Meta Graph API
+            if (data.mediaId && (!downloadUrl || downloadUrl === 'MOCK_AUDIO_URL')) {
+                const metaToken = process.env.META_ACCESS_TOKEN || 'MOCK_TOKEN';
+                if (metaToken && metaToken !== 'MOCK_TOKEN') {
+                    console.log(`[Worker] Resolving Meta Media URL for ID: ${data.mediaId}`);
+                    const metaRes = await axios.get(`https://graph.facebook.com/v19.0/${data.mediaId}`, {
+                        headers: { Authorization: `Bearer ${metaToken}` }
+                    });
+                    downloadUrl = metaRes.data.url;
+                    headers['Authorization'] = `Bearer ${metaToken}`;
+                }
+            }
+
+            if (downloadUrl && downloadUrl !== 'MOCK_AUDIO_URL') {
+                console.log(`[Worker] Downloading audio file from: ${downloadUrl}`);
+                const audioResponse = await axios.get(downloadUrl, {
+                    responseType: 'arraybuffer',
+                    headers: headers,
+                    timeout: 10000
+                });
+                const audioBuffer = Buffer.from(audioResponse.data);
+                const base64Audio = audioBuffer.toString('base64');
+                const mimeType = 'audio/ogg'; // WhatsApp voice notes are typically OGG format
+
+                // Try Gemini first if key exists
+                const geminiKey = process.env.GEMINI_API_KEY;
+                const groqKey = process.env.GROQ_API_KEY;
+
+                if (geminiKey && geminiKey !== 'your_gemini_api_key_here') {
+                    parsed = await QueryParserService.parseAudioMessage(base64Audio, mimeType);
+                } else if (groqKey && groqKey !== 'your_groq_api_key_here') {
+                    console.log(`[Worker] Transcribing voice note using Groq Whisper...`);
+                    const transcribedText = await QueryParserService.transcribeAudioWithGroq(audioBuffer, groqKey);
+                    if (transcribedText) {
+                        console.log(`[Worker] Voice note transcribed to text: "${transcribedText}"`);
+                        messageTextToParse = transcribedText;
+                    }
+                }
+
+                if (parsed && parsed.intent) {
+                    messageTextToParse = `[Voice Note: parsed as ${parsed.intent}]`;
+                }
+            } else {
+                console.warn(`[Worker] Could not resolve a valid audio download URL (Url: ${downloadUrl}, MediaId: ${data.mediaId})`);
+            }
+        } catch (audioErr) {
+            console.error(`[Worker] Failed to download or process audio:`, audioErr.message);
+        }
+    }
+
+    if (!parsed) {
+        parsed = await QueryParserService.parseMessage(messageTextToParse);
+    }
+
+    if (!parsed) {
+        parsed = { intent: 'UNKNOWN', args: {} };
+    }
+
     console.log(`[Worker] Parsed intent: ${parsed.intent}`, parsed.args);
 
     let resultData = null;
     let filePath = null;
+    let fileUrl = null;
+    let fileName = null;
 
     // 3. Execute deterministic ERP business services
     try {
@@ -223,6 +330,18 @@ async function processMessageJob(data) {
                 } catch (e) {
                     resultData = require('../mock_data/old_ledger_status.json');
                 }
+                if (resultData) {
+                    try {
+                        const port = process.env.PORT || 3000;
+                        fileName = `ledger_${phoneNumber}.pdf`;
+                        filePath = path.join(__dirname, '../public', fileName);
+                        await PDFGeneratorService.generateLedgerPDF(resultData, filePath);
+                        const baseUrl = process.env.API_BASE_URL || `http://localhost:${port}`;
+                        fileUrl = `${baseUrl}/public/${fileName}`;
+                    } catch (pdfErr) {
+                        console.error('[Worker] Failed to generate Ledger PDF:', pdfErr.message);
+                    }
+                }
                 break;
             case 'LAST_INVOICE_COPY':
                 try {
@@ -231,6 +350,18 @@ async function processMessageJob(data) {
                     resultData = res.data;
                 } catch (e) {
                     resultData = require('../mock_data/last_invoice_copy.json');
+                }
+                if (resultData) {
+                    try {
+                        const port = process.env.PORT || 3000;
+                        fileName = `invoice_${resultData.invoice_number || 'LATEST'}.pdf`;
+                        filePath = path.join(__dirname, '../public', fileName);
+                        await PDFGeneratorService.generateInvoicePDF(resultData, filePath);
+                        const baseUrl = process.env.API_BASE_URL || `http://localhost:${port}`;
+                        fileUrl = `${baseUrl}/public/${fileName}`;
+                    } catch (pdfErr) {
+                        console.error('[Worker] Failed to generate Invoice PDF:', pdfErr.message);
+                    }
                 }
                 break;
             case 'SHIPMENT_TRACKING':
@@ -272,10 +403,10 @@ async function processMessageJob(data) {
     const logMsg = typeof replyText === 'string' ? replyText : JSON.stringify(replyText);
     console.log(`[Worker] Outbound response to ${phoneNumber}: "${logMsg.replace(/\n/g, ' ')}"`);
     if (filePath) {
-        console.log(`[Worker] Attaching ledger document: ${filePath}`);
+        console.log(`[Worker] Attaching dynamic document: ${filePath} (URL: ${fileUrl})`);
     }
 
-    await sendOutboundWhatsAppMessage(phoneNumber, replyText, fallbackPhone);
+    await sendOutboundWhatsAppMessage(phoneNumber, replyText, fallbackPhone, fileUrl, fileName);
 
     return { replyText, filePath };
 }
