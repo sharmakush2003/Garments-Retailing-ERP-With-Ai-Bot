@@ -9,6 +9,7 @@ const getBaseUrl = () => process.env.API_BASE_URL || `http://localhost:${PORT}`;
 class InventoryService {
     /**
      * Queries stock availability for a specific SKU code.
+     * COMMENT: This function is to check stock.
      */
     static async getStockAvailability(db, skuIdOrCode, filters = {}) {
         try {
@@ -61,6 +62,7 @@ class InventoryService {
 
     /**
      * Resolves the wholesale price matching style and client pricing tier.
+     * COMMENT: This will get item price.
      */
     static async getItemPrice(db, skuId, tierId) {
         try {
@@ -84,6 +86,7 @@ class InventoryService {
 
     /**
      * Retrieves active pricing and discount schemes.
+     * COMMENT: This will find active pricing & discount schemes.
      */
     static async getActiveScheme(db, subtotal, totalQty) {
         try {
@@ -132,6 +135,7 @@ class InventoryService {
 
     /**
      * Get recently added products/styles.
+     * COMMENT: This gets recently added products & styles.
      */
     static async getNewArrivals(db, limit = 5) {
         try {
@@ -153,6 +157,7 @@ class InventoryService {
 
     /**
      * Get fastest selling/top selling products.
+     * COMMENT: This gets fastest selling & top selling products.
      */
     static async getFastestSelling(db, limit = 5) {
         try {
@@ -176,6 +181,7 @@ class InventoryService {
 
     /**
      * Get products by filters like price bounds, categories, garments, colors, sizes.
+     * COMMENT: This gets product filter by price bounds, categories, etc.
      */
     static async getProductsByFilters(db, filters = {}) {
         try {
