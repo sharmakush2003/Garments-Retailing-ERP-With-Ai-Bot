@@ -45,18 +45,23 @@ class QueryParserService {
         if (text === 'btn_stock' || text.includes('check stock') || text === '2') {
             return { intent: 'GUIDE_STOCK', args: {} };
         }
-        // Specific category price list selections
-        if (text.includes('price_kurti') || (text.includes('kurti') && text.includes('price') && !text.includes('check'))) {
-            return { intent: 'PRICE_LOOKUP', args: { garmentType: 'KURTI', skuCode: 'KURTI-FES-BLU-L' } };
+        // Specific category price list selection buttons
+        if (text === 'price_cat_kurti' || (text.includes('kurti') && text.includes('price') && !text.includes('check') && !text.includes('kurti-'))) {
+            return { intent: 'GUIDE_PRICE_KURTI', args: {} };
         }
-        if (text.includes('price_shirt') || (text.includes('shirt') && text.includes('price') && !text.includes('check'))) {
-            return { intent: 'PRICE_LOOKUP', args: { garmentType: 'SHIRT', skuCode: 'SHIRT-COT-WHT-L' } };
+        if (text === 'price_cat_shirt' || (text.includes('shirt') && text.includes('price') && !text.includes('check') && !text.includes('shirt-'))) {
+            return { intent: 'GUIDE_PRICE_SHIRT', args: {} };
         }
-        if (text.includes('price_pant') || (text.includes('pant') && text.includes('price') && !text.includes('check'))) {
-            return { intent: 'PRICE_LOOKUP', args: { garmentType: 'PANT', skuCode: 'PANT-DEN-BLU-L' } };
+        if (text === 'price_cat_pant' || (text.includes('pant') && text.includes('price') && !text.includes('check') && !text.includes('pant-'))) {
+            return { intent: 'GUIDE_PRICE_PANT', args: {} };
         }
-        if (text.includes('price_saree') || (text.includes('saree') && text.includes('price') && !text.includes('check'))) {
-            return { intent: 'PRICE_LOOKUP', args: { garmentType: 'SAREE', skuCode: 'SAREE-SIL-RED-FS' } };
+        if (text === 'price_cat_saree' || (text.includes('saree') && text.includes('price') && !text.includes('check') && !text.includes('saree-'))) {
+            return { intent: 'GUIDE_PRICE_SAREE', args: {} };
+        }
+
+        if (text.startsWith('price_sku_')) {
+            const skuCode = text.replace('price_sku_', '').toUpperCase();
+            return { intent: 'PRICE_LOOKUP', args: { skuCode: skuCode } };
         }
 
         if (text === 'btn_price' || text.includes('check price') || text.includes('wholesale rates') || text.includes('rate list') || text === '3') {
@@ -131,6 +136,16 @@ class QueryParserService {
 
         // Pricing Rate queries
         if (text.includes('rate') || text.includes('price') || text.includes('bhao') || text.includes('price list')) {
+            const hasSpecificSku = text.includes('kurti-') || text.includes('shirt-') || text.includes('pant-') || text.includes('saree-') || text.match(/(?:style|sku|code|design|product)\s*#?\s*(\d+)/i) || text.match(/(?<!\d)(\d{3,4})(?!\d)/);
+            if (hasSpecificSku) {
+                let detectedSku = 'KURTI-FES-BLU-L'; // default fallback
+                const matches = text.match(/\b([a-z0-9]+(?:-[a-z0-9]+)+)\b/i);
+                if (matches) detectedSku = matches[1].toUpperCase();
+                return {
+                    intent: 'PRICE_LOOKUP',
+                    args: { skuCode: detectedSku }
+                };
+            }
             return {
                 intent: 'GUIDE_PRICE',
                 args: {}
@@ -367,10 +382,108 @@ class QueryParserService {
                                 {
                                     title: 'Price Categories 🏷️',
                                     rows: [
-                                        { id: 'price_kurti', title: '👗 Kurti Price Card', description: 'Wholesale rates for Kurtis' },
-                                        { id: 'price_shirt', title: '👔 Shirt Price Card', description: 'Wholesale rates for Shirts' },
-                                        { id: 'price_pant', title: '👖 Pant Price Card', description: 'Wholesale rates for Pants' },
-                                        { id: 'price_saree', title: '🥻 Saree Price Card', description: 'Wholesale rates for Sarees' }
+                                        { id: 'price_cat_kurti', title: '👗 Kurti Price Card', description: 'Wholesale rates for Kurtis' },
+                                        { id: 'price_cat_shirt', title: '👔 Shirt Price Card', description: 'Wholesale rates for Shirts' },
+                                        { id: 'price_cat_pant', title: '👖 Pant Price Card', description: 'Wholesale rates for Pants' },
+                                        { id: 'price_cat_saree', title: '🥻 Saree Price Card', description: 'Wholesale rates for Sarees' }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                };
+
+            case 'GUIDE_PRICE_KURTI':
+                return {
+                    type: 'interactive',
+                    interactive: {
+                        type: 'list',
+                        header: { type: 'text', text: 'Kurti Wholesale Prices 👗' },
+                        body: { text: 'Please select which Kurti design\'s wholesale price you want to check, dear! 💖👇' },
+                        footer: { text: 'Digify Soft Solutions Kaira 💁‍♀️ Chatbot' },
+                        action: {
+                            button: 'Select Kurti 👗',
+                            sections: [
+                                {
+                                    title: 'Kurti Designs 👗',
+                                    rows: [
+                                        { id: 'price_sku_KURTI-FES-BLU-L', title: 'Festive Silk - Blue L', description: 'SKU: KURTI-FES-BLU-L' },
+                                        { id: 'price_sku_KURTI-FES-RED-M', title: 'Festive Silk - Red M', description: 'SKU: KURTI-FES-RED-M' },
+                                        { id: 'price_sku_KURTI-FES-GRN-S', title: 'Festive Silk - Green S', description: 'SKU: KURTI-FES-GRN-S' },
+                                        { id: 'price_sku_KURTI-FES-PUR-M', title: 'Festive Silk - Purple M', description: 'SKU: KURTI-FES-PUR-M' }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                };
+
+            case 'GUIDE_PRICE_SHIRT':
+                return {
+                    type: 'interactive',
+                    interactive: {
+                        type: 'list',
+                        header: { type: 'text', text: 'Shirt Wholesale Prices 👔' },
+                        body: { text: 'Please select which Shirt design\'s wholesale price you want to check, dear! 💖👇' },
+                        footer: { text: 'Digify Soft Solutions Kaira 💁‍♀️ Chatbot' },
+                        action: {
+                            button: 'Select Shirt 👔',
+                            sections: [
+                                {
+                                    title: 'Shirt Designs 👔',
+                                    rows: [
+                                        { id: 'price_sku_SHIRT-COT-WHT-L', title: 'Casual Cotton - White L', description: 'SKU: SHIRT-COT-WHT-L' },
+                                        { id: 'price_sku_SHIRT-COT-BLK-XL', title: 'Casual Cotton - Black XL', description: 'SKU: SHIRT-COT-BLK-XL' },
+                                        { id: 'price_sku_SHIRT-COT-BLU-M', title: 'Casual Cotton - Blue M', description: 'SKU: SHIRT-COT-BLU-M' },
+                                        { id: 'price_sku_SHIRT-COT-PNK-M', title: 'Casual Cotton - Pink M', description: 'SKU: SHIRT-COT-PNK-M' }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                };
+
+            case 'GUIDE_PRICE_PANT':
+                return {
+                    type: 'interactive',
+                    interactive: {
+                        type: 'list',
+                        header: { type: 'text', text: 'Pant Wholesale Prices 👖' },
+                        body: { text: 'Please select which Pant design\'s wholesale price you want to check, dear! 💖👇' },
+                        footer: { text: 'Digify Soft Solutions Kaira 💁‍♀️ Chatbot' },
+                        action: {
+                            button: 'Select Pant 👖',
+                            sections: [
+                                {
+                                    title: 'Pant Designs 👖',
+                                    rows: [
+                                        { id: 'price_sku_PANT-DEN-BLU-L', title: 'Slim Fit Denim - Blue L', description: 'SKU: PANT-DEN-BLU-L' },
+                                        { id: 'price_sku_PANT-DEN-BLK-M', title: 'Slim Fit Denim - Black M', description: 'SKU: PANT-DEN-BLK-M' },
+                                        { id: 'price_sku_PANT-DEN-GRY-M', title: 'Slim Fit Denim - Grey M', description: 'SKU: PANT-DEN-GRY-M' }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                };
+
+            case 'GUIDE_PRICE_SAREE':
+                return {
+                    type: 'interactive',
+                    interactive: {
+                        type: 'list',
+                        header: { type: 'text', text: 'Saree Wholesale Prices 🥻' },
+                        body: { text: 'Please select which Saree design\'s wholesale price you want to check, dear! 💖👇' },
+                        footer: { text: 'Digify Soft Solutions Kaira 💁‍♀️ Chatbot' },
+                        action: {
+                            button: 'Select Saree 🥻',
+                            sections: [
+                                {
+                                    title: 'Saree Designs 🥻',
+                                    rows: [
+                                        { id: 'price_sku_SAREE-SIL-RED-FS', title: 'Traditional Silk - Red FreeSize', description: 'SKU: SAREE-SIL-RED-FS' },
+                                        { id: 'price_sku_SAREE-SIL-PNK-FS', title: 'Traditional Silk - Pink FreeSize', description: 'SKU: SAREE-SIL-PNK-FS' },
+                                        { id: 'price_sku_SAREE-SIL-YLW-FS', title: 'Traditional Silk - Yellow FreeSize', description: 'SKU: SAREE-SIL-YLW-FS' }
                                     ]
                                 }
                             ]

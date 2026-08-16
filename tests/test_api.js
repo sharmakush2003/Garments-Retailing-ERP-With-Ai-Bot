@@ -51,7 +51,7 @@ const server = app.listen(PORT, async () => {
 
         // Test Case 4: Price Lookup
         console.log('\n--- Running Test Case 4: Wholesale Rate check ---');
-        const parsed4 = await QueryParserService.parseMessage('What is the wholesale price of Kurti?');
+        const parsed4 = await QueryParserService.parseMessage('What is the wholesale price of SKU KURTI-FES-BLU-L?');
         assert.strictEqual(parsed4.intent, 'PRICE_LOOKUP');
         const skuObj = await InventoryService.getStockAvailability(db, parsed4.args.skuCode, parsed4.args);
         const priceVal = await InventoryService.getItemPrice(db, skuObj.sku_id, 1);
