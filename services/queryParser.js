@@ -518,9 +518,6 @@ Do not include any markdown formatting, comments, or extra text in your output. 
         
         switch (intent) {
             case 'GREETING':
-                if (context.chatReply) {
-                    return context.chatReply;
-                }
                 return {
                     type: 'interactive',
                     interactive: {
@@ -530,7 +527,7 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                             text: `${context.companyName || 'Kaira'} 💁‍♀️`
                         },
                         body: {
-                            text: `👋 Welcome to *Digifys Soft Solutions Garments*! 🙏\n\nI am *Kaira* 💁‍♀️, your helper today. How can I help you, dear? Please select an option below: ✨\n\n⚠️ *Note:* I am Kaira, your AI chatbot helper 🤖, so I can sometimes make little mistakes. If you are taking any final or financial decisions, please verify them manually once! 🌸💖`
+                            text: context.chatReply || `👋 Welcome to *Digifys Soft Solutions Garments*! 🙏\n\nI am *Kaira* 💁‍♀️, your helper today. How can I help you, dear? Please select an option below: ✨\n\n⚠️ *Note:* I am Kaira, your AI chatbot helper 🤖, so I can sometimes make little mistakes. If you are taking any final or financial decisions, please verify them manually once! 🌸💖`
                         },
                         footer: {
                             text: 'Digify Soft Solutions Kaira 💁‍♀️ Chatbot'
@@ -984,10 +981,40 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                 return `💰 *Outstanding Status*: No outstanding profile found for your account, dear! 🥺`;
 
             default:
-                if (context.chatReply) {
-                    return context.chatReply;
-                }
-                return `Welcome to Kaira support! 💁‍♀️ How may I help you today, dear? 🌸\n1. Check Stock 📦\n2. Check Price 🏷️\n3. View Catalogue 📖`;
+                return {
+                    type: 'interactive',
+                    interactive: {
+                        type: 'list',
+                        header: {
+                            type: 'text',
+                            text: `${context.companyName || 'Kaira'} 💁‍♀️`
+                        },
+                        body: {
+                            text: context.chatReply || `Welcome to Kaira support! 💁‍♀️ How may I help you today, dear? 🌸\n\nSelect an option below to check your account status, catalog, or stock:`
+                        },
+                        footer: {
+                            text: 'Digify Soft Solutions Kaira 💁‍♀️ Chatbot'
+                        },
+                        action: {
+                            button: 'View Options 📋',
+                            sections: [
+                                {
+                                    title: 'Assistant Menu 📋',
+                                    rows: [
+                                        { id: 'btn_catalogue', title: '1️⃣ Products Catalog ✨', description: 'Show all available products' },
+                                        { id: 'btn_stock', title: '2️⃣ Check Stock 📦', description: 'Check color & size availability' },
+                                        { id: 'btn_price', title: '3️⃣ Check Price 🏷️', description: 'Get wholesale tier rates' },
+                                        { id: 'btn_ledger', title: '4️⃣ Ledger Status 📒', description: 'Statement of accounts/ledger' },
+                                        { id: 'btn_tracking', title: '5️⃣ Shipment Tracking 📍', description: 'Track active shipment location' },
+                                        { id: 'btn_outstanding', title: '6️⃣ Outstanding Credit 💰', description: 'Check credit limits & due balances' },
+                                        { id: 'btn_invoice', title: '7️⃣ Last Invoice Copy 📄', description: 'Get copy of your latest invoice' },
+                                        { id: 'btn_past_shipments', title: '8️⃣ Past Shipments 🚚', description: 'View historical completed dispatches' }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                };
         }
     }
 }
