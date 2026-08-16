@@ -278,10 +278,10 @@ async function processMessageJob(data) {
         parsed = { intent: 'UNKNOWN', args: {} };
     }
 
-    // Intercept personal account inquiries when no name is matched/provided in the query
+    // Intercept personal account inquiries when no phone number is matched/provided in the query
     const personalIntents = ['OLD_LEDGER_STATUS', 'OUTSTANDING_LOOKUP', 'LAST_INVOICE_COPY', 'OLD_SHIPMENT_INQUIRY'];
     if (personalIntents.includes(parsed.intent) && (!parsed.args || !parsed.args.overridePhone)) {
-        parsed.intent = 'ASK_USER_NAME';
+        parsed.intent = 'ASK_USER_PHONE';
     }
 
     console.log(`[Worker] Parsed intent: ${parsed.intent}`, parsed.args);

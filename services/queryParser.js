@@ -287,12 +287,13 @@ Do not include any markdown formatting, comments, or extra text in your output. 
             users = [];
         }
 
-        // Check if the query contains a name from users.json
+        // Check if the query contains a phone number from users.json
+        const cleanDigits = text.replace(/[^0-9]/g, '');
         const matchedUser = users.find(u => {
-            const nameLower = u.name.toLowerCase();
-            const companyLower = u.company_name.toLowerCase();
-            return text.includes(nameLower) || text.includes(companyLower) ||
-                   (nameLower.split(/\s+/).filter(part => part.length > 3).some(part => text.includes(part)));
+            if (!u.phone_number) return false;
+            const uPhoneClean = u.phone_number.replace(/[^0-9]/g, '');
+            return (cleanDigits && uPhoneClean.includes(cleanDigits) && cleanDigits.length >= 10) || 
+                   (cleanDigits && cleanDigits.includes(uPhoneClean) && cleanDigits.length >= 10);
         });
 
         // 1. Direct button clicks override
@@ -309,7 +310,7 @@ Do not include any markdown formatting, comments, or extra text in your output. 
             return { intent: 'OLD_SHIPMENT_INQUIRY', args: { overridePhone: text.replace('btn_user_shipments_', '') } };
         }
 
-        // 2. If a customer name and an ERP action are both present in the query
+        // 2. If a customer phone number and an ERP action are both present in the query
         if (matchedUser) {
             let mappedIntent = null;
             if (text.includes('outstanding') || text.includes('credit') || text.includes('due') || text.includes('baki')) {
@@ -327,7 +328,7 @@ Do not include any markdown formatting, comments, or extra text in your output. 
             }
         }
 
-        // 3. If the query contains a matched user name and does not match any other transactional intents
+        // 3. If the query contains a matched phone number and does not match any other transactional intents
         const transactionalIntents = [
             'INVENTORY_LOOKUP', 'PRICE_LOOKUP', 'PRODUCT_FILTERED', 'COLOURS_LOOKUP', 'SIZES_LOOKUP',
             'OLD_LEDGER_STATUS', 'OUTSTANDING_LOOKUP', 'LAST_INVOICE_COPY', 'OLD_SHIPMENT_INQUIRY'
@@ -1057,13 +1058,13 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                 }
                 return `💰 *Outstanding Status*: No outstanding profile found for your account, dear! 🥺`;
 
-            case 'ASK_USER_NAME':
-                return `Sure, dear! 🌸 Please tell me your registered name (e.g. *Kush Sharma* or *Aarav Patel*) so I can verify your account and check your details!`;
+            case 'ASK_USER_PHONE':
+                return `Sure, dear! 🌸 Please enter your registered WhatsApp phone number (e.g. *917425016636*) so I can verify your account and check your details!`;
 
             case 'IDENTITY_RESOLVED':
                 const matchedUser = context.args ? context.args.user : null;
                 if (!matchedUser) {
-                    return `I couldn't verify your profile, dear! 🥺 Please reply with your registered name so I can try again.`;
+                    return `I couldn't verify your profile, dear! 🥺 Please reply with your registered phone number so I can try again.`;
                 }
                 const uName = matchedUser.name;
                 const company = matchedUser.company_name;
