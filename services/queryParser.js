@@ -39,7 +39,7 @@ Available Intents:
 - 'LAST_INVOICE_COPY': Asking for a copy of the latest or last invoice.
 - 'SHIPMENT_TRACKING': Tracking active shipments ("where has it reached", "status of order").
 - 'OUTSTANDING_LOOKUP': Querying credit limit, due balance, or outstanding amount.
-- 'ORDER_FLOW_TRIGGER': User wants to book or place a new order / purchase garments.
+- 'ORDER_FLOW_TRIGGER': User wants to start or open a new order booking form (e.g., "book order", "place order", "order form"). Note: If the user query specifies style, quantity, size, or color to order (e.g. "Book 12 pieces of red kurta"), classify it as INVENTORY_LOOKUP instead so we can check stock.
 
 Parameters to extract in 'args' object (use null if not mentioned):
 - 'skuCode': Standardized style code (e.g. "KURTI-FES-BLU-L") or numeric style/design code (e.g. "102", "110").
@@ -159,7 +159,7 @@ Available Intents:
 - 'LAST_INVOICE_COPY': Asking for a copy of the latest or last invoice.
 - 'SHIPMENT_TRACKING': Tracking active shipments ("where has it reached", "status of order").
 - 'OUTSTANDING_LOOKUP': Querying credit limit, due balance, or outstanding amount.
-- 'ORDER_FLOW_TRIGGER': User wants to book or place a new order / purchase garments.
+- 'ORDER_FLOW_TRIGGER': User wants to start or open a new order booking form (e.g., "book order", "place order", "order form"). Note: If the user query specifies style, quantity, size, or color to order (e.g. "Book 12 pieces of red kurta"), classify it as INVENTORY_LOOKUP instead so we can check stock.
 
 Parameters to extract in 'args' object (use null if not mentioned):
 - 'skuCode': Standardized style code (e.g. "KURTI-FES-BLU-L") or numeric style/design code (e.g. "102", "110").
@@ -446,7 +446,7 @@ Do not include any markdown formatting, comments, or extra text in your output. 
             'xxl': 'XXL', 'xs': 'XS'
         };
         const garmentMap = {
-            'kurti': 'KURTI', 'kurtis': 'KURTI', 'shirt': 'SHIRT',
+            'kurti': 'KURTI', 'kurtis': 'KURTI', 'kurta': 'KURTI', 'kurtas': 'KURTI', 'shirt': 'SHIRT',
             'pant': 'PANT', 'pants': 'PANT', 'saree': 'SAREE',
             'dress': 'DRESS', 'top': 'TOP', 'lehenga': 'LEHENGA'
         };
@@ -557,6 +557,10 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                 };
 
             case 'ORDER_FLOW_TRIGGER':
+                if (!process.env.META_FLOW_ID || process.env.META_FLOW_ID === '1234567890') {
+                    // Fallback to text instructions if Flow ID is not yet configured or is mock
+                    return `Dear customer, please check your WhatsApp Flow configuration in .env. To start ordering, you can select '1️⃣ Products Catalog' from the main menu, or simply type what you want to order (e.g. "Check stock for kurti" or "Book 12 Kurtis L RED") and I will assist you! 🌸`;
+                }
                 return {
                     type: 'interactive',
                     interactive: {
@@ -576,7 +580,7 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                             parameters: {
                                 flow_message_version: '3',
                                 flow_token: `order_token_${Date.now()}`,
-                                flow_id: process.env.META_FLOW_ID || '1234567890',
+                                flow_id: process.env.META_FLOW_ID,
                                 flow_cta: 'Open Order Form 📋',
                                 flow_action: 'navigate',
                                 flow_action_payload: {
