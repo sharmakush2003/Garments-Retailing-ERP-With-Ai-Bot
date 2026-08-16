@@ -558,8 +558,37 @@ Do not include any markdown formatting, comments, or extra text in your output. 
 
             case 'ORDER_FLOW_TRIGGER':
                 if (!process.env.META_FLOW_ID || process.env.META_FLOW_ID === '1234567890') {
-                    // Fallback to text instructions if Flow ID is not yet configured or is mock
-                    return `Dear customer, please check your WhatsApp Flow configuration in .env. To start ordering, you can select '1️⃣ Products Catalog' from the main menu, or simply type what you want to order (e.g. "Check stock for kurti" or "Book 12 Kurtis L RED") and I will assist you! 🌸`;
+                    // Fallback to Guide Catalogue interactive list if Flow is not configured
+                    return {
+                        type: 'interactive',
+                        interactive: {
+                            type: 'list',
+                            header: {
+                                type: 'text',
+                                text: 'Products Catalog 📖'
+                            },
+                            body: {
+                                text: 'Dear customer, please select a category below to see our latest designs and place your order directly! 🌸✨'
+                            },
+                            footer: {
+                                text: 'Digify Soft Solutions Kaira 💁‍♀️ Chatbot'
+                            },
+                            action: {
+                                button: 'Select Category 📂',
+                                sections: [
+                                    {
+                                        title: 'Categories 🏷️',
+                                        rows: [
+                                            { id: 'cat_kurti', title: '1️⃣ Kurti 👗', description: 'Festive & Casual Kurtis' },
+                                            { id: 'cat_shirt', title: '2️⃣ Shirt 👔', description: 'Casual & Cotton Shirts' },
+                                            { id: 'cat_pant', title: '3️⃣ Pant 👖', description: 'Cotton & Denim Pants' },
+                                            { id: 'cat_saree', title: '4️⃣ Saree 🥻', description: 'Silk & Designer Sarees' }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    };
                 }
                 return {
                     type: 'interactive',
