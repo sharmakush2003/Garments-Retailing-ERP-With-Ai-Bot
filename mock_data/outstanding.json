@@ -30,5 +30,53 @@
       "overdue_30_60_days": 0.00,
       "overdue_60_plus_days": 0.00
     }
+  },
+  {
+    "customer_id": 3,
+    "customer_name": "Verma Garments",
+    "phone": "917778889999",
+    "outstanding_balance": 75000.00,
+    "credit_limit": 300000.00,
+    "available_credit": 225000.00,
+    "used_credit": 75000.00,
+    "payment_terms": "Net 30 Days",
+    "due_date_summary": {
+      "not_due_yet": 50000.00,
+      "overdue_0_30_days": 25000.00,
+      "overdue_30_60_days": 0.00,
+      "overdue_60_plus_days": 0.00
+    }
+  },
+  {
+    "customer_id": 4,
+    "customer_name": "Sunita Sharma Boutique",
+    "phone": "916665554444",
+    "outstanding_balance": 18200.00,
+    "credit_limit": 150000.00,
+    "available_credit": 131800.00,
+    "used_credit": 18200.00,
+    "payment_terms": "Net 15 Days",
+    "due_date_summary": {
+      "not_due_yet": 10000.00,
+      "overdue_0_30_days": 8200.00,
+      "overdue_30_60_days": 0.00,
+      "overdue_60_plus_days": 0.00
+    }
+  },
+  {
+    "customer_id": 5,
+    "customer_name": "Joshi Retail Store",
+    "phone": "914443332222",
+    "outstanding_balance": 0.00,
+    "credit_limit": 200000.00,
+    "available_credit": 200000.00,
+    "used_credit": 0.00,
+    "payment_terms": "Net 15 Days",
+    "due_date_summary": {
+      "not_due_yet": 0.00,
+      "overdue_0_30_days": 0.00,
+      "overdue_30_60_days": 0.00,
+      "overdue_60_plus_days": 0.00
+    }
   }
 ]

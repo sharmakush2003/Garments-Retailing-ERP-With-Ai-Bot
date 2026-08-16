@@ -259,13 +259,86 @@ Do not include any markdown formatting, comments, or extra text in your output. 
      * Parse incoming message text into structured intent and parameters.
      */
     static async parseMessage(messageText) {
-        // Try LLM parsing if configured
         const llmResult = await this.parseMessageWithLLM(messageText);
-        if (llmResult && llmResult.intent) {
-            console.log('[QueryParserService] Successfully parsed query using LLM:', llmResult);
-            return llmResult;
+        let parsed = llmResult;
+
+        if (parsed && parsed.intent) {
+            console.log('[QueryParserService] Successfully parsed query using LLM:', parsed);
+        } else {
+            parsed = await this.parseMessageWithRegex(messageText);
         }
 
+        return this.postProcessParsedMessage(messageText, parsed);
+    }
+
+    /**
+     * Post-processes parsed message to inject name-matching and verification flows.
+     */
+    static postProcessParsedMessage(messageText, parsed) {
+        if (!parsed) {
+            parsed = { intent: 'UNKNOWN', args: {} };
+        }
+
+        const text = messageText.toLowerCase().trim();
+        let users;
+        try {
+            users = require('../mock_data/users.json');
+        } catch (e) {
+            users = [];
+        }
+
+        // Check if the query contains a name from users.json
+        const matchedUser = users.find(u => {
+            const nameLower = u.name.toLowerCase();
+            const companyLower = u.company_name.toLowerCase();
+            return text.includes(nameLower) || text.includes(companyLower) ||
+                   (nameLower.split(/\s+/).filter(part => part.length > 3).some(part => text.includes(part)));
+        });
+
+        // 1. Direct button clicks override
+        if (text.startsWith('btn_user_outstanding_')) {
+            return { intent: 'OUTSTANDING_LOOKUP', args: { overridePhone: text.replace('btn_user_outstanding_', '') } };
+        }
+        if (text.startsWith('btn_user_ledger_')) {
+            return { intent: 'OLD_LEDGER_STATUS', args: { overridePhone: text.replace('btn_user_ledger_', '') } };
+        }
+        if (text.startsWith('btn_user_invoice_')) {
+            return { intent: 'LAST_INVOICE_COPY', args: { overridePhone: text.replace('btn_user_invoice_', '') } };
+        }
+        if (text.startsWith('btn_user_shipments_')) {
+            return { intent: 'OLD_SHIPMENT_INQUIRY', args: { overridePhone: text.replace('btn_user_shipments_', '') } };
+        }
+
+        // 2. If a customer name and an ERP action are both present in the query
+        if (matchedUser) {
+            let mappedIntent = null;
+            if (text.includes('outstanding') || text.includes('credit') || text.includes('due') || text.includes('baki')) {
+                mappedIntent = 'OUTSTANDING_LOOKUP';
+            } else if (text.includes('ledger') || text.includes('statement') || text.includes('khata')) {
+                mappedIntent = 'OLD_LEDGER_STATUS';
+            } else if (text.includes('invoice') || text.includes('bill') || text.includes('copy')) {
+                mappedIntent = 'LAST_INVOICE_COPY';
+            } else if (text.includes('shipment') || text.includes('dispatch') || text.includes('delivery')) {
+                mappedIntent = 'OLD_SHIPMENT_INQUIRY';
+            }
+
+            if (mappedIntent) {
+                return { intent: mappedIntent, args: { overridePhone: matchedUser.phone_number } };
+            }
+        }
+
+        // 3. If the query is just the name (e.g. Kush Sharma)
+        if (matchedUser && (text === matchedUser.name.toLowerCase() || text === matchedUser.company_name.toLowerCase() || text.includes('my name is') || text.includes('i am') || text.includes('hoon'))) {
+            return { intent: 'IDENTITY_RESOLVED', args: { user: matchedUser } };
+        }
+
+        return parsed;
+    }
+
+    /**
+     * Fallback Regex parser.
+     */
+    static async parseMessageWithRegex(messageText) {
         const text = messageText.toLowerCase().trim();
 
         // 1. Detect interactive button/list clicks or category selections
@@ -979,6 +1052,48 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                     return `💰 *Credit & Outstanding Status Summary* 📊\n_________________________\n\n👤 *Customer*: ${data.customer_name}\n📞 *Registered Phone*: ${data.phone}\n\n💸 *Total Outstanding*: *₹${data.outstanding_balance}* 💳\n🛡️ *Credit Limit*: ₹${data.credit_limit}\n✅ *Available Credit*: ₹${data.available_credit}\n⏳ *Payment Terms*: ${data.payment_terms}\n\n📅 *Aging Summary (Overdue status)*:\n• Not Due Yet: ₹${data.due_date_summary.not_due_yet}\n• 0-30 Days Overdue: *₹${data.due_date_summary.overdue_0_30_days}* ⚠️\n• 31-60 Days Overdue: ₹${data.due_date_summary.overdue_30_60_days}\n• 60+ Days Overdue: ₹${data.due_date_summary.overdue_60_plus_days}\n\n💬 Please clear overdue bills at your earliest convenience, dear! 🌸`;
                 }
                 return `💰 *Outstanding Status*: No outstanding profile found for your account, dear! 🥺`;
+
+            case 'ASK_USER_NAME':
+                return `Sure, dear! 🌸 Please tell me your registered name (e.g. *Kush Sharma* or *Aarav Patel*) so I can verify your account and check your details!`;
+
+            case 'IDENTITY_RESOLVED':
+                const matchedUser = context.args ? context.args.user : null;
+                if (!matchedUser) {
+                    return `I couldn't verify your profile, dear! 🥺 Please reply with your registered name so I can try again.`;
+                }
+                const uName = matchedUser.name;
+                const company = matchedUser.company_name;
+                
+                return {
+                    type: 'interactive',
+                    interactive: {
+                        type: 'list',
+                        header: {
+                            type: 'text',
+                            text: `Welcome, ${uName}! 🌸`
+                        },
+                        body: {
+                            text: `I have found your account for *${company}*. Please select which detail you would like to check today, dear: 👇`
+                        },
+                        footer: {
+                            text: 'Kaira Support Assistant'
+                        },
+                        action: {
+                            button: 'Select Action 📋',
+                            sections: [
+                                {
+                                    title: 'Account Actions 📋',
+                                    rows: [
+                                        { id: `btn_user_outstanding_${matchedUser.phone_number}`, title: '1️⃣ Outstanding Credit 💰', description: `Check credit status of ${company}` },
+                                        { id: `btn_user_ledger_${matchedUser.phone_number}`, title: '2️⃣ Account Ledger 📒', description: `Statement of accounts for ${company}` },
+                                        { id: `btn_user_invoice_${matchedUser.phone_number}`, title: '3️⃣ Last Invoice Copy 📄', description: `Get latest invoice for ${company}` },
+                                        { id: `btn_user_shipments_${matchedUser.phone_number}`, title: '4️⃣ Past Shipments 🚚', description: `View dispatch history of ${company}` }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                };
 
             default:
                 return {

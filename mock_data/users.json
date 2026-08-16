@@ -1,0 +1,112 @@
+[
+  {
+    "id": 1,
+    "name": "Aarav Mehta",
+    "phone_number": "919876543210",
+    "email": "aarav.mehta@kairafashion.com",
+    "role": "Owner",
+    "tenant_id": "Co_102",
+    "erp_customer_id": null,
+    "company_name": "Kaira",
+    "status": "Active"
+  },
+  {
+    "id": 2,
+    "name": "Kush Sharma",
+    "phone_number": "917425016636",
+    "email": "kush.sharma@sharmaretails.in",
+    "role": "Customer",
+    "tenant_id": "Co_102",
+    "erp_customer_id": 2,
+    "company_name": "Kush Sharma Retailers",
+    "status": "Active"
+  },
+  {
+    "id": 3,
+    "name": "Aarav Patel",
+    "phone_number": "919045099111",
+    "email": "aarav.patel@aaravwholesalers.com",
+    "role": "Customer",
+    "tenant_id": "Co_102",
+    "erp_customer_id": 1,
+    "company_name": "Aarav Wholesalers",
+    "status": "Active"
+  },
+  {
+    "id": 4,
+    "name": "Priya Singh",
+    "phone_number": "918233816674",
+    "email": "priya.singh@kairafashion.com",
+    "role": "Sales",
+    "tenant_id": "Co_102",
+    "erp_customer_id": null,
+    "company_name": "Kaira",
+    "status": "Active"
+  },
+  {
+    "id": 5,
+    "name": "Rajesh Kumar",
+    "phone_number": "919988776655",
+    "email": "rajesh@rajeshtextiles.com",
+    "role": "Vendor",
+    "tenant_id": "Co_102",
+    "erp_customer_id": null,
+    "company_name": "Rajesh Textiles",
+    "status": "Active"
+  },
+  {
+    "id": 6,
+    "name": "Neha Gupta",
+    "phone_number": "918887776666",
+    "email": "neha.gupta@kairafashion.com",
+    "role": "Sales",
+    "tenant_id": "Co_102",
+    "erp_customer_id": null,
+    "company_name": "Kaira",
+    "status": "Active"
+  },
+  {
+    "id": 7,
+    "name": "Amit Verma",
+    "phone_number": "917778889999",
+    "email": "amit.verma@vermagarments.in",
+    "role": "Customer",
+    "tenant_id": "Co_102",
+    "erp_customer_id": 3,
+    "company_name": "Verma Garments",
+    "status": "Active"
+  },
+  {
+    "id": 8,
+    "name": "Sunita Sharma",
+    "phone_number": "916665554444",
+    "email": "sunita@sunitaboutique.com",
+    "role": "Customer",
+    "tenant_id": "Co_102",
+    "erp_customer_id": 4,
+    "company_name": "Sunita Boutique",
+    "status": "Active"
+  },
+  {
+    "id": 9,
+    "name": "Vikram Rathore",
+    "phone_number": "915554443333",
+    "email": "vikram@rathorefabricmill.com",
+    "role": "Vendor",
+    "tenant_id": "Co_102",
+    "erp_customer_id": null,
+    "company_name": "Rathore Fabric Mill",
+    "status": "Active"
+  },
+  {
+    "id": 10,
+    "name": "Divya Joshi",
+    "phone_number": "914443332222",
+    "email": "divya@joshiretails.in",
+    "role": "Customer",
+    "tenant_id": "Co_102",
+    "erp_customer_id": 5,
+    "company_name": "Joshi Retail Store",
+    "status": "Active"
+  }
+]

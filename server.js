@@ -173,27 +173,46 @@ app.get('/api/mock/subcategories', (req, res) => {
 // 6. Get old shipment inquiry (all/completed shipments)
 app.get('/api/mock/old-shipments', (req, res) => {
     const items = require('./mock_data/old_shipment_inquiry.json');
-    res.json(items);
+    const { phone } = req.query;
+    if (phone) {
+        const match = items.find(i => i.phone && (i.phone.includes(phone) || phone.includes(i.phone)));
+        if (match) return res.json(match.shipments || []);
+    }
+    res.json(items[0] ? items[0].shipments || [] : []);
 });
 
 // 7. Get old ledger status
 app.get('/api/mock/old-ledger-status', (req, res) => {
     const items = require('./mock_data/old_ledger_status.json');
-    res.json(items);
+    const { phone } = req.query;
+    if (phone) {
+        const match = items.find(i => i.phone && (i.phone.includes(phone) || phone.includes(i.phone)));
+        if (match) return res.json(match.transactions || []);
+    }
+    res.json(items[0] ? items[0].transactions || [] : []);
 });
 
 // 8. Get last invoice copy
 app.get('/api/mock/last-invoice-copy', (req, res) => {
-    const item = require('./mock_data/last_invoice_copy.json');
-    res.json(item);
+    const items = require('./mock_data/last_invoice_copy.json');
+    const { phone } = req.query;
+    if (phone) {
+        const match = items.find(i => i.phone && (i.phone.includes(phone) || phone.includes(i.phone)));
+        if (match) return res.json(match);
+    }
+    res.json(items[0] || {});
 });
 
 // 9. Get active shipment tracking status
 app.get('/api/mock/shipment-status', (req, res) => {
     const items = require('./mock_data/shipment_status.json');
-    const { orderId } = req.query;
+    const { orderId, phone } = req.query;
     if (orderId) {
         const match = items.find(i => i.order_id === parseInt(orderId));
+        if (match) return res.json(match);
+    }
+    if (phone) {
+        const match = items.find(i => i.phone && (i.phone.includes(phone) || phone.includes(i.phone)));
         if (match) return res.json(match);
     }
     res.json(items[0] || {});
@@ -204,7 +223,7 @@ app.get('/api/mock/outstanding', (req, res) => {
     const items = require('./mock_data/outstanding.json');
     const { phone } = req.query;
     if (phone) {
-        const match = items.find(i => i.phone.includes(phone) || phone.includes(i.phone));
+        const match = items.find(i => i.phone && (i.phone.includes(phone) || phone.includes(i.phone)));
         if (match) return res.json(match);
     }
     res.json(items[0] || {});

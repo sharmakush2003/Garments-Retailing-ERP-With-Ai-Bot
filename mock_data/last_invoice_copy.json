@@ -1,37 +1,173 @@
-{
-  "invoice_number": "INV-2026-003",
-  "invoice_date": "2026-08-10",
-  "order_id": 1012,
-  "customer_name": "Aarav Wholesalers",
-  "phone": "919045099111",
-  "billing_address": "Shop 42, Textile Market, Ring Road, Surat, Gujarat - 395002",
-  "shipping_address": "Shop 42, Textile Market, Ring Road, Surat, Gujarat - 395002",
-  "gstin": "24AAAAA1111A1Z1",
-  "items": [
-    {
-      "sku_code": "KURTI-FES-BLU-L",
-      "name": "Festive Silk Kurti - Blue L",
-      "qty": 100,
-      "price_per_item": 500.00,
-      "total_amount": 50000.00
-    },
-    {
-      "sku_code": "KURTI-FES-RED-M",
-      "name": "Festive Silk Kurti - Red M",
-      "qty": 80,
-      "price_per_item": 500.00,
-      "total_amount": 40000.00
-    }
-  ],
-  "taxable_value": 90000.00,
-  "cgst_rate": 2.5,
-  "cgst_amount": 2250.00,
-  "sgst_rate": 2.5,
-  "sgst_amount": 2250.00,
-  "igst_rate": 0,
-  "igst_amount": 0.00,
-  "total_amount_payable": 94500.00,
-  "discount_applied": 4500.00,
-  "net_payable": 91200.00,
-  "payment_status": "Unpaid"
-}
+[
+  {
+    "invoice_number": "INV-2026-003",
+    "invoice_date": "2026-08-10",
+    "order_id": 1012,
+    "customer_name": "Aarav Wholesalers",
+    "phone": "919045099111",
+    "billing_address": "Shop 42, Textile Market, Ring Road, Surat, Gujarat - 395002",
+    "shipping_address": "Shop 42, Textile Market, Ring Road, Surat, Gujarat - 395002",
+    "gstin": "24AAAAA1111A1Z1",
+    "items": [
+      {
+        "sku_code": "KURTI-FES-BLU-L",
+        "name": "Festive Silk Kurti - Blue L",
+        "qty": 100,
+        "price_per_item": 500.00,
+        "total_amount": 50000.00
+      },
+      {
+        "sku_code": "KURTI-FES-RED-M",
+        "name": "Festive Silk Kurti - Red M",
+        "qty": 80,
+        "price_per_item": 500.00,
+        "total_amount": 40000.00
+      }
+    ],
+    "taxable_value": 90000.00,
+    "cgst_rate": 2.5,
+    "cgst_amount": 2250.00,
+    "sgst_rate": 2.5,
+    "sgst_amount": 2250.00,
+    "igst_rate": 0,
+    "igst_amount": 0.00,
+    "total_amount_payable": 94500.00,
+    "discount_applied": 4500.00,
+    "net_payable": 91200.00,
+    "payment_status": "Unpaid"
+  },
+  {
+    "invoice_number": "INV-2026-004",
+    "invoice_date": "2026-07-18",
+    "order_id": 1006,
+    "customer_name": "Kush Sharma Retailers",
+    "phone": "917425016636",
+    "billing_address": "Sector 5, Mansarovar, Jaipur, Rajasthan - 302020",
+    "shipping_address": "Sector 5, Mansarovar, Jaipur, Rajasthan - 302020",
+    "gstin": "08BBBBB2222B2Z2",
+    "items": [
+      {
+        "sku_code": "KURTI-FES-BLU-L",
+        "name": "Festive Silk Kurti - Blue L",
+        "qty": 50,
+        "price_per_item": 500.00,
+        "total_amount": 25000.00
+      },
+      {
+        "sku_code": "KURTI-FES-RED-M",
+        "name": "Festive Silk Kurti - Red M",
+        "qty": 45,
+        "price_per_item": 500.00,
+        "total_amount": 22500.00
+      }
+    ],
+    "taxable_value": 47500.00,
+    "cgst_rate": 2.5,
+    "cgst_amount": 1187.50,
+    "sgst_rate": 2.5,
+    "sgst_amount": 1187.50,
+    "igst_rate": 0,
+    "igst_amount": 0.00,
+    "total_amount_payable": 49875.00,
+    "discount_applied": 4275.00,
+    "net_payable": 45600.00,
+    "payment_status": "Unpaid"
+  },
+  {
+    "invoice_number": "INV-2026-005",
+    "invoice_date": "2026-07-22",
+    "order_id": 1007,
+    "customer_name": "Verma Garments",
+    "phone": "917778889999",
+    "billing_address": "Chandni Chowk, Delhi - 110006",
+    "shipping_address": "Chandni Chowk, Delhi - 110006",
+    "gstin": "07CCCCC3333C3Z3",
+    "items": [
+      {
+        "sku_code": "SHIRT-COT-WHT-L",
+        "name": "Casual Cotton Shirt - White L",
+        "qty": 100,
+        "price_per_item": 450.00,
+        "total_amount": 45000.00
+      },
+      {
+        "sku_code": "SHIRT-COT-BLK-XL",
+        "name": "Casual Cotton Shirt - Black XL",
+        "qty": 70,
+        "price_per_item": 450.00,
+        "total_amount": 31500.00
+      }
+    ],
+    "taxable_value": 76500.00,
+    "cgst_rate": 2.5,
+    "cgst_amount": 1912.50,
+    "sgst_rate": 2.5,
+    "sgst_amount": 1912.50,
+    "igst_rate": 0,
+    "igst_amount": 0.00,
+    "total_amount_payable": 80325.00,
+    "discount_applied": 5325.00,
+    "net_payable": 75000.00,
+    "payment_status": "Unpaid"
+  },
+  {
+    "invoice_number": "INV-2026-006",
+    "invoice_date": "2026-07-25",
+    "order_id": 1008,
+    "customer_name": "Sunita Sharma Boutique",
+    "phone": "916665554444",
+    "billing_address": "M.G. Road, Pune, Maharashtra - 411001",
+    "shipping_address": "M.G. Road, Pune, Maharashtra - 411001",
+    "gstin": "27DDDDD4444D4D4",
+    "items": [
+      {
+        "sku_code": "SAREE-SIL-RED-FS",
+        "name": "Traditional Silk Saree - Red FreeSize",
+        "qty": 15,
+        "price_per_item": 1200.00,
+        "total_amount": 18000.00
+      }
+    ],
+    "taxable_value": 18000.00,
+    "cgst_rate": 2.5,
+    "cgst_amount": 450.00,
+    "sgst_rate": 2.5,
+    "sgst_amount": 450.00,
+    "igst_rate": 0,
+    "igst_amount": 0.00,
+    "total_amount_payable": 18900.00,
+    "discount_applied": 700.00,
+    "net_payable": 18200.00,
+    "payment_status": "Unpaid"
+  },
+  {
+    "invoice_number": "INV-2026-007",
+    "invoice_date": "2026-08-01",
+    "order_id": 1009,
+    "customer_name": "Joshi Retail Store",
+    "phone": "914443332222",
+    "billing_address": "Indira Nagar, Bengaluru, Karnataka - 560038",
+    "shipping_address": "Indira Nagar, Bengaluru, Karnataka - 560038",
+    "gstin": "29EEEEE5555E5E5",
+    "items": [
+      {
+        "sku_code": "PANT-DEN-BLU-L",
+        "name": "Slim Fit Denim - Blue L",
+        "qty": 20,
+        "price_per_item": 750.00,
+        "total_amount": 15000.00
+      }
+    ],
+    "taxable_value": 15000.00,
+    "cgst_rate": 2.5,
+    "cgst_amount": 375.00,
+    "sgst_rate": 2.5,
+    "sgst_amount": 375.00,
+    "igst_rate": 0,
+    "igst_amount": 0.00,
+    "total_amount_payable": 15750.00,
+    "discount_applied": 5750.00,
+    "net_payable": 10000.00,
+    "payment_status": "Paid"
+  }
+]

@@ -278,7 +278,15 @@ async function processMessageJob(data) {
         parsed = { intent: 'UNKNOWN', args: {} };
     }
 
+    // Intercept personal account inquiries from guests when no name is matched/provided
+    const personalIntents = ['OLD_LEDGER_STATUS', 'OUTSTANDING_LOOKUP', 'LAST_INVOICE_COPY', 'OLD_SHIPMENT_INQUIRY'];
+    if (personalIntents.includes(parsed.intent) && role === 'Guest' && (!parsed.args || !parsed.args.overridePhone)) {
+        parsed.intent = 'ASK_USER_NAME';
+    }
+
     console.log(`[Worker] Parsed intent: ${parsed.intent}`, parsed.args);
+
+    const targetPhone = (parsed.args && parsed.args.overridePhone) || phoneNumber;
 
     let resultData = null;
     let filePath = null;
@@ -319,24 +327,32 @@ async function processMessageJob(data) {
             case 'OLD_SHIPMENT_INQUIRY':
                 try {
                     const port = process.env.PORT || 3000;
-                    const res = await axios.get(`${process.env.API_BASE_URL || `http://localhost:${port}`}/api/mock/old-shipments`);
+                    const res = await axios.get(`${process.env.API_BASE_URL || `http://localhost:${port}`}/api/mock/old-shipments`, {
+                        params: { phone: targetPhone }
+                    });
                     resultData = res.data;
                 } catch (e) {
-                    resultData = require('../mock_data/old_shipment_inquiry.json');
+                    const items = require('../mock_data/old_shipment_inquiry.json');
+                    const match = items.find(i => i.phone && (i.phone.includes(targetPhone) || targetPhone.includes(i.phone)));
+                    resultData = match ? match.shipments || [] : (items[0] ? items[0].shipments || [] : []);
                 }
                 break;
             case 'OLD_LEDGER_STATUS':
                 try {
                     const port = process.env.PORT || 3000;
-                    const res = await axios.get(`${process.env.API_BASE_URL || `http://localhost:${port}`}/api/mock/old-ledger-status`);
+                    const res = await axios.get(`${process.env.API_BASE_URL || `http://localhost:${port}`}/api/mock/old-ledger-status`, {
+                        params: { phone: targetPhone }
+                    });
                     resultData = res.data;
                 } catch (e) {
-                    resultData = require('../mock_data/old_ledger_status.json');
+                    const items = require('../mock_data/old_ledger_status.json');
+                    const match = items.find(i => i.phone && (i.phone.includes(targetPhone) || targetPhone.includes(i.phone)));
+                    resultData = match ? match.transactions || [] : (items[0] ? items[0].transactions || [] : []);
                 }
                 if (resultData) {
                     try {
                         const port = process.env.PORT || 3000;
-                        fileName = `ledger_${phoneNumber}.pdf`;
+                        fileName = `ledger_${targetPhone}.pdf`;
                         filePath = path.join(__dirname, '../public', fileName);
                         await PDFGeneratorService.generateLedgerPDF(resultData, filePath);
                         const baseUrl = process.env.API_BASE_URL || `http://localhost:${port}`;
@@ -349,10 +365,13 @@ async function processMessageJob(data) {
             case 'LAST_INVOICE_COPY':
                 try {
                     const port = process.env.PORT || 3000;
-                    const res = await axios.get(`${process.env.API_BASE_URL || `http://localhost:${port}`}/api/mock/last-invoice-copy`);
+                    const res = await axios.get(`${process.env.API_BASE_URL || `http://localhost:${port}`}/api/mock/last-invoice-copy`, {
+                        params: { phone: targetPhone }
+                    });
                     resultData = res.data;
                 } catch (e) {
-                    resultData = require('../mock_data/last_invoice_copy.json');
+                    const items = require('../mock_data/last_invoice_copy.json');
+                    resultData = items.find(i => i.phone && (i.phone.includes(targetPhone) || targetPhone.includes(i.phone))) || items[0] || {};
                 }
                 if (resultData) {
                     try {
@@ -370,22 +389,25 @@ async function processMessageJob(data) {
             case 'SHIPMENT_TRACKING':
                 try {
                     const port = process.env.PORT || 3000;
-                    const res = await axios.get(`${process.env.API_BASE_URL || `http://localhost:${port}`}/api/mock/shipment-status`);
+                    const res = await axios.get(`${process.env.API_BASE_URL || `http://localhost:${port}`}/api/mock/shipment-status`, {
+                        params: { phone: targetPhone }
+                    });
                     resultData = res.data;
                 } catch (e) {
-                    resultData = require('../mock_data/shipment_status.json')[0] || {};
+                    const items = require('../mock_data/shipment_status.json');
+                    resultData = items.find(i => i.phone && (i.phone.includes(targetPhone) || targetPhone.includes(i.phone))) || items[0] || {};
                 }
                 break;
             case 'OUTSTANDING_LOOKUP':
                 try {
                     const port = process.env.PORT || 3000;
                     const res = await axios.get(`${process.env.API_BASE_URL || `http://localhost:${port}`}/api/mock/outstanding`, {
-                        params: { phone: phoneNumber }
+                        params: { phone: targetPhone }
                     });
                     resultData = res.data;
                 } catch (e) {
                     const items = require('../mock_data/outstanding.json');
-                    resultData = items.find(i => i.phone.includes(phoneNumber) || phoneNumber.includes(i.phone)) || items[0] || {};
+                    resultData = items.find(i => i.phone && (i.phone.includes(targetPhone) || targetPhone.includes(i.phone))) || items[0] || {};
                 }
                 break;
         }
