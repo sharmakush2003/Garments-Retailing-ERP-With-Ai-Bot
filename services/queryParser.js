@@ -60,8 +60,10 @@ Return ONLY a valid JSON object matching this schema:
     "requestedQty": number or null,
     "maxPrice": number or null,
     "fabric": string or null
-  }
+  },
+  "chatReply": string or null
 }
+In "chatReply", if the user query is a greeting, casual chat, or general question, provide a warm, conversational, human-like response in the same language/dialect/tone as the user (e.g. Hinglish, Hindi, or English). Keep it concise, friendly, and guide them to use ERP features (like catalog, stock, price, ledger) if appropriate.
 Do not include any markdown formatting, comments, or extra text in your output. Just return the raw JSON object.
 `;
 
@@ -177,8 +179,10 @@ Return ONLY a valid JSON object matching this schema:
     "requestedQty": number or null,
     "maxPrice": number or null,
     "fabric": string or null
-  }
+  },
+  "chatReply": string or null
 }
+In "chatReply", if the user query is a greeting, casual chat, or general question, provide a warm, conversational, human-like response in the same language/dialect/tone as the user (e.g. Hinglish, Hindi, or English). Keep it concise, friendly, and guide them to use ERP features (like catalog, stock, price, ledger) if appropriate.
 Do not include any markdown formatting, comments, or extra text in your output. Just return the raw JSON object.
 `;
 
@@ -512,6 +516,9 @@ Do not include any markdown formatting, comments, or extra text in your output. 
         
         switch (intent) {
             case 'GREETING':
+                if (context.chatReply) {
+                    return context.chatReply;
+                }
                 return {
                     type: 'interactive',
                     interactive: {
@@ -879,6 +886,9 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                 return `💰 *Outstanding Status*: No outstanding profile found for your account, dear! 🥺`;
 
             default:
+                if (context.chatReply) {
+                    return context.chatReply;
+                }
                 return `Welcome to Kaira support! 💁‍♀️ How may I help you today, dear? 🌸\n1. Check Stock 📦\n2. Check Price 🏷️\n3. View Catalogue 📖`;
         }
     }
