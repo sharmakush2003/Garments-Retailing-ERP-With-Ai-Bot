@@ -201,6 +201,54 @@ async function processMessageJob(data) {
                     resultData = 0.00;
                 }
                 break;
+            case 'OLD_SHIPMENT_INQUIRY':
+                try {
+                    const port = process.env.PORT || 3000;
+                    const res = await axios.get(`${process.env.API_BASE_URL || `http://localhost:${port}`}/api/mock/old-shipments`);
+                    resultData = res.data;
+                } catch (e) {
+                    resultData = require('../mock_data/old_shipment_inquiry.json');
+                }
+                break;
+            case 'OLD_LEDGER_STATUS':
+                try {
+                    const port = process.env.PORT || 3000;
+                    const res = await axios.get(`${process.env.API_BASE_URL || `http://localhost:${port}`}/api/mock/old-ledger-status`);
+                    resultData = res.data;
+                } catch (e) {
+                    resultData = require('../mock_data/old_ledger_status.json');
+                }
+                break;
+            case 'LAST_INVOICE_COPY':
+                try {
+                    const port = process.env.PORT || 3000;
+                    const res = await axios.get(`${process.env.API_BASE_URL || `http://localhost:${port}`}/api/mock/last-invoice-copy`);
+                    resultData = res.data;
+                } catch (e) {
+                    resultData = require('../mock_data/last_invoice_copy.json');
+                }
+                break;
+            case 'SHIPMENT_TRACKING':
+                try {
+                    const port = process.env.PORT || 3000;
+                    const res = await axios.get(`${process.env.API_BASE_URL || `http://localhost:${port}`}/api/mock/shipment-status`);
+                    resultData = res.data;
+                } catch (e) {
+                    resultData = require('../mock_data/shipment_status.json')[0] || {};
+                }
+                break;
+            case 'OUTSTANDING_LOOKUP':
+                try {
+                    const port = process.env.PORT || 3000;
+                    const res = await axios.get(`${process.env.API_BASE_URL || `http://localhost:${port}`}/api/mock/outstanding`, {
+                        params: { phone: phoneNumber }
+                    });
+                    resultData = res.data;
+                } catch (e) {
+                    const items = require('../mock_data/outstanding.json');
+                    resultData = items.find(i => i.phone.includes(phoneNumber) || phoneNumber.includes(i.phone)) || items[0] || {};
+                }
+                break;
         }
     } catch (err) {
         console.error(`[Worker] ERP Service execution failed for intent ${parsed.intent}:`, err.message);

@@ -48,6 +48,21 @@ class QueryParserService {
         if (text === 'btn_price' || text.includes('check price') || text.includes('wholesale rates') || text.includes('rate list') || text === '3') {
             return { intent: 'PRICE_LOOKUP', args: { skuCode: 'KURTI-FES-BLU-L' } };
         }
+        if (text === 'btn_ledger' || text === '4' || text.includes('4️⃣')) {
+            return { intent: 'OLD_LEDGER_STATUS', args: {} };
+        }
+        if (text === 'btn_tracking' || text === '5' || text.includes('5️⃣')) {
+            return { intent: 'SHIPMENT_TRACKING', args: {} };
+        }
+        if (text === 'btn_outstanding' || text === '6' || text.includes('6️⃣')) {
+            return { intent: 'OUTSTANDING_LOOKUP', args: {} };
+        }
+        if (text === 'btn_invoice' || text === '7' || text.includes('7️⃣')) {
+            return { intent: 'LAST_INVOICE_COPY', args: {} };
+        }
+        if (text === 'btn_past_shipments' || text === '8' || text.includes('8️⃣')) {
+            return { intent: 'OLD_SHIPMENT_INQUIRY', args: {} };
+        }
 
         // Colors lookup (general questions about colors)
         if ((text.includes('colour') || text.includes('color') || text.includes('rang')) && !text.includes('book') && !text.includes('order')) {
@@ -106,6 +121,31 @@ class QueryParserService {
                 intent: 'PRICE_LOOKUP',
                 args: { skuCode: 'KURTI-FES-BLU-L' }
             };
+        }
+
+        // Old Shipment Inquiry queries
+        if (text.includes('old shipment') || text.includes('past shipment') || text.includes('delivery history') || text.includes('completed delivery') || text.includes('dispatch history') || text.includes('pichli delivery') || text.includes('purana dispatch')) {
+            return { intent: 'OLD_SHIPMENT_INQUIRY', args: {} };
+        }
+
+        // Old Ledger Status queries
+        if (text.includes('ledger') || text.includes('statement of account') || text.includes('khata book') || text.includes('khata status') || text.includes('account statement')) {
+            return { intent: 'OLD_LEDGER_STATUS', args: {} };
+        }
+
+        // Last Invoice Copy queries
+        if (text.includes('last invoice') || text.includes('invoice copy') || text.includes('pichla invoice') || text.includes('latest invoice') || text.includes('invoice detail')) {
+            return { intent: 'LAST_INVOICE_COPY', args: {} };
+        }
+
+        // Shipment tracking / where has it reached queries
+        if (text.includes('track') || text.includes('where') || text.includes('reach') || text.includes('tracking') || text.includes('kahan pahuncha') || text.includes('shipment status') || text.includes('delivery status') || text.includes('lr status')) {
+            return { intent: 'SHIPMENT_TRACKING', args: {} };
+        }
+
+        // Outstanding balance queries
+        if (text.includes('outstanding') || text.includes('baki payment') || text.includes('baki paisa') || text.includes('due balance') || text.includes('due amount') || text.includes('kitna baki') || text.includes('credit limit')) {
+            return { intent: 'OUTSTANDING_LOOKUP', args: {} };
         }
 
         // Maps and tools for entity extraction
@@ -215,7 +255,12 @@ class QueryParserService {
                                     rows: [
                                         { id: 'btn_catalogue', title: '1️⃣ Products Catalog ✨', description: 'Show all available products' },
                                         { id: 'btn_stock', title: '2️⃣ Check Stock 📦', description: 'Check color & size availability' },
-                                        { id: 'btn_price', title: '3️⃣ Check Price 🏷️', description: 'Get wholesale tier rates' }
+                                        { id: 'btn_price', title: '3️⃣ Check Price 🏷️', description: 'Get wholesale tier rates' },
+                                        { id: 'btn_ledger', title: '4️⃣ Ledger Status 📒', description: 'Statement of accounts/ledger' },
+                                        { id: 'btn_tracking', title: '5️⃣ Shipment Tracking 📍', description: 'Track active shipment location' },
+                                        { id: 'btn_outstanding', title: '6️⃣ Outstanding Credit 💰', description: 'Check credit limits & due balances' },
+                                        { id: 'btn_invoice', title: '7️⃣ Last Invoice Copy 📄', description: 'Get copy of your latest invoice' },
+                                        { id: 'btn_past_shipments', title: '8️⃣ Past Shipments 🚚', description: 'View historical completed dispatches' }
                                     ]
                                 }
                             ]
@@ -386,6 +431,41 @@ class QueryParserService {
             case 'PRICE_LOOKUP':
                 const rate = typeof data === 'number' || typeof data === 'string' ? data : (data && data.price ? data.price : 480);
                 return `🏷️ *Wholesale Rate Card - ${context.companyName || 'Kaira'}* 💁‍♀️✨\n\n📌 *Item*: Kurti Festive Collection\n🆔 *SKU*: KURTI-FES-BLU-L\n\n💰 *Wholesale Price*: *₹${rate}* / piece\n📊 *Your Customer Tier*: *${role}* 🌸\n📦 *Minimum Order Qty (MOQ)*: 12 pieces\n\n🔥 *Volume Tier Schemes*:\n• 50+ pcs: *5% Flat Discount* (₹${Math.round(rate * 0.95)}/pc)\n• 100+ pcs: *10% Festive Offer* (₹${Math.round(rate * 0.90)}/pc)\n\n💬 Reply *"Book 12 pcs"* to place your order with me! 💖`;
+
+            case 'OLD_SHIPMENT_INQUIRY':
+                if (data && data.length > 0) {
+                    const list = data.map(s => `• *Order #${s.order_id}* Dispatched via *${s.transporter_name}* (LR: \`${s.lr_number}\`) on *${s.dispatch_date}* to *${s.destination}* — Status: *${s.status}* on ${s.delivered_date || s.estimated_delivery} (${s.total_qty} pcs)`).join('\n');
+                    return `🚚 *Old Shipment History Summary* 📦\n_________________________\n\nHere is your past shipment dispatch history, dear! 🌸:\n\n${list}\n\n💬 Need details on any order? Reply with order number!`;
+                }
+                return `🚚 *Old Shipment History*: No past shipments found in database for you, dear! 🥺`;
+
+            case 'OLD_LEDGER_STATUS':
+                if (data && data.length > 0) {
+                    const list = data.map(l => `• *${l.date}*: ${l.description} | Debit: *₹${l.debit}* | Credit: *₹${l.credit}* | Bal: *₹${l.running_balance}*`).join('\n');
+                    const latest = data[data.length - 1];
+                    return `📒 *Account Ledger Status Statement* 📊\n_________________________\n\nHere is the transaction ledger list, dear! 🌸:\n\n${list}\n\n📌 *Current Outstanding Balance*: *₹${latest ? latest.running_balance : 0.00}* 💰\n💬 Reply *"Invoice"* for the invoice copy of latest transaction!`;
+                }
+                return `📒 *Ledger Status*: No transaction history found, dear! 🥺`;
+
+            case 'LAST_INVOICE_COPY':
+                if (data) {
+                    const itemsList = data.items.map(i => `  - ${i.name} (Qty: *${i.qty}* @ ₹${i.price_per_item}/pc) = *₹${i.total_amount}*`).join('\n');
+                    return `📄 *Latest Invoice Details* 🧾\n_________________________\n\n📌 *Invoice No*: *${data.invoice_number}*\n📅 *Date*: ${data.invoice_date}\n📦 *Order ID*: #${data.order_id}\n👤 *Customer*: ${data.customer_name}\n\n🛍️ *Items*:\n${itemsList}\n\n💵 *Taxable Value*: ₹${data.taxable_value}\n➕ *CGST (2.5%)*: ₹${data.cgst_amount}\n➕ *SGST (2.5%)*: ₹${data.sgst_amount}\n➖ *Discount*: ₹${data.discount_applied}\n💰 *Net Payable*: *₹${data.net_payable}*\n📝 *Status*: *${data.payment_status}* 🌸`;
+                }
+                return `📄 *Invoice details*: No invoice record found for you, dear! 🥺`;
+
+            case 'SHIPMENT_TRACKING':
+                if (data && data.status) {
+                    const history = data.tracking_history ? data.tracking_history.map(h => `  • _${h.timestamp}_ [${h.location}]: ${h.details}`).join('\n') : '';
+                    return `📍 *Active Shipment Tracking Status* 🚚\n_________________________\n\n📦 *Order ID*: #${data.order_id}\n🔢 *Tracking/LR No*: \`${data.tracking_number || data.lr_number}\`\n🚛 *Transporter*: ${data.transporter_name}\n📅 *Dispatch Date*: ${data.dispatch_date}\n\n⚡ *Current Location*: *${data.current_location}*\n🟢 *Status*: *${data.status}* ✨\n🕒 *Last Updated*: ${data.last_updated}\n📅 *Est. Delivery*: *${data.estimated_delivery_date}*\n\n📊 *Tracking Timeline*:\n${history}\n\n💖 Maal jaldi pahunch jayega, dear!`;
+                }
+                return `📍 *Shipment Tracking*: Oh, no active shipment tracking data found! 🥺\n💬 Try replying with your order number.`;
+
+            case 'OUTSTANDING_LOOKUP':
+                if (data) {
+                    return `💰 *Credit & Outstanding Status Summary* 📊\n_________________________\n\n👤 *Customer*: ${data.customer_name}\n📞 *Registered Phone*: ${data.phone}\n\n💸 *Total Outstanding*: *₹${data.outstanding_balance}* 💳\n🛡️ *Credit Limit*: ₹${data.credit_limit}\n✅ *Available Credit*: ₹${data.available_credit}\n⏳ *Payment Terms*: ${data.payment_terms}\n\n📅 *Aging Summary (Overdue status)*:\n• Not Due Yet: ₹${data.due_date_summary.not_due_yet}\n• 0-30 Days Overdue: *₹${data.due_date_summary.overdue_0_30_days}* ⚠️\n• 31-60 Days Overdue: ₹${data.due_date_summary.overdue_30_60_days}\n• 60+ Days Overdue: ₹${data.due_date_summary.overdue_60_plus_days}\n\n💬 Please clear overdue bills at your earliest convenience, dear! 🌸`;
+                }
+                return `💰 *Outstanding Status*: No outstanding profile found for your account, dear! 🥺`;
 
             default:
                 return `Welcome to Kaira support! 💁‍♀️ How may I help you today, dear? 🌸\n1. Check Stock 📦\n2. Check Price 🏷️\n3. View Catalogue 📖`;

@@ -1,0 +1,47 @@
+[
+  {
+    "txn_id": 201,
+    "date": "2026-07-01",
+    "description": "Opening Balance",
+    "reference_id": null,
+    "debit": 0.00,
+    "credit": 0.00,
+    "running_balance": 0.00
+  },
+  {
+    "txn_id": 202,
+    "date": "2026-07-15",
+    "description": "Invoice #INV-2026-001 for Order #1001",
+    "reference_id": "INV-2026-001",
+    "debit": 85000.00,
+    "credit": 0.00,
+    "running_balance": 85000.00
+  },
+  {
+    "txn_id": 203,
+    "date": "2026-07-20",
+    "description": "Payment Received via Bank Transfer",
+    "reference_id": "TXN99847120",
+    "debit": 0.00,
+    "credit": 85000.00,
+    "running_balance": 0.00
+  },
+  {
+    "txn_id": 204,
+    "date": "2026-08-01",
+    "description": "Invoice #INV-2026-002 for Order #1005",
+    "reference_id": "INV-2026-002",
+    "debit": 37250.00,
+    "credit": 0.00,
+    "running_balance": 37250.00
+  },
+  {
+    "txn_id": 205,
+    "date": "2026-08-10",
+    "description": "Invoice #INV-2026-003 for Order #1012",
+    "reference_id": "INV-2026-003",
+    "debit": 91200.00,
+    "credit": 0.00,
+    "running_balance": 128450.00
+  }
+]

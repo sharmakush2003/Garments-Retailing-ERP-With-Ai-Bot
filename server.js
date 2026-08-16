@@ -166,6 +166,46 @@ app.get('/api/mock/subcategories', (req, res) => {
     res.json(items);
 });
 
+// 6. Get old shipment inquiry (all/completed shipments)
+app.get('/api/mock/old-shipments', (req, res) => {
+    const items = require('./mock_data/old_shipment_inquiry.json');
+    res.json(items);
+});
+
+// 7. Get old ledger status
+app.get('/api/mock/old-ledger-status', (req, res) => {
+    const items = require('./mock_data/old_ledger_status.json');
+    res.json(items);
+});
+
+// 8. Get last invoice copy
+app.get('/api/mock/last-invoice-copy', (req, res) => {
+    const item = require('./mock_data/last_invoice_copy.json');
+    res.json(item);
+});
+
+// 9. Get active shipment tracking status
+app.get('/api/mock/shipment-status', (req, res) => {
+    const items = require('./mock_data/shipment_status.json');
+    const { orderId } = req.query;
+    if (orderId) {
+        const match = items.find(i => i.order_id === parseInt(orderId));
+        if (match) return res.json(match);
+    }
+    res.json(items[0] || {});
+});
+
+// 10. Get outstanding balance status
+app.get('/api/mock/outstanding', (req, res) => {
+    const items = require('./mock_data/outstanding.json');
+    const { phone } = req.query;
+    if (phone) {
+        const match = items.find(i => i.phone.includes(phone) || phone.includes(i.phone));
+        if (match) return res.json(match);
+    }
+    res.json(items[0] || {});
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK', message: 'Digify Soft API Gateway is operational' });

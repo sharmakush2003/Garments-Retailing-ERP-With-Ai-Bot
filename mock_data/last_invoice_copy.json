@@ -1,0 +1,37 @@
+{
+  "invoice_number": "INV-2026-003",
+  "invoice_date": "2026-08-10",
+  "order_id": 1012,
+  "customer_name": "Aarav Wholesalers",
+  "phone": "919045099111",
+  "billing_address": "Shop 42, Textile Market, Ring Road, Surat, Gujarat - 395002",
+  "shipping_address": "Shop 42, Textile Market, Ring Road, Surat, Gujarat - 395002",
+  "gstin": "24AAAAA1111A1Z1",
+  "items": [
+    {
+      "sku_code": "KURTI-FES-BLU-L",
+      "name": "Festive Silk Kurti - Blue L",
+      "qty": 100,
+      "price_per_item": 500.00,
+      "total_amount": 50000.00
+    },
+    {
+      "sku_code": "KURTI-FES-RED-M",
+      "name": "Festive Silk Kurti - Red M",
+      "qty": 80,
+      "price_per_item": 500.00,
+      "total_amount": 40000.00
+    }
+  ],
+  "taxable_value": 90000.00,
+  "cgst_rate": 2.5,
+  "cgst_amount": 2250.00,
+  "sgst_rate": 2.5,
+  "sgst_amount": 2250.00,
+  "igst_rate": 0,
+  "igst_amount": 0.00,
+  "total_amount_payable": 94500.00,
+  "discount_applied": 4500.00,
+  "net_payable": 91200.00,
+  "payment_status": "Unpaid"
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "dispatch_id": 101,
+    "order_id": 1001,
+    "transporter_name": "SafeExpress Logistics",
+    "lr_number": "SFX98745210",
+    "dispatch_date": "2026-07-15",
+    "estimated_delivery": "2026-07-20",
+    "delivered_date": "2026-07-19",
+    "status": "Delivered",
+    "total_qty": 120,
+    "destination": "New Delhi",
+    "items": [
+      { "sku_code": "KURTI-FES-BLU-L", "qty": 50 },
+      { "sku_code": "KURTI-FES-RED-M", "qty": 70 }
+    ]
+  },
+  {
+    "dispatch_id": 102,
+    "order_id": 1005,
+    "transporter_name": "TCI Freight",
+    "lr_number": "TCI88241094",
+    "dispatch_date": "2026-08-01",
+    "estimated_delivery": "2026-08-05",
+    "delivered_date": "2026-08-05",
+    "status": "Delivered",
+    "total_qty": 65,
+    "destination": "Mumbai",
+    "items": [
+      { "sku_code": "SHIRT-COT-WHT-L", "qty": 40 },
+      { "sku_code": "SHIRT-COT-BLK-XL", "qty": 25 }
+    ]
+  }
+]

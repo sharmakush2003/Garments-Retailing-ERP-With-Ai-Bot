@@ -141,6 +141,78 @@ const server = app.listen(PORT, async () => {
         assert.ok(res.data.some(s => s.name === 'Festive'));
         console.log('✓ Test Case 11 Passed!');
 
+        // Test Case 12: Mock Old Shipments API Endpoint & Query Parsing
+        console.log('\n--- Running Test Case 12: Mock Old Shipments API ---');
+        res = await axios.get(`http://localhost:${PORT}/api/mock/old-shipments`);
+        console.log('Response Status:', res.status);
+        assert.strictEqual(res.status, 200);
+        assert.ok(res.data.some(s => s.transporter_name === 'SafeExpress Logistics'));
+        // Parse message
+        const parsed12 = await QueryParserService.parseMessage('Show me my past shipments history');
+        assert.strictEqual(parsed12.intent, 'OLD_SHIPMENT_INQUIRY');
+        const replyText12 = QueryParserService.formatResponse(parsed12.intent, res.data, { role: 'Customer' });
+        console.log('Formatted response:', replyText12);
+        assert.ok(replyText12.includes('Old Shipment History Summary'));
+        console.log('✓ Test Case 12 Passed!');
+
+        // Test Case 13: Mock Ledger Status API Endpoint & Query Parsing
+        console.log('\n--- Running Test Case 13: Mock Ledger Status API ---');
+        res = await axios.get(`http://localhost:${PORT}/api/mock/old-ledger-status`);
+        console.log('Response Status:', res.status);
+        assert.strictEqual(res.status, 200);
+        assert.ok(res.data.some(l => l.reference_id === 'INV-2026-003'));
+        // Parse message
+        const parsed13 = await QueryParserService.parseMessage('Send me my ledger khata status');
+        assert.strictEqual(parsed13.intent, 'OLD_LEDGER_STATUS');
+        const replyText13 = QueryParserService.formatResponse(parsed13.intent, res.data, { role: 'Customer' });
+        console.log('Formatted response:', replyText13);
+        assert.ok(replyText13.includes('Account Ledger Status Statement'));
+        console.log('✓ Test Case 13 Passed!');
+
+        // Test Case 14: Mock Last Invoice Copy API Endpoint & Query Parsing
+        console.log('\n--- Running Test Case 14: Mock Last Invoice Copy API ---');
+        res = await axios.get(`http://localhost:${PORT}/api/mock/last-invoice-copy`);
+        console.log('Response Status:', res.status);
+        assert.strictEqual(res.status, 200);
+        assert.strictEqual(res.data.invoice_number, 'INV-2026-003');
+        // Parse message
+        const parsed14 = await QueryParserService.parseMessage('Send me my last invoice copy');
+        assert.strictEqual(parsed14.intent, 'LAST_INVOICE_COPY');
+        const replyText14 = QueryParserService.formatResponse(parsed14.intent, res.data, { role: 'Customer' });
+        console.log('Formatted response:', replyText14);
+        assert.ok(replyText14.includes('Latest Invoice Details'));
+        console.log('✓ Test Case 14 Passed!');
+
+        // Test Case 15: Mock Shipment Status/Tracking API Endpoint & Query Parsing
+        console.log('\n--- Running Test Case 15: Mock Shipment Status/Tracking API ---');
+        res = await axios.get(`http://localhost:${PORT}/api/mock/shipment-status`);
+        console.log('Response Status:', res.status);
+        assert.strictEqual(res.status, 200);
+        assert.strictEqual(res.data.status, 'In Transit');
+        // Parse message
+        const parsed15 = await QueryParserService.parseMessage('where is my shipment, tracking status check?');
+        assert.strictEqual(parsed15.intent, 'SHIPMENT_TRACKING');
+        const replyText15 = QueryParserService.formatResponse(parsed15.intent, res.data, { role: 'Customer' });
+        console.log('Formatted response:', replyText15);
+        assert.ok(replyText15.includes('Active Shipment Tracking Status'));
+        console.log('✓ Test Case 15 Passed!');
+
+        // Test Case 16: Mock Outstanding Balance API Endpoint & Query Parsing
+        console.log('\n--- Running Test Case 16: Mock Outstanding Balance API ---');
+        res = await axios.get(`http://localhost:${PORT}/api/mock/outstanding`, {
+            params: { phone: '919045099111' }
+        });
+        console.log('Response Status:', res.status);
+        assert.strictEqual(res.status, 200);
+        assert.strictEqual(res.data.customer_name, 'Aarav Wholesalers');
+        // Parse message
+        const parsed16 = await QueryParserService.parseMessage('what is my total outstanding due payment?');
+        assert.strictEqual(parsed16.intent, 'OUTSTANDING_LOOKUP');
+        const replyText16 = QueryParserService.formatResponse(parsed16.intent, res.data, { role: 'Customer' });
+        console.log('Formatted response:', replyText16);
+        assert.ok(replyText16.includes('Credit & Outstanding Status Summary'));
+        console.log('✓ Test Case 16 Passed!');
+
         console.log('\n======================================');
         console.log('★ ALL INTEGRATION TESTS PASSED ★');
         console.log('======================================');
