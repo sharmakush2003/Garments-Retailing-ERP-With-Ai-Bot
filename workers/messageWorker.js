@@ -297,7 +297,10 @@ async function processMessageJob(data) {
                 resultData = await InventoryService.getProductsByFilters(db, parsed.args);
                 break;
             case 'PRODUCT_FILTERED':
-                resultData = await InventoryService.getProductsByFilters(db, parsed.args);
+            case 'GUIDE_CATALOGUE':
+                if (parsed.intent === 'PRODUCT_FILTERED' || (parsed.args && parsed.args.garmentType)) {
+                    resultData = await InventoryService.getProductsByFilters(db, parsed.args);
+                }
                 break;
             case 'PRICE_LOOKUP':
                 // For price lookup, resolve base/tier price

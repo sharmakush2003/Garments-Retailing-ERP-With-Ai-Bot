@@ -624,6 +624,35 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                 };
 
             case 'GUIDE_CATALOGUE':
+                if (context.args && context.args.garmentType && data && data.length > 0) {
+                    const grouped = {};
+                    data.forEach(i => {
+                        const baseSku = i.sku_code.replace(/-[smlx]+$/i, '').replace(/-fs$/i, '').replace(/-freesize$/i, '');
+                        const baseName = (i.name || i.sku_code).replace(/\s+([sml]|xl|xxl|freesize|free size)$/i, '');
+                        if (!grouped[baseSku]) {
+                            grouped[baseSku] = {
+                                name: baseName,
+                                subcategory: i.subcategory || 'Cotton',
+                                variants: []
+                            };
+                        }
+                        grouped[baseSku].variants.push(i);
+                    });
+
+                    const sections = Object.keys(grouped).map(baseSku => {
+                        const style = grouped[baseSku];
+                        const variantsList = style.variants.map(v => {
+                            const price = v.price !== undefined ? v.price : v.base_price;
+                            const stock = v.available_qty !== undefined ? v.available_qty : 0;
+                            return `  • Size *${v.size}* (${v.color}) — *₹${price}/pc* (Stock: *${stock}*)`;
+                        }).join('\n');
+                        return `🛍️ *${style.name}*\n🆔 SKU: \`${baseSku}\`\n🧵 Fabric: ${style.subcategory}\n${variantsList}`;
+                    }).join('\n\n');
+
+                    const cat = context.args.garmentType;
+                    const title = `📖 *${cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase()} Catalog* 👗✨`;
+                    return `${title}\n_________________________\n\nHere is our catalog for you, dear! 🌸:\n\n${sections}`;
+                }
                 return {
                     type: 'interactive',
                     interactive: {
