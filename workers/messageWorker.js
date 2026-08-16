@@ -278,9 +278,9 @@ async function processMessageJob(data) {
         parsed = { intent: 'UNKNOWN', args: {} };
     }
 
-    // Intercept personal account inquiries from guests when no name is matched/provided
+    // Intercept personal account inquiries when no name is matched/provided in the query
     const personalIntents = ['OLD_LEDGER_STATUS', 'OUTSTANDING_LOOKUP', 'LAST_INVOICE_COPY', 'OLD_SHIPMENT_INQUIRY'];
-    if (personalIntents.includes(parsed.intent) && role === 'Guest' && (!parsed.args || !parsed.args.overridePhone)) {
+    if (personalIntents.includes(parsed.intent) && (!parsed.args || !parsed.args.overridePhone)) {
         parsed.intent = 'ASK_USER_NAME';
     }
 
