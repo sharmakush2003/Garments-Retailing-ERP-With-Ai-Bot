@@ -327,8 +327,12 @@ Do not include any markdown formatting, comments, or extra text in your output. 
             }
         }
 
-        // 3. If the query is just the name (e.g. Kush Sharma)
-        if (matchedUser && (text === matchedUser.name.toLowerCase() || text === matchedUser.company_name.toLowerCase() || text.includes('my name is') || text.includes('i am') || text.includes('hoon'))) {
+        // 3. If the query contains a matched user name and does not match any other transactional intents
+        const transactionalIntents = [
+            'INVENTORY_LOOKUP', 'PRICE_LOOKUP', 'PRODUCT_FILTERED', 'COLOURS_LOOKUP', 'SIZES_LOOKUP',
+            'OLD_LEDGER_STATUS', 'OUTSTANDING_LOOKUP', 'LAST_INVOICE_COPY', 'OLD_SHIPMENT_INQUIRY'
+        ];
+        if (matchedUser && !transactionalIntents.includes(parsed.intent)) {
             return { intent: 'IDENTITY_RESOLVED', args: { user: matchedUser } };
         }
 

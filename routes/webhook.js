@@ -74,19 +74,25 @@ router.post('/', injectTenantContext, async (req, res) => {
             if (message.type === 'audio' || message.type === 'voice') {
                 isAudio = true;
                 mediaId = (message.audio || message.voice).id;
-            } else if (message.type === 'interactive' && message.interactive && message.interactive.type === 'nfm_reply') {
-                const responseJsonStr = message.interactive.nfm_reply.response_json;
-                try {
-                    const parsedFlow = JSON.parse(responseJsonStr);
-                    const vals = parsedFlow.values || {};
-                    messageText = `Book ${vals.qty || 12} pieces of ${vals.color || 'RED'} ${vals.garment_type || 'KURTI'} in size ${vals.size || 'L'}`;
-                    if (vals.notes) {
-                        messageText += ` (Notes: ${vals.notes})`;
+            } else if (message.type === 'interactive' && message.interactive) {
+                if (message.interactive.type === 'nfm_reply') {
+                    const responseJsonStr = message.interactive.nfm_reply.response_json;
+                    try {
+                        const parsedFlow = JSON.parse(responseJsonStr);
+                        const vals = parsedFlow.values || {};
+                        messageText = `Book ${vals.qty || 12} pieces of ${vals.color || 'RED'} ${vals.garment_type || 'KURTI'} in size ${vals.size || 'L'}`;
+                        if (vals.notes) {
+                            messageText += ` (Notes: ${vals.notes})`;
+                        }
+                        console.log(`[Webhook] Synthesized message from WhatsApp Flow: "${messageText}"`);
+                    } catch (e) {
+                        console.error('[Webhook] Failed to parse Flow response_json:', e.message);
+                        messageText = 'Order Flow Submitted';
                     }
-                    console.log(`[Webhook] Synthesized message from WhatsApp Flow: "${messageText}"`);
-                } catch (e) {
-                    console.error('[Webhook] Failed to parse Flow response_json:', e.message);
-                    messageText = 'Order Flow Submitted';
+                } else if (message.interactive.type === 'list_reply') {
+                    messageText = message.interactive.list_reply.id;
+                } else if (message.interactive.type === 'button_reply') {
+                    messageText = message.interactive.button_reply.id;
                 }
             } else {
                 messageText = message.text ? message.text.body : '';
@@ -98,18 +104,24 @@ router.post('/', injectTenantContext, async (req, res) => {
             if (req.body.media_type === 'audio' || req.body.media_type === 'voice' || req.body.audio) {
                 isAudio = true;
                 audioUrl = req.body.media_url || req.body.audio;
-            } else if (req.body.type === 'interactive' && req.body.interactive && req.body.interactive.type === 'nfm_reply') {
-                const responseJsonStr = req.body.interactive.nfm_reply.response_json;
-                try {
-                    const parsedFlow = JSON.parse(responseJsonStr);
-                    const vals = parsedFlow.values || {};
-                    messageText = `Book ${vals.qty || 12} pieces of ${vals.color || 'RED'} ${vals.garment_type || 'KURTI'} in size ${vals.size || 'L'}`;
-                    if (vals.notes) {
-                        messageText += ` (Notes: ${vals.notes})`;
+            } else if (req.body.type === 'interactive' && req.body.interactive) {
+                if (req.body.interactive.type === 'nfm_reply') {
+                    const responseJsonStr = req.body.interactive.nfm_reply.response_json;
+                    try {
+                        const parsedFlow = JSON.parse(responseJsonStr);
+                        const vals = parsedFlow.values || {};
+                        messageText = `Book ${vals.qty || 12} pieces of ${vals.color || 'RED'} ${vals.garment_type || 'KURTI'} in size ${vals.size || 'L'}`;
+                        if (vals.notes) {
+                            messageText += ` (Notes: ${vals.notes})`;
+                        }
+                        console.log(`[Webhook] Synthesized message from AutobotChat Flow: "${messageText}"`);
+                    } catch (e) {
+                        messageText = 'Order Flow Submitted';
                     }
-                    console.log(`[Webhook] Synthesized message from AutobotChat Flow: "${messageText}"`);
-                } catch (e) {
-                    messageText = 'Order Flow Submitted';
+                } else if (req.body.interactive.type === 'list_reply' || req.body.interactive.list_reply) {
+                    messageText = req.body.interactive.list_reply.id;
+                } else if (req.body.interactive.type === 'button_reply' || req.body.interactive.button_reply) {
+                    messageText = req.body.interactive.button_reply.id;
                 }
             }
             if (!isAudio && !messageText) {
@@ -126,18 +138,24 @@ router.post('/', injectTenantContext, async (req, res) => {
             if (req.body.type === 'audio' || req.body.type === 'voice') {
                 isAudio = true;
                 mediaId = req.body.audio ? req.body.audio.id : (req.body.voice ? req.body.voice.id : null);
-            } else if (req.body.type === 'interactive' && req.body.interactive && req.body.interactive.type === 'nfm_reply') {
-                const responseJsonStr = req.body.interactive.nfm_reply.response_json;
-                try {
-                    const parsedFlow = JSON.parse(responseJsonStr);
-                    const vals = parsedFlow.values || {};
-                    messageText = `Book ${vals.qty || 12} pieces of ${vals.color || 'RED'} ${vals.garment_type || 'KURTI'} in size ${vals.size || 'L'}`;
-                    if (vals.notes) {
-                        messageText += ` (Notes: ${vals.notes})`;
+            } else if (req.body.type === 'interactive' && req.body.interactive) {
+                if (req.body.type === 'interactive' && req.body.interactive && req.body.interactive.type === 'nfm_reply') {
+                    const responseJsonStr = req.body.interactive.nfm_reply.response_json;
+                    try {
+                        const parsedFlow = JSON.parse(responseJsonStr);
+                        const vals = parsedFlow.values || {};
+                        messageText = `Book ${vals.qty || 12} pieces of ${vals.color || 'RED'} ${vals.garment_type || 'KURTI'} in size ${vals.size || 'L'}`;
+                        if (vals.notes) {
+                            messageText += ` (Notes: ${vals.notes})`;
+                        }
+                        console.log(`[Webhook] Synthesized message from Flow: "${messageText}"`);
+                    } catch (e) {
+                        messageText = 'Order Flow Submitted';
                     }
-                    console.log(`[Webhook] Synthesized message from Flow: "${messageText}"`);
-                } catch (e) {
-                    messageText = 'Order Flow Submitted';
+                } else if (req.body.interactive.type === 'list_reply' || req.body.interactive.list_reply) {
+                    messageText = req.body.interactive.list_reply.id;
+                } else if (req.body.interactive.type === 'button_reply' || req.body.interactive.button_reply) {
+                    messageText = req.body.interactive.button_reply.id;
                 }
             } else if (req.body.text && req.body.text.body) {
                 messageText = req.body.text.body;
@@ -147,18 +165,24 @@ router.post('/', injectTenantContext, async (req, res) => {
             if (req.body.audio || req.body.voice || req.body.message_type === 'audio') {
                 isAudio = true;
                 audioUrl = req.body.audio || req.body.voice || req.body.message;
-            } else if (req.body.message_type === 'interactive' && req.body.interactive && req.body.interactive.type === 'nfm_reply') {
-                const responseJsonStr = req.body.interactive.nfm_reply.response_json;
-                try {
-                    const parsedFlow = JSON.parse(responseJsonStr);
-                    const vals = parsedFlow.values || {};
-                    messageText = `Book ${vals.qty || 12} pieces of ${vals.color || 'RED'} ${vals.garment_type || 'KURTI'} in size ${vals.size || 'L'}`;
-                    if (vals.notes) {
-                        messageText += ` (Notes: ${vals.notes})`;
+            } else if (req.body.message_type === 'interactive' && req.body.interactive) {
+                if (req.body.interactive.type === 'nfm_reply') {
+                    const responseJsonStr = req.body.interactive.nfm_reply.response_json;
+                    try {
+                        const parsedFlow = JSON.parse(responseJsonStr);
+                        const vals = parsedFlow.values || {};
+                        messageText = `Book ${vals.qty || 12} pieces of ${vals.color || 'RED'} ${vals.garment_type || 'KURTI'} in size ${vals.size || 'L'}`;
+                        if (vals.notes) {
+                            messageText += ` (Notes: ${vals.notes})`;
+                        }
+                        console.log(`[Webhook] Synthesized message from Flow: "${messageText}"`);
+                    } catch (e) {
+                        messageText = 'Order Flow Submitted';
                     }
-                    console.log(`[Webhook] Synthesized message from Flow: "${messageText}"`);
-                } catch (e) {
-                    messageText = 'Order Flow Submitted';
+                } else if (req.body.interactive.type === 'list_reply' || req.body.interactive.list_reply) {
+                    messageText = req.body.interactive.list_reply.id;
+                } else if (req.body.interactive.type === 'button_reply' || req.body.interactive.button_reply) {
+                    messageText = req.body.interactive.button_reply.id;
                 }
             } else {
                 messageText = req.body.message;
