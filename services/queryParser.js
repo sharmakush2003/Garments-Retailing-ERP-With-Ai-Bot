@@ -40,6 +40,8 @@ Available Intents:
 - 'SHIPMENT_TRACKING': Tracking active shipments ("where has it reached", "status of order").
 - 'OUTSTANDING_LOOKUP': Querying credit limit, due balance, or outstanding amount.
 - 'ORDER_FLOW_TRIGGER': User wants to start or open a new order booking form (e.g., "book order", "place order", "order form"). Note: If the user query specifies style, quantity, size, or color to order (e.g. "Book 12 pieces of red kurta"), classify it as INVENTORY_LOOKUP instead so we can check stock.
+- 'PLACE_ORDER': Booking/placing an order in chat (e.g., "Book 100 white shirts XL", "Book 12 pieces of red kurta", "order 10 pcs of style 101"). Extract items into the 'args.items' array.
+- 'REORDER': User wants to repeat a previous order or reorder (e.g., "reorder order #1001", "reorder my last shipment"). Extract order ID into 'args.orderId'.
 
 Parameters to extract in 'args' object (use null if not mentioned):
 - 'skuCode': Standardized style code (e.g. "KURTI-FES-BLU-L") or numeric style/design code (e.g. "102", "110").
@@ -49,6 +51,13 @@ Parameters to extract in 'args' object (use null if not mentioned):
 - 'requestedQty': Integer number of pieces/quantity requested (e.g. "Book 12 pcs" -> 12).
 - 'maxPrice': Numeric maximum price filter (e.g. "under 500" -> 500).
 - 'fabric': Material name (e.g. "cotton", "silk", "denim").
+- 'orderId': Numeric ID of a past order to reorder.
+- 'items': An array of objects representing items to order (for PLACE_ORDER intent). Each item object contains:
+  - 'skuCode': string or null
+  - 'color': string or null
+  - 'size': string or null
+  - 'garmentType': string or null
+  - 'requestedQty': number or null
 
 Return ONLY a valid JSON object matching this schema:
 {
@@ -60,7 +69,9 @@ Return ONLY a valid JSON object matching this schema:
     "garmentType": string or null,
     "requestedQty": number or null,
     "maxPrice": number or null,
-    "fabric": string or null
+    "fabric": string or null,
+    "orderId": number or null,
+    "items": array or null
   },
   "chatReply": string or null
 }
@@ -160,6 +171,8 @@ Available Intents:
 - 'SHIPMENT_TRACKING': Tracking active shipments ("where has it reached", "status of order").
 - 'OUTSTANDING_LOOKUP': Querying credit limit, due balance, or outstanding amount.
 - 'ORDER_FLOW_TRIGGER': User wants to start or open a new order booking form (e.g., "book order", "place order", "order form"). Note: If the user query specifies style, quantity, size, or color to order (e.g. "Book 12 pieces of red kurta"), classify it as INVENTORY_LOOKUP instead so we can check stock.
+- 'PLACE_ORDER': Booking/placing an order in chat (e.g., "Book 100 white shirts XL", "Book 12 pieces of red kurta", "order 10 pcs of style 101"). Extract items into the 'args.items' array.
+- 'REORDER': User wants to repeat a previous order or reorder (e.g., "reorder order #1001", "reorder my last shipment"). Extract order ID into 'args.orderId'.
 
 Parameters to extract in 'args' object (use null if not mentioned):
 - 'skuCode': Standardized style code (e.g. "KURTI-FES-BLU-L") or numeric style/design code (e.g. "102", "110").
@@ -169,6 +182,13 @@ Parameters to extract in 'args' object (use null if not mentioned):
 - 'requestedQty': Integer number of pieces/quantity requested (e.g. "Book 12 pcs" -> 12).
 - 'maxPrice': Numeric maximum price filter (e.g. "under 500" -> 500).
 - 'fabric': Material name (e.g. "cotton", "silk", "denim").
+- 'orderId': Numeric ID of a past order to reorder.
+- 'items': An array of objects representing items to order (for PLACE_ORDER intent). Each item object contains:
+  - 'skuCode': string or null
+  - 'color': string or null
+  - 'size': string or null
+  - 'garmentType': string or null
+  - 'requestedQty': number or null
 
 Return ONLY a valid JSON object matching this schema:
 {
@@ -180,7 +200,9 @@ Return ONLY a valid JSON object matching this schema:
     "garmentType": string or null,
     "requestedQty": number or null,
     "maxPrice": number or null,
-    "fabric": string or null
+    "fabric": string or null,
+    "orderId": number or null,
+    "items": array or null
   },
   "chatReply": string or null
 }
@@ -345,6 +367,17 @@ Do not include any markdown formatting, comments, or extra text in your output. 
      */
     static async parseMessageWithRegex(messageText) {
         const text = messageText.toLowerCase().trim();
+
+        // Detect REORDER intent
+        if (text.includes('reorder') || text.includes('repeat')) {
+            const orderIdMatch = text.match(/(?:order|id|#)\s*#?(\d+)/i) || text.match(/(?<!\d)(\d+)(?!\d)/);
+            return {
+                intent: 'REORDER',
+                args: {
+                    orderId: orderIdMatch ? parseInt(orderIdMatch[1]) : null
+                }
+            };
+        }
 
         // 1. Detect interactive button/list clicks or category selections
         if (text.includes('cat_kurti') || text.includes('1️⃣ kurti') || text.includes('kurti 👗') || text === 'kurti' || text === 'kurtis') {
@@ -574,6 +607,28 @@ Do not include any markdown formatting, comments, or extra text in your output. 
         // Extract requested quantity if user asks "Do you have 50 pieces?"
         const qtyMatch = text.match(/(\d+)\s*(?:piece|pieces|pcs|pc)/i) || text.match(/(?:have|get|want)\s*(\d+)/i);
         const requestedQty = qtyMatch ? parseInt(qtyMatch[1]) : null;
+
+        const isPurchaseIntent = text.includes('book') || text.includes('order') || text.includes('place order') || text.includes('buy');
+        if (isPurchaseIntent && requestedQty) {
+            return {
+                intent: 'PLACE_ORDER',
+                args: {
+                    items: [{
+                        skuCode: skuSearch,
+                        color: detectedColor,
+                        size: detectedSize,
+                        garmentType: detectedGarment,
+                        requestedQty: requestedQty
+                    }],
+                    skuCode: skuSearch,
+                    color: detectedColor,
+                    originalColor: detectedColorWord,
+                    size: detectedSize,
+                    garmentType: detectedGarment,
+                    requestedQty: requestedQty
+                }
+            };
+        }
 
         return {
             intent: 'INVENTORY_LOOKUP',
@@ -935,6 +990,22 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                     return `📦 *Stock Status for You!* ✨\n\n👗 *Product*: ${data.name}\n🎨 *Color*: ${data.color}\n📏 *Size*: ${data.size}\n🆔 *SKU*: ${data.sku_code}\n\n✅ *Current Ready Stock*: *${data.available_qty} Pieces* 🌸\n🚚 *Dispatch Status*: Ready for immediate dispatch in 1-2 days! ✨\n🏬 *Warehouse*: Central Depot (Jaipur)\n\n💬 Reply *"Book 10 pcs"* to reserve this stock for you! 💖`;
                 }
                 return `❌ *Stock Status for You!* ✨\n\n👗 *Item*: ${data ? data.sku_code || 'Garment' : 'Requested Combination'}\n⚠️ *Status*: Currently out of stock, so sorry! 🥺\n\n💡 *Recommendation*: Similar gorgeous styles are available. Reply *"Check Stock"* to see them! 🌸`;
+
+            case 'PLACE_ORDER':
+                if (data && data.orderId) {
+                    const itemsText = data.items.map(item => `  • ${item.name} (${item.size}, ${item.color}) x *${item.qty} pcs* @ ₹${item.pricePerItem}/pc = *₹${item.total}*`).join('\n');
+                    const schemeText = data.schemeName ? `\n🎁 *Scheme Applied*: ${data.schemeName} (-₹${data.discount})` : '';
+                    return `🛒 *Order Booked Successfully!* 🎉\n_________________________\n\n📌 *Order ID*: #${data.orderId}\n👤 *Customer*: ${data.customerName}\n\n🛍️ *Items Ordered*:\n${itemsText}\n${schemeText}\n💰 *Net Payable Amount*: *₹${data.netPayable}* 💳\n📝 *Order Status*: *${data.status}* (Awaiting verification)\n\n💖 Thank you for ordering with us, dear! Anything else I can do for you? 🌸`;
+                }
+                return `❌ *Order Booking Failed* 🥺\n_________________________\n\nOh, sorry! We couldn't book your order. Please make sure items are in stock and try again, dear!`;
+
+            case 'REORDER':
+                if (data && data.orderId) {
+                    const itemsText = data.items.map(item => `  • ${item.name} (${item.size}, ${item.color}) x *${item.qty} pcs* @ ₹${item.pricePerItem}/pc = *₹${item.total}*`).join('\n');
+                    const schemeText = data.schemeName ? `\n🎁 *Scheme Applied*: ${data.schemeName} (-₹${data.discount})` : '';
+                    return `🚚 *Reorder Placed Successfully!* 🔄\n_________________________\n\n📌 *New Order ID*: #${data.orderId}\n👤 *Customer*: ${data.customerName}\n\n🛍️ *Reordered Items*:\n${itemsText}\n${schemeText}\n💰 *Net Payable Amount*: *₹${data.netPayable}* 💳\n📝 *Order Status*: *${data.status}* (Awaiting verification)\n\n💖 Past items have been successfully rebooked for you, dear!`;
+                }
+                return `❌ *Reorder Failed* 🥺\n_________________________\n\nOh, sorry! We couldn't process the reorder for you. Please check if the past order was valid and items are still in stock, dear!`;
 
             case 'COLOURS_LOOKUP':
                 if (data && data.length > 0) {

@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const webhookRouter = require('./routes/webhook');
 const { useMemoryFallback } = require('./workers/messageWorker');
+const { getTenantDb } = require('./services/dbManager');
+const OrderService = require('./services/orderService');
 
 // In-Memory Logger for remote diagnostics
 const logStore = [];
@@ -227,6 +229,36 @@ app.get('/api/mock/outstanding', (req, res) => {
         if (match) return res.json(match);
     }
     res.json(items[0] || {});
+});
+
+// 11. Create a new Sales Order
+app.post('/api/orders', async (req, res) => {
+    try {
+        const { customerId, items } = req.body;
+        const tenantId = req.headers['x-tenant-id'] || 'Co_102';
+        const db = await getTenantDb(tenantId);
+
+        const order = await OrderService.createOrder(db, customerId || 1, items);
+        res.status(201).json(order);
+    } catch (err) {
+        console.error('[API] Failed to create order:', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 12. Reorder a past order
+app.post('/api/orders/reorder', async (req, res) => {
+    try {
+        const { orderId } = req.body;
+        const tenantId = req.headers['x-tenant-id'] || 'Co_102';
+        const db = await getTenantDb(tenantId);
+
+        const order = await OrderService.reorder(db, orderId);
+        res.status(201).json(order);
+    } catch (err) {
+        console.error('[API] Failed to reorder:', err.message);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Health check endpoint

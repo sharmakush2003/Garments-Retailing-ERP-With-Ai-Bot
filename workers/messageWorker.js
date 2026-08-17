@@ -13,6 +13,7 @@ const { getTenantDb } = require('../services/dbManager');
 const InventoryService = require('../services/inventoryService');
 const QueryParserService = require('../services/queryParser');
 const PDFGeneratorService = require('../services/pdfGenerator');
+const OrderService = require('../services/orderService');
 const axios = require('axios');
 const EventEmitter = require('events');
 const path = require('path');
@@ -408,6 +409,52 @@ async function processMessageJob(data) {
                 } catch (e) {
                     const items = require('../mock_data/outstanding.json');
                     resultData = items.find(i => i.phone && (i.phone.includes(targetPhone) || targetPhone.includes(i.phone))) || items[0] || {};
+                }
+                break;
+            case 'PLACE_ORDER':
+                // For placing order, get items list or create it from single args
+                const orderItems = parsed.args.items || [{
+                    skuCode: parsed.args.skuCode,
+                    color: parsed.args.color,
+                    size: parsed.args.size,
+                    garmentType: parsed.args.garmentType,
+                    requestedQty: parsed.args.requestedQty
+                }];
+                // Call createOrder
+                try {
+                    // Try via REST API first
+                    const port = process.env.PORT || 3000;
+                    const orderRes = await axios.post(`${process.env.API_BASE_URL || `http://localhost:${port}`}/api/orders`, {
+                        customerId: customerId || 1, // Fallback default customer
+                        items: orderItems
+                    });
+                    resultData = orderRes.data;
+                } catch (e) {
+                    console.warn('[Worker] API order placement failed, falling back to local DB:', e.message);
+                    resultData = await OrderService.createOrder(db, customerId || 1, orderItems);
+                }
+                break;
+            case 'REORDER':
+                let targetOrderId = parsed.args.orderId;
+                if (!targetOrderId) {
+                    // Find latest completed/dispatched order for the customer
+                    const latestOrder = await db.get(
+                        'SELECT order_id FROM sales_orders WHERE customer_id = ? ORDER BY order_id DESC LIMIT 1',
+                        [customerId || 1]
+                    );
+                    targetOrderId = latestOrder ? latestOrder.order_id : null;
+                }
+                if (targetOrderId) {
+                    try {
+                        const port = process.env.PORT || 3000;
+                        const orderRes = await axios.post(`${process.env.API_BASE_URL || `http://localhost:${port}`}/api/orders/reorder`, {
+                            orderId: targetOrderId
+                        });
+                        resultData = orderRes.data;
+                    } catch (e) {
+                        console.warn('[Worker] API reorder failed, falling back to local DB:', e.message);
+                        resultData = await OrderService.reorder(db, targetOrderId);
+                    }
                 }
                 break;
         }

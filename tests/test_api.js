@@ -213,6 +213,46 @@ const server = app.listen(PORT, async () => {
         assert.ok(replyText16.includes('Credit & Outstanding Status Summary'));
         console.log('✓ Test Case 16 Passed!');
 
+        // Test Case 17: Order Placement via REST API & Query Parsing
+        console.log('\n--- Running Test Case 17: Order Placement API & Parse ---');
+        const parsed17 = await QueryParserService.parseMessage('Book 12 pieces of Blue Kurti size L');
+        assert.strictEqual(parsed17.intent, 'PLACE_ORDER');
+        assert.ok(parsed17.args.items && parsed17.args.items.length > 0);
+        assert.strictEqual(parsed17.args.items[0].requestedQty, 12);
+        
+        res = await axios.post(`http://localhost:${PORT}/api/orders`, {
+            customerId: 1,
+            items: parsed17.args.items
+        });
+        console.log('Order API Response Status:', res.status);
+        console.log('Order API Response Data:', JSON.stringify(res.data, null, 2));
+        assert.strictEqual(res.status, 201);
+        assert.ok(res.data.orderId);
+        assert.strictEqual(res.data.items[0].qty, 12);
+        const replyText17 = QueryParserService.formatResponse(parsed17.intent, res.data, { role: 'Customer', companyName: 'Kaira' });
+        console.log('Formatted response:', replyText17);
+        assert.ok(replyText17.includes('Order Booked Successfully!'));
+        console.log('✓ Test Case 17 Passed!');
+
+        // Test Case 18: Reorder flow via REST API & Query Parsing
+        console.log('\n--- Running Test Case 18: Reorder API & Parse ---');
+        const parsed18 = await QueryParserService.parseMessage('Reorder order #1');
+        assert.strictEqual(parsed18.intent, 'REORDER');
+        assert.strictEqual(parsed18.args.orderId, 1);
+        
+        res = await axios.post(`http://localhost:${PORT}/api/orders/reorder`, {
+            orderId: parsed18.args.orderId
+        });
+        console.log('Reorder API Response Status:', res.status);
+        console.log('Reorder API Response Data:', JSON.stringify(res.data, null, 2));
+        assert.strictEqual(res.status, 201);
+        assert.ok(res.data.orderId);
+        assert.ok(res.data.orderId !== 1); // a new order is created
+        const replyText18 = QueryParserService.formatResponse(parsed18.intent, res.data, { role: 'Customer', companyName: 'Kaira' });
+        console.log('Formatted response:', replyText18);
+        assert.ok(replyText18.includes('Reorder Placed Successfully!'));
+        console.log('✓ Test Case 18 Passed!');
+
         console.log('\n======================================');
         console.log('★ ALL INTEGRATION TESTS PASSED ★');
         console.log('======================================');
