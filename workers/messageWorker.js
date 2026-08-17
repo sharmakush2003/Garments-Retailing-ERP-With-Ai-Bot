@@ -215,9 +215,20 @@ async function processMessageJob(data) {
     let sessionPhone = null;
     let verifiedRole = role;
     let verifiedCustomerId = customerId;
+    let senderRole = 'Guest';
 
     try {
         const masterDb = await getMasterDb();
+        
+        // Find sender's actual role
+        const senderUser = await masterDb.get(
+            'SELECT role FROM tenant_whatsapp_users WHERE phone_number = ?',
+            [phoneNumber]
+        );
+        if (senderUser) {
+            senderRole = senderUser.role;
+        }
+
         const session = await masterDb.get('SELECT verified_phone FROM whatsapp_sessions WHERE sender_phone = ?', [phoneNumber]);
         if (session) {
             sessionPhone = session.verified_phone;
@@ -233,7 +244,7 @@ async function processMessageJob(data) {
             }
         }
     } catch (e) {
-        console.warn('[Worker] Failed to query whatsapp_sessions:', e.message);
+        console.warn('[Worker] Failed to query masterDb:', e.message);
     }
 
     // 2. Parse text/audio to extract intent & arguments
@@ -313,6 +324,16 @@ async function processMessageJob(data) {
     console.log(`[Worker] Parsed intent: ${parsed.intent}`, parsed.args);
 
     const targetPhone = (parsed.args && parsed.args.overridePhone) || sessionPhone || phoneNumber;
+
+    // Security Authorization Check: Customer and Guest roles CANNOT query other phone numbers
+    if (personalIntents.includes(parsed.intent)) {
+        const cleanTarget = targetPhone.replace(/[^0-9]/g, '');
+        const cleanSender = phoneNumber.replace(/[^0-9]/g, '');
+        if (cleanTarget !== cleanSender && senderRole !== 'Owner' && senderRole !== 'Sales') {
+            console.warn(`[Worker] Security Violation: Sender ${phoneNumber} (${senderRole}) attempted to query ${targetPhone}`);
+            parsed.intent = 'SECURITY_VIOLATION';
+        }
+    }
 
     let resultData = null;
     let filePath = null;
@@ -488,6 +509,16 @@ async function processMessageJob(data) {
             case 'IDENTITY_RESOLVED':
                 const matchedUser = parsed.args ? parsed.args.user : null;
                 if (matchedUser && matchedUser.phone_number) {
+                    const cleanTarget = matchedUser.phone_number.replace(/[^0-9]/g, '');
+                    const cleanSender = phoneNumber.replace(/[^0-9]/g, '');
+                    
+                    if (cleanTarget !== cleanSender && senderRole !== 'Owner' && senderRole !== 'Sales') {
+                        console.warn(`[Worker] Security Violation during Verification: Sender ${phoneNumber} (${senderRole}) attempted to verify ${matchedUser.phone_number}`);
+                        parsed.intent = 'SECURITY_VIOLATION';
+                        resultData = null;
+                        break;
+                    }
+
                     try {
                         const masterDb = await getMasterDb();
                         await masterDb.run(

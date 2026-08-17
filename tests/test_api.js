@@ -262,6 +262,44 @@ const server = app.listen(PORT, async () => {
         assert.ok(replyText19.includes('Account Not Found'));
         console.log('✓ Test Case 19 Passed!');
 
+        // Test Case 20: Security Verification Block - Guest/Customer querying others
+        console.log('\n--- Running Test Case 20: Security Verification Block (Query other number) ---');
+        const { processMessageJob } = require('../workers/messageWorker');
+        
+        // Kush Sharma (Customer) chatting from '917425016636' tries to verify '919045099111' (Aarav Patel)
+        const jobResult20 = await processMessageJob({
+            phoneNumber: '917425016636',
+            fallbackPhone: '917425016636',
+            messageText: '919045099111',
+            tenantContext: {
+                tenantId: 'Co_102',
+                role: 'Customer',
+                customerId: 2
+            }
+        });
+        
+        console.log('Resulting reply text:', jobResult20.replyText);
+        assert.ok(jobResult20.replyText.includes('Security Verification Failed'));
+        console.log('✓ Test Case 20 Passed!');
+
+        // Test Case 21: Security Verification Bypass - Owner querying others
+        console.log('\n--- Running Test Case 21: Security Verification Bypass (Owner) ---');
+        // Aarav Mehta (Owner) chatting from '919876543210' verifies '919045099111' (Aarav Patel)
+        const jobResult21 = await processMessageJob({
+            phoneNumber: '919876543210',
+            fallbackPhone: '919876543210',
+            messageText: '919045099111',
+            tenantContext: {
+                tenantId: 'Co_102',
+                role: 'Owner',
+                customerId: null
+            }
+        });
+        
+        console.log('Resulting reply text:', JSON.stringify(jobResult21.replyText));
+        assert.ok(jobResult21.replyText.interactive.header.text.includes('Welcome, Aarav Patel'));
+        console.log('✓ Test Case 21 Passed!');
+
         console.log('\n======================================');
         console.log('★ ALL INTEGRATION TESTS PASSED ★');
         console.log('======================================');

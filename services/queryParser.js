@@ -356,7 +356,22 @@ Do not include any markdown formatting, comments, or extra text in your output. 
             'OLD_LEDGER_STATUS', 'OUTSTANDING_LOOKUP', 'LAST_INVOICE_COPY', 'OLD_SHIPMENT_INQUIRY',
             'PLACE_ORDER', 'REORDER'
         ];
-        if (matchedUser && !transactionalIntents.includes(parsed.intent)) {
+        
+        const isRealInventoryQuery = parsed.intent === 'INVENTORY_LOOKUP' && 
+            (parsed.args && (parsed.args.skuCode || parsed.args.color || parsed.args.size || parsed.args.garmentType));
+
+        let shouldResolveIdentity = !!matchedUser;
+        if (shouldResolveIdentity) {
+            if (transactionalIntents.includes(parsed.intent)) {
+                if (parsed.intent === 'INVENTORY_LOOKUP' && !isRealInventoryQuery) {
+                    shouldResolveIdentity = true;
+                } else {
+                    shouldResolveIdentity = false;
+                }
+            }
+        }
+
+        if (shouldResolveIdentity) {
             return { intent: 'IDENTITY_RESOLVED', args: { user: matchedUser } };
         }
 
@@ -667,7 +682,7 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                             text: `${context.companyName || 'Kaira'} 💁‍♀️`
                         },
                         body: {
-                            text: context.chatReply || `👋 Welcome to *Digifys Soft Solutions Garments*! 🙏\n\nI am *Kaira* 💁‍♀️, your helper today. How can I help you, dear? Please select an option below: ✨\n\n⚠️ *Note:* I am Kaira, your AI chatbot helper 🤖, so I can sometimes make little mistakes. If you are taking any final or financial decisions, please verify them manually once! 🌸💖`
+                            text: context.chatReply || `Welcome to Kaira wholesale garments retailing platform. How can I help you today? Need to check our catalog, stock, or prices?`
                         },
                         footer: {
                             text: 'Digify Soft Solutions Kaira 💁‍♀️ Chatbot'
@@ -676,16 +691,16 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                             button: 'View Options 📋',
                             sections: [
                                 {
-                                    title: 'Assistant Menu 📋',
+                                    title: 'Menu Options 📋',
                                     rows: [
-                                        { id: 'btn_catalogue', title: '1️⃣ Products Catalog ✨', description: 'Show all available products' },
+                                        { id: 'btn_catalogue', title: '1️⃣ Product Catalog 📖', description: 'View full wholesale catalog' },
                                         { id: 'btn_stock', title: '2️⃣ Check Stock 📦', description: 'Check color & size availability' },
-                                        { id: 'btn_price', title: '3️⃣ Check Price 🏷️', description: 'Get wholesale tier rates' },
+                                        { id: 'btn_price', title: '3️⃣ Check Price 🏷️', description: 'Get wholesale rate card' },
                                         { id: 'btn_ledger', title: '4️⃣ Ledger Status 📒', description: 'Statement of accounts/ledger' },
-                                        { id: 'btn_tracking', title: '5️⃣ Shipment Tracking 📍', description: 'Track active shipment location' },
-                                        { id: 'btn_outstanding', title: '6️⃣ Outstanding Credit 💰', description: 'Check credit limits & due balances' },
-                                        { id: 'btn_invoice', title: '7️⃣ Last Invoice Copy 📄', description: 'Get copy of your latest invoice' },
-                                        { id: 'btn_past_shipments', title: '8️⃣ Past Shipments 🚚', description: 'View historical completed dispatches' }
+                                        { id: 'btn_tracking', title: '5️⃣ Shipment Tracking 📍', description: 'Track active shipment status' },
+                                        { id: 'btn_outstanding', title: '6️⃣ Outstanding Credit 💰', description: 'Check outstanding/credit limit' },
+                                        { id: 'btn_invoice', title: '7️⃣ Last Invoice Copy 📄', description: 'Get copy of latest invoice' },
+                                        { id: 'btn_past_shipments', title: '8️⃣ Past Shipments 🚚', description: 'View past shipment history' }
                                     ]
                                 }
                             ]
@@ -1182,6 +1197,9 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                 const phoneNum = context.args ? context.args.phone : '';
                 return `❌ *Account Not Found* 🥺\n_________________________\n\nOh, sorry! I couldn't find any registered account with the number *${phoneNum}* in our system.\n\n💡 *Action*: Please check the number and reply again (e.g. *917425016636*), or contact our Support Team to register your number! 🌸`;
 
+            case 'SECURITY_VIOLATION':
+                return `❌ *Security Verification Failed* 🔒\n_________________________\n\nOh, sorry! You are not authorized to view account details for another number.\n\n💡 *Note*: Customers can only access information linked to their own registered WhatsApp phone number. If you need assistance, please contact our Support Team! 🌸`;
+
             default:
                 return {
                     type: 'interactive',
@@ -1192,7 +1210,7 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                             text: `${context.companyName || 'Kaira'} 💁‍♀️`
                         },
                         body: {
-                            text: context.chatReply || `Welcome to Kaira support! 💁‍♀️ How may I help you today, dear? 🌸\n\nSelect an option below to check your account status, catalog, or stock:`
+                            text: context.chatReply || `Welcome to Kaira wholesale garments retailing platform. How can I help you today? Need to check our catalog, stock, or prices?`
                         },
                         footer: {
                             text: 'Digify Soft Solutions Kaira 💁‍♀️ Chatbot'
@@ -1201,16 +1219,16 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                             button: 'View Options 📋',
                             sections: [
                                 {
-                                    title: 'Assistant Menu 📋',
+                                    title: 'Menu Options 📋',
                                     rows: [
-                                        { id: 'btn_catalogue', title: '1️⃣ Products Catalog ✨', description: 'Show all available products' },
+                                        { id: 'btn_catalogue', title: '1️⃣ Product Catalog 📖', description: 'View full wholesale catalog' },
                                         { id: 'btn_stock', title: '2️⃣ Check Stock 📦', description: 'Check color & size availability' },
-                                        { id: 'btn_price', title: '3️⃣ Check Price 🏷️', description: 'Get wholesale tier rates' },
+                                        { id: 'btn_price', title: '3️⃣ Check Price 🏷️', description: 'Get wholesale rate card' },
                                         { id: 'btn_ledger', title: '4️⃣ Ledger Status 📒', description: 'Statement of accounts/ledger' },
-                                        { id: 'btn_tracking', title: '5️⃣ Shipment Tracking 📍', description: 'Track active shipment location' },
-                                        { id: 'btn_outstanding', title: '6️⃣ Outstanding Credit 💰', description: 'Check credit limits & due balances' },
-                                        { id: 'btn_invoice', title: '7️⃣ Last Invoice Copy 📄', description: 'Get copy of your latest invoice' },
-                                        { id: 'btn_past_shipments', title: '8️⃣ Past Shipments 🚚', description: 'View historical completed dispatches' }
+                                        { id: 'btn_tracking', title: '5️⃣ Shipment Tracking 📍', description: 'Track active shipment status' },
+                                        { id: 'btn_outstanding', title: '6️⃣ Outstanding Credit 💰', description: 'Check outstanding/credit limit' },
+                                        { id: 'btn_invoice', title: '7️⃣ Last Invoice Copy 📄', description: 'Get copy of latest invoice' },
+                                        { id: 'btn_past_shipments', title: '8️⃣ Past Shipments 🚚', description: 'View past shipment history' }
                                     ]
                                 }
                             ]
