@@ -300,6 +300,25 @@ const server = app.listen(PORT, async () => {
         assert.ok(jobResult21.replyText.interactive.header.text.includes('Welcome, Aarav Patel'));
         console.log('✓ Test Case 21 Passed!');
 
+        // Test Case 22: Country Code Agnostic Phone Number Verification
+        console.log('\n--- Running Test Case 22: Country Code Agnostic Phone Number Verification ---');
+        // Priya Singh chatting from '8233816674' (10 digits) verifies '918233816674' (12 digits)
+        const jobResult22 = await processMessageJob({
+            phoneNumber: '8233816674',
+            fallbackPhone: '8233816674',
+            messageText: '918233816674',
+            tenantContext: {
+                tenantId: 'Co_102',
+                role: 'Customer',
+                customerId: 1
+            }
+        });
+        
+        console.log('Resulting reply text:', JSON.stringify(jobResult22.replyText));
+        // Verify it returns the welcome message (meaning verification passed)
+        assert.ok(jobResult22.replyText.interactive.header.text.includes('Welcome, Priya Singh'));
+        console.log('✓ Test Case 22 Passed!');
+
         console.log('\n======================================');
         console.log('★ ALL INTEGRATION TESTS PASSED ★');
         console.log('======================================');

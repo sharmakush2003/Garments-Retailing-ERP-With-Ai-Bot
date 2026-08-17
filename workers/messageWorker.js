@@ -205,6 +205,18 @@ async function sendOutboundWhatsAppMessage(phoneNumber, replyText, fallbackPhone
 async function processMessageJob(data) {
     const { phoneNumber, fallbackPhone, messageText, tenantContext } = data;
     const { tenantId, role, customerId } = tenantContext;
+
+    // Helper to check same phone number ignoring country code
+    const isSamePhone = (p1, p2) => {
+        if (!p1 || !p2) return false;
+        const c1 = p1.replace(/[^0-9]/g, '');
+        const c2 = p2.replace(/[^0-9]/g, '');
+        if (c1 === c2) return true;
+        if (c1.length >= 10 && c2.length >= 10) {
+            return c1.slice(-10) === c2.slice(-10);
+        }
+        return false;
+    };
     
     console.log(`[Worker] Processing message from ${phoneNumber} for tenant ${tenantId} (${role})`);
 
@@ -327,9 +339,7 @@ async function processMessageJob(data) {
 
     // Security Authorization Check: Customer and Guest roles CANNOT query other phone numbers
     if (personalIntents.includes(parsed.intent)) {
-        const cleanTarget = targetPhone.replace(/[^0-9]/g, '');
-        const cleanSender = phoneNumber.replace(/[^0-9]/g, '');
-        if (cleanTarget !== cleanSender && senderRole !== 'Owner' && senderRole !== 'Sales') {
+        if (!isSamePhone(targetPhone, phoneNumber) && senderRole !== 'Owner' && senderRole !== 'Sales') {
             console.warn(`[Worker] Security Violation: Sender ${phoneNumber} (${senderRole}) attempted to query ${targetPhone}`);
             parsed.intent = 'SECURITY_VIOLATION';
         }
@@ -509,10 +519,7 @@ async function processMessageJob(data) {
             case 'IDENTITY_RESOLVED':
                 const matchedUser = parsed.args ? parsed.args.user : null;
                 if (matchedUser && matchedUser.phone_number) {
-                    const cleanTarget = matchedUser.phone_number.replace(/[^0-9]/g, '');
-                    const cleanSender = phoneNumber.replace(/[^0-9]/g, '');
-                    
-                    if (cleanTarget !== cleanSender && senderRole !== 'Owner' && senderRole !== 'Sales') {
+                    if (!isSamePhone(matchedUser.phone_number, phoneNumber) && senderRole !== 'Owner' && senderRole !== 'Sales') {
                         console.warn(`[Worker] Security Violation during Verification: Sender ${phoneNumber} (${senderRole}) attempted to verify ${matchedUser.phone_number}`);
                         parsed.intent = 'SECURITY_VIOLATION';
                         resultData = null;
