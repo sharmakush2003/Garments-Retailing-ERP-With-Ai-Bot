@@ -120,12 +120,12 @@ async function getMasterDb() {
 
     await masterDb.run(`
         INSERT OR IGNORE INTO tenant_whatsapp_users (tenant_id, phone_number, erp_customer_id, role)
-        VALUES ('Co_102', '918233816674', 1, 'Customer')
+        VALUES ('Co_102', '918233816674', 2, 'Customer')
     `);
 
     await masterDb.run(`
         INSERT OR IGNORE INTO tenant_whatsapp_users (tenant_id, phone_number, erp_customer_id, role)
-        VALUES ('Co_102', '917425016636', 2, 'Customer')
+        VALUES ('Co_102', '917425016636', null, 'Sales')
     `);
 
     // Owner registered on WhatsApp
