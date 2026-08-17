@@ -98,6 +98,12 @@ async function getMasterDb() {
             role TEXT CHECK(role IN ('Owner', 'Sales', 'Customer', 'Vendor')) NOT NULL,
             FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id) ON DELETE CASCADE
         );
+
+        CREATE TABLE IF NOT EXISTS whatsapp_sessions (
+            sender_phone VARCHAR(20) PRIMARY KEY,
+            verified_phone VARCHAR(20) NOT NULL,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
     `);
 
     // Seed master tenant mock records

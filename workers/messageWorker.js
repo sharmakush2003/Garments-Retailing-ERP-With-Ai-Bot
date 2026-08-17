@@ -9,7 +9,7 @@ if (process.env.USE_REDIS === 'true') {
     }
 }
 
-const { getTenantDb } = require('../services/dbManager');
+const { getTenantDb, getMasterDb } = require('../services/dbManager');
 const InventoryService = require('../services/inventoryService');
 const QueryParserService = require('../services/queryParser');
 const PDFGeneratorService = require('../services/pdfGenerator');
@@ -211,6 +211,31 @@ async function processMessageJob(data) {
     // 1. Get database instance for tenant
     const db = await getTenantDb(tenantId);
 
+    // Retrieve active verification session if exists
+    let sessionPhone = null;
+    let verifiedRole = role;
+    let verifiedCustomerId = customerId;
+
+    try {
+        const masterDb = await getMasterDb();
+        const session = await masterDb.get('SELECT verified_phone FROM whatsapp_sessions WHERE sender_phone = ?', [phoneNumber]);
+        if (session) {
+            sessionPhone = session.verified_phone;
+            console.log(`[Worker] Active session found for ${phoneNumber} -> verified phone: ${sessionPhone}`);
+            const verifiedUser = await masterDb.get(
+                'SELECT role, erp_customer_id FROM tenant_whatsapp_users WHERE phone_number = ?',
+                [sessionPhone]
+            );
+            if (verifiedUser) {
+                verifiedRole = verifiedUser.role;
+                verifiedCustomerId = verifiedUser.erp_customer_id;
+                console.log(`[Worker] Overriding role to ${verifiedRole} and customerId to ${verifiedCustomerId} based on active session`);
+            }
+        }
+    } catch (e) {
+        console.warn('[Worker] Failed to query whatsapp_sessions:', e.message);
+    }
+
     // 2. Parse text/audio to extract intent & arguments
     let parsed = null;
     let messageTextToParse = messageText;
@@ -281,13 +306,13 @@ async function processMessageJob(data) {
 
     // Intercept personal account inquiries when no phone number is matched/provided in the query
     const personalIntents = ['OLD_LEDGER_STATUS', 'OUTSTANDING_LOOKUP', 'LAST_INVOICE_COPY', 'OLD_SHIPMENT_INQUIRY'];
-    if (personalIntents.includes(parsed.intent) && (!parsed.args || !parsed.args.overridePhone)) {
+    if (personalIntents.includes(parsed.intent) && (!parsed.args || !parsed.args.overridePhone) && !sessionPhone) {
         parsed.intent = 'ASK_USER_PHONE';
     }
 
     console.log(`[Worker] Parsed intent: ${parsed.intent}`, parsed.args);
 
-    const targetPhone = (parsed.args && parsed.args.overridePhone) || phoneNumber;
+    const targetPhone = (parsed.args && parsed.args.overridePhone) || sessionPhone || phoneNumber;
 
     let resultData = null;
     let filePath = null;
@@ -301,12 +326,15 @@ async function processMessageJob(data) {
                 resultData = await InventoryService.getStockAvailability(db, parsed.args.skuCode, parsed.args);
                 break;
             case 'COLOURS_LOOKUP':
+                resultData = await InventoryService.getColoursAvailability(db, parsed.args.skuCode, parsed.args);
+                break;
             case 'SIZES_LOOKUP':
+                resultData = await InventoryService.getSizesAvailability(db, parsed.args.skuCode, parsed.args);
+                break;
             case 'DESIGN_AVAILABILITY':
-                resultData = await InventoryService.getProductsByFilters(db, parsed.args);
+                resultData = await InventoryService.getDesignAvailability(db, parsed.args.skuCode, parsed.args);
                 break;
             case 'PRODUCT_FILTERED':
-            case 'GUIDE_CATALOGUE':
                 if (parsed.intent === 'PRODUCT_FILTERED' || (parsed.args && parsed.args.garmentType)) {
                     resultData = await InventoryService.getProductsByFilters(db, parsed.args);
                 }
@@ -315,7 +343,7 @@ async function processMessageJob(data) {
                 // For price lookup, resolve base/tier price
                 const sku = await InventoryService.getStockAvailability(db, parsed.args.skuCode, parsed.args);
                 if (sku) {
-                    const price = await InventoryService.getItemPrice(db, sku.sku_id, customerId || 1);
+                    const price = await InventoryService.getItemPrice(db, sku.sku_id, verifiedCustomerId || 1);
                     resultData = {
                         price: price,
                         sku_code: sku.sku_code,
@@ -425,13 +453,13 @@ async function processMessageJob(data) {
                     // Try via REST API first
                     const port = process.env.PORT || 3000;
                     const orderRes = await axios.post(`${process.env.API_BASE_URL || `http://localhost:${port}`}/api/orders`, {
-                        customerId: customerId || 1, // Fallback default customer
+                        customerId: verifiedCustomerId || 1, // Fallback default customer
                         items: orderItems
                     });
                     resultData = orderRes.data;
                 } catch (e) {
                     console.warn('[Worker] API order placement failed, falling back to local DB:', e.message);
-                    resultData = await OrderService.createOrder(db, customerId || 1, orderItems);
+                    resultData = await OrderService.createOrder(db, verifiedCustomerId || 1, orderItems);
                 }
                 break;
             case 'REORDER':
@@ -440,7 +468,7 @@ async function processMessageJob(data) {
                     // Find latest completed/dispatched order for the customer
                     const latestOrder = await db.get(
                         'SELECT order_id FROM sales_orders WHERE customer_id = ? ORDER BY order_id DESC LIMIT 1',
-                        [customerId || 1]
+                        [verifiedCustomerId || 1]
                     );
                     targetOrderId = latestOrder ? latestOrder.order_id : null;
                 }
@@ -457,6 +485,21 @@ async function processMessageJob(data) {
                     }
                 }
                 break;
+            case 'IDENTITY_RESOLVED':
+                const matchedUser = parsed.args ? parsed.args.user : null;
+                if (matchedUser && matchedUser.phone_number) {
+                    try {
+                        const masterDb = await getMasterDb();
+                        await masterDb.run(
+                            'INSERT OR REPLACE INTO whatsapp_sessions (sender_phone, verified_phone) VALUES (?, ?)',
+                            [phoneNumber, matchedUser.phone_number]
+                        );
+                        console.log(`[Worker] Saved session: ${phoneNumber} resolved to ${matchedUser.phone_number}`);
+                    } catch (sessionErr) {
+                        console.error('[Worker] Failed to save session:', sessionErr.message);
+                    }
+                }
+                break;
         }
     } catch (err) {
         console.error(`[Worker] ERP Service execution failed for intent ${parsed.intent}:`, err.message);
@@ -468,7 +511,7 @@ async function processMessageJob(data) {
     const replyText = QueryParserService.formatResponse(
         parsed.intent, 
         resultData, 
-        { role, companyName: 'Kaira', args: parsed.args, chatReply: parsed.chatReply }
+        { role: verifiedRole, companyName: 'Kaira', args: parsed.args, chatReply: parsed.chatReply }
     );
 
     // 5. Send reply via Meta Cloud WhatsApp API
