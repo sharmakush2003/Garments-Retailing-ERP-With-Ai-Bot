@@ -1152,7 +1152,7 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                 return `💰 *Outstanding Status*: No outstanding profile found for your account, dear! 🥺`;
 
             case 'ASK_USER_PHONE':
-                return `Sure, dear! 🌸 Please enter your registered WhatsApp phone number (e.g. *918233816674*) so I can verify your account and check your details!`;
+                return `Sure, dear! 🌸 Please enter your registered WhatsApp phone number (e.g. *917425016636*) so I can verify your account and check your details!`;
 
             case 'IDENTITY_RESOLVED':
                 const matchedUser = context.args ? context.args.user : null;

@@ -53,7 +53,7 @@ class MySQLWrapper {
  */
 async function getMasterDb() {
     if (masterDb) return masterDb;
-    
+
     const isMySQLConfigured = process.env.DB_HOST && process.env.DB_USER && process.env.DB_NAME;
 
     if (isMySQLConfigured) {
