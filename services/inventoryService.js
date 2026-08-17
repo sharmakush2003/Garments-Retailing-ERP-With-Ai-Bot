@@ -233,7 +233,7 @@ class InventoryService {
 
             const whereClauseStr = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
             const query = `
-                SELECT s.sku_id, s.sku_code, s.color, s.size, st.base_price, (i.physical_qty - i.reserved_qty) AS available_qty
+                SELECT s.sku_id, s.sku_code, s.color, s.size, st.name AS name, st.base_price, (i.physical_qty - i.reserved_qty) AS available_qty
                 FROM skus s
                 JOIN styles st ON s.style_id = st.style_id
                 JOIN inventory i ON s.sku_id = i.sku_id
@@ -244,6 +244,28 @@ class InventoryService {
             `;
             return await db.all(query, params);
         }
+    }
+
+    /**
+     * Retrieves design availability for a garment type/SKU code.
+     */
+    static async getDesignAvailability(db, skuIdOrCode, filters = {}) {
+        const garmentType = filters.garmentType || skuIdOrCode;
+        return await this.getProductsByFilters(db, { ...filters, garmentType });
+    }
+
+    /**
+     * Retrieves color availability matrix.
+     */
+    static async getColoursAvailability(db, skuIdOrCode, filters = {}) {
+        return await this.getProductsByFilters(db, filters);
+    }
+
+    /**
+     * Retrieves size availability matrix.
+     */
+    static async getSizesAvailability(db, skuIdOrCode, filters = {}) {
+        return await this.getProductsByFilters(db, filters);
     }
 }
 
