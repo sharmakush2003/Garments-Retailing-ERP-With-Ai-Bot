@@ -353,10 +353,17 @@ Do not include any markdown formatting, comments, or extra text in your output. 
         // 3. If the query contains a matched phone number and does not match any other transactional intents
         const transactionalIntents = [
             'INVENTORY_LOOKUP', 'PRICE_LOOKUP', 'PRODUCT_FILTERED', 'COLOURS_LOOKUP', 'SIZES_LOOKUP',
-            'OLD_LEDGER_STATUS', 'OUTSTANDING_LOOKUP', 'LAST_INVOICE_COPY', 'OLD_SHIPMENT_INQUIRY'
+            'OLD_LEDGER_STATUS', 'OUTSTANDING_LOOKUP', 'LAST_INVOICE_COPY', 'OLD_SHIPMENT_INQUIRY',
+            'PLACE_ORDER', 'REORDER'
         ];
         if (matchedUser && !transactionalIntents.includes(parsed.intent)) {
             return { intent: 'IDENTITY_RESOLVED', args: { user: matchedUser } };
+        }
+
+        // --- NEW LOGIC: Unregistered phone number lookup ---
+        const isPhoneNumberOnly = /^\d{10,12}$/.test(cleanDigits) && text.length <= 15;
+        if (isPhoneNumberOnly && !matchedUser) {
+            return { intent: 'IDENTITY_NOT_FOUND', args: { phone: cleanDigits } };
         }
 
         return parsed;
@@ -1170,6 +1177,10 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                         }
                     }
                 };
+
+            case 'IDENTITY_NOT_FOUND':
+                const phoneNum = context.args ? context.args.phone : '';
+                return `❌ *Account Not Found* 🥺\n_________________________\n\nOh, sorry! I couldn't find any registered account with the number *${phoneNum}* in our system.\n\n💡 *Action*: Please check the number and reply again (e.g. *917425016636*), or contact our Support Team to register your number! 🌸`;
 
             default:
                 return {

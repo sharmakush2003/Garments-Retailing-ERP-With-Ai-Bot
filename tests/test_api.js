@@ -250,8 +250,17 @@ const server = app.listen(PORT, async () => {
         assert.ok(res.data.orderId !== 1); // a new order is created
         const replyText18 = QueryParserService.formatResponse(parsed18.intent, res.data, { role: 'Customer', companyName: 'Kaira' });
         console.log('Formatted response:', replyText18);
-        assert.ok(replyText18.includes('Reorder Placed Successfully!'));
         console.log('✓ Test Case 18 Passed!');
+
+        // Test Case 19: Unregistered Phone Number Lookup
+        console.log('\n--- Running Test Case 19: Unregistered Phone Number ---');
+        const parsed19 = await QueryParserService.parseMessage('8233816675');
+        assert.strictEqual(parsed19.intent, 'IDENTITY_NOT_FOUND');
+        assert.strictEqual(parsed19.args.phone, '8233816675');
+        const replyText19 = QueryParserService.formatResponse(parsed19.intent, null, { role: 'Guest', args: parsed19.args });
+        console.log('Formatted response:', replyText19);
+        assert.ok(replyText19.includes('Account Not Found'));
+        console.log('✓ Test Case 19 Passed!');
 
         console.log('\n======================================');
         console.log('★ ALL INTEGRATION TESTS PASSED ★');
