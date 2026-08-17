@@ -415,16 +415,16 @@ Do not include any markdown formatting, comments, or extra text in your output. 
             return { intent: 'PRODUCT_FILTERED', args: { garmentType: 'SAREE' } };
         }
 
-        if (text.includes('stock_kurti') || (text.includes('kurti') && text.includes('stock') && !text.includes('check'))) {
+        if (text.includes('stock_kurti') || (text.includes('kurti') && text.includes('stock'))) {
             return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'KURTI' } };
         }
-        if (text.includes('stock_shirt') || (text.includes('shirt') && text.includes('stock') && !text.includes('check'))) {
+        if (text.includes('stock_shirt') || (text.includes('shirt') && text.includes('stock'))) {
             return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'SHIRT' } };
         }
-        if (text.includes('stock_pant') || (text.includes('pant') && text.includes('stock') && !text.includes('check'))) {
+        if (text.includes('stock_pant') || (text.includes('pant') && text.includes('stock'))) {
             return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'PANT' } };
         }
-        if (text.includes('stock_saree') || (text.includes('saree') && text.includes('stock') && !text.includes('check'))) {
+        if (text.includes('stock_saree') || (text.includes('saree') && text.includes('stock'))) {
             return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'SAREE' } };
         }
 
