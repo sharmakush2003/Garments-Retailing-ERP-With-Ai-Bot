@@ -401,37 +401,54 @@ Do not include any markdown formatting, comments, or extra text in your output. 
             };
         }
 
-        // 1. Detect interactive button/list clicks or category selections
-        if (text.includes('cat_kurti') || text.includes('1️⃣ kurti') || text.includes('kurti 👗') || text === 'kurti' || text === 'kurtis') {
-            return { intent: 'PRODUCT_FILTERED', args: { garmentType: 'KURTI' } };
-        }
-        if (text.includes('cat_shirt') || text.includes('2️⃣ shirt') || text.includes('shirt 👔') || text === 'shirt' || text === 'shirts') {
-            return { intent: 'PRODUCT_FILTERED', args: { garmentType: 'SHIRT' } };
-        }
-        if (text.includes('cat_pant') || text.includes('3️⃣ pant') || text.includes('pant 👖') || text === 'pant' || text === 'pants') {
-            return { intent: 'PRODUCT_FILTERED', args: { garmentType: 'PANT' } };
-        }
-        if (text.includes('cat_saree') || text.includes('4️⃣ saree') || text.includes('saree 🥻') || text === 'saree' || text === 'sarees') {
-            return { intent: 'PRODUCT_FILTERED', args: { garmentType: 'SAREE' } };
-        }
+        // 1. Detect interactive button/list clicks or category selections.
+        // NOTE: AutobotChat sends the list item's Title + Description as plain text.
+        // So "3️⃣ Pant 👖" click arrives as "3️⃣ Pant 👖\nCotton & Denim Pants".
+        // Stock clicks arrive as e.g. "Pant Stock\nCheck availability for Pants".
+        // Category rules MUST come before the generic GUIDE_CATALOGUE/GUIDE_STOCK rules.
 
-        if (text.includes('stock_kurti') || (text.includes('kurti') && text.includes('stock'))) {
+        // --- DESIGN_AVAILABILITY (Stock checks) — check before PRODUCT_FILTERED ---
+        if (text.includes('stock_kurti') || (text.includes('kurti') && (text.includes('stock') || text.includes('availability')))) {
             return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'KURTI' } };
         }
-        if (text.includes('stock_shirt') || (text.includes('shirt') && text.includes('stock'))) {
+        if (text.includes('stock_shirt') || (text.includes('shirt') && (text.includes('stock') || text.includes('availability')))) {
             return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'SHIRT' } };
         }
-        if (text.includes('stock_pant') || (text.includes('pant') && text.includes('stock'))) {
+        if (text.includes('stock_pant') || (text.includes('pant') && (text.includes('stock') || text.includes('availability')))) {
             return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'PANT' } };
         }
-        if (text.includes('stock_saree') || (text.includes('saree') && text.includes('stock'))) {
+        if (text.includes('stock_saree') || (text.includes('saree') && (text.includes('stock') || text.includes('availability')))) {
             return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'SAREE' } };
         }
 
-        if (text === 'btn_catalogue' || text.includes('catalogue') || text.includes('catalog') || text === '1' || text.includes('1️⃣')) {
+        // --- PRODUCT_FILTERED (Catalog category selections) ---
+        if (text.includes('cat_kurti') || text.includes('1️⃣ kurti') || text.includes('kurti 👗') ||
+            text === 'kurti' || text === 'kurtis' ||
+            (text.includes('kurti') && (text.includes('festive') || text.includes('casual') || text.includes('collection') || text.includes('cotton')))) {
+            return { intent: 'PRODUCT_FILTERED', args: { garmentType: 'KURTI' } };
+        }
+        if (text.includes('cat_shirt') || text.includes('2️⃣ shirt') || text.includes('shirt 👔') ||
+            text === 'shirt' || text === 'shirts' ||
+            (text.includes('shirt') && (text.includes('casual') || text.includes('cotton') || text.includes('collection')))) {
+            return { intent: 'PRODUCT_FILTERED', args: { garmentType: 'SHIRT' } };
+        }
+        if (text.includes('cat_pant') || text.includes('3️⃣ pant') || text.includes('pant 👖') ||
+            text === 'pant' || text === 'pants' ||
+            (text.includes('pant') && (text.includes('denim') || text.includes('cotton') || text.includes('collection') || text.includes('trouser')))) {
+            return { intent: 'PRODUCT_FILTERED', args: { garmentType: 'PANT' } };
+        }
+        if (text.includes('cat_saree') || text.includes('4️⃣ saree') || text.includes('saree 🥻') ||
+            text === 'saree' || text === 'sarees' ||
+            (text.includes('saree') && (text.includes('silk') || text.includes('designer') || text.includes('collection')))) {
+            return { intent: 'PRODUCT_FILTERED', args: { garmentType: 'SAREE' } };
+        }
+
+        // --- GUIDE_CATALOGUE: Only match when user explicitly asks for catalog (not a category click) ---
+        if (text === 'btn_catalogue' || text === 'product catalog' || text === 'catalogue' ||
+            (text.includes('catalog') && !text.includes('pant') && !text.includes('kurti') && !text.includes('shirt') && !text.includes('saree'))) {
             return { intent: 'GUIDE_CATALOGUE', args: {} };
         }
-        if (text === 'btn_stock' || text.includes('check stock') || text === '2') {
+        if (text === 'btn_stock' || text === 'check stock' || text === '2') {
             return { intent: 'GUIDE_STOCK', args: {} };
         }
         // Specific category price list selection buttons
