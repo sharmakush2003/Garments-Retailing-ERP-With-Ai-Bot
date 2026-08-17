@@ -281,13 +281,49 @@ Do not include any markdown formatting, comments, or extra text in your output. 
      * Parse incoming message text into structured intent and parameters.
      */
     static async parseMessage(messageText) {
-        const llmResult = await this.parseMessageWithLLM(messageText);
-        let parsed = llmResult;
+        const text = messageText.toLowerCase().trim();
 
-        if (parsed && parsed.intent) {
-            console.log('[QueryParserService] Successfully parsed query using LLM:', parsed);
-        } else {
+        // PRE-LLM INTERCEPT: Button IDs and list-click patterns should NEVER go to LLM.
+        // AutobotChat sends the list item's id (e.g. cat_pant, stock_saree) or
+        // the Title+Description combined (e.g. "Pant Stock\nCheck availability for Pants").
+        // We detect these deterministically here before LLM is even called.
+        const isButtonId = text.startsWith('btn_') || text.startsWith('cat_') ||
+                           text.startsWith('stock_') || text.startsWith('price_');
+
+        // List-click text is short (<= 80 chars), contains no natural language verbs,
+        // and matches the exact AutobotChat title+description format.
+        // e.g. "4️⃣ Saree 🥻\nSilk & Designer Sarees" or "Pant Stock\nCheck availability for Pants"
+        const hasNaturalLanguage = text.includes('show') || text.includes('check') ||
+                                   text.includes('send') || text.includes('give') ||
+                                   text.includes('kitna') || text.includes('kya') ||
+                                   text.includes('bhai') || text.includes('main') ||
+                                   text.includes('under') || text.includes('above') ||
+                                   text.includes('want') || text.includes('need') ||
+                                   text.includes(' me ') || text.includes('please') ||
+                                   text.includes('mujhe') || text.includes('chahiye');
+        const isCategoryClick = !hasNaturalLanguage && text.length <= 80 &&
+                                 (text.includes('kurti') || text.includes('shirt') ||
+                                  text.includes('pant') || text.includes('saree')) &&
+                                 (text.includes('stock') || text.includes('availability') ||
+                                  text.includes('denim') || text.includes('silk') ||
+                                  text.includes('casual') || text.includes('festive') ||
+                                  text.includes('designer') || text.includes('trouser') ||
+                                  text.includes('cotton shirts') || text.includes('cotton pants'));
+        const isKnownMenuClick = isButtonId || isCategoryClick;
+
+        let parsed;
+        if (isKnownMenuClick) {
+            // Bypass LLM entirely — use regex for deterministic button/click handling
             parsed = await this.parseMessageWithRegex(messageText);
+        } else {
+            const llmResult = await this.parseMessageWithLLM(messageText);
+            parsed = llmResult;
+
+            if (parsed && parsed.intent) {
+                console.log('[QueryParserService] Successfully parsed query using LLM:', parsed);
+            } else {
+                parsed = await this.parseMessageWithRegex(messageText);
+            }
         }
 
         return this.postProcessParsedMessage(messageText, parsed);
@@ -421,26 +457,52 @@ Do not include any markdown formatting, comments, or extra text in your output. 
             return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'SAREE' } };
         }
 
-        // --- PRODUCT_FILTERED (Catalog category selections) ---
-        if (text.includes('cat_kurti') || text.includes('1️⃣ kurti') || text.includes('kurti 👗') ||
-            text === 'kurti' || text === 'kurtis' ||
-            (text.includes('kurti') && (text.includes('festive') || text.includes('casual') || text.includes('collection') || text.includes('cotton')))) {
-            return { intent: 'PRODUCT_FILTERED', args: { garmentType: 'KURTI' } };
-        }
-        if (text.includes('cat_shirt') || text.includes('2️⃣ shirt') || text.includes('shirt 👔') ||
-            text === 'shirt' || text === 'shirts' ||
-            (text.includes('shirt') && (text.includes('casual') || text.includes('cotton') || text.includes('collection')))) {
-            return { intent: 'PRODUCT_FILTERED', args: { garmentType: 'SHIRT' } };
-        }
-        if (text.includes('cat_pant') || text.includes('3️⃣ pant') || text.includes('pant 👖') ||
-            text === 'pant' || text === 'pants' ||
-            (text.includes('pant') && (text.includes('denim') || text.includes('cotton') || text.includes('collection') || text.includes('trouser')))) {
-            return { intent: 'PRODUCT_FILTERED', args: { garmentType: 'PANT' } };
-        }
-        if (text.includes('cat_saree') || text.includes('4️⃣ saree') || text.includes('saree 🥻') ||
-            text === 'saree' || text === 'sarees' ||
-            (text.includes('saree') && (text.includes('silk') || text.includes('designer') || text.includes('collection')))) {
-            return { intent: 'PRODUCT_FILTERED', args: { garmentType: 'SAREE' } };
+        // --- PRODUCT_FILTERED (Catalog category selections + natural language product filter queries) ---
+        // Detect garment type in text
+        const garmentInText = text.includes('kurti') ? 'KURTI' :
+                              text.includes('shirt') ? 'SHIRT' :
+                              text.includes('pant') || text.includes('trouser') ? 'PANT' :
+                              text.includes('saree') ? 'SAREE' : null;
+
+        if (garmentInText) {
+            // Check if this is a button ID click
+            if (text.includes('cat_kurti') || text.includes('cat_shirt') || text.includes('cat_pant') || text.includes('cat_saree') ||
+                text.includes('1️⃣ kurti') || text.includes('2️⃣ shirt') || text.includes('3️⃣ pant') || text.includes('4️⃣ saree') ||
+                text === 'kurti' || text === 'kurtis' || text === 'shirt' || text === 'shirts' ||
+                text === 'pant' || text === 'pants' || text === 'saree' || text === 'sarees') {
+                return { intent: 'PRODUCT_FILTERED', args: { garmentType: garmentInText } };
+            }
+
+            // Check if it's a list-click description (short AutobotChat menu text, no inventory keywords)
+            // e.g. "3️⃣ Pant 👖\nCotton & Denim Pants" or "Casual & Cotton Shirts"
+            const hasInventoryKeywords = text.includes('available') || text.includes('kitna') ||
+                                         text.includes('size') || text.includes('blue') ||
+                                         text.includes('red') || text.includes('green') ||
+                                         text.includes('white') || text.includes('black') ||
+                                         text.includes('pink') || text.includes('yellow') ||
+                                         text.includes('lal') || text.includes('neela') ||
+                                         text.match(/\d+\s*(pcs|pieces|pc)/i);
+            const isListClick = !hasInventoryKeywords &&
+                                 !text.includes('under') && !text.includes('below') && !text.includes('above') &&
+                                 !text.includes('show me') && !text.includes('want') &&
+                                 text.length <= 80;
+
+            // Extract price filter (e.g. "under 500", "below 400", "₹300 se kam")
+            const priceMatch = text.match(/(?:under|below|less than|max|upto|up to|se kam)\s*[₹]?\s*(\d+)/i) ||
+                               text.match(/[₹]?\s*(\d+)\s*(?:se kam|tak|max)/i);
+            const maxPrice = priceMatch ? parseInt(priceMatch[1]) : null;
+
+            // Extract fabric (cotton, silk, denim, georgette, chiffon, etc.)
+            const fabrics = ['cotton', 'silk', 'denim', 'georgette', 'chiffon', 'linen', 'synthetic', 'rayon', 'polyester'];
+            const fabric = fabrics.find(f => text.includes(f)) || null;
+
+            if (isListClick || maxPrice !== null || fabric !== null || text.includes('show') || text.includes('filter')) {
+                // Don't match if this is clearly a price lookup (has explicit SKU code)
+                const hasSKUCode = /[A-Z]{3,}-[A-Z0-9]{2,}-/.test(messageText.toUpperCase());
+                if (!hasSKUCode) {
+                    return { intent: 'PRODUCT_FILTERED', args: { garmentType: garmentInText, maxPrice, fabric } };
+                }
+            }
         }
 
         // --- GUIDE_CATALOGUE: Only match when user explicitly asks for catalog (not a category click) ---
