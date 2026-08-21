@@ -1,0 +1,466 @@
+{
+  "info": {
+    "name": "Garments Retailing ERP with AI Bot",
+    "description": "Postman collection to test and interact with the Garments Retailing ERP and Kaira AI WhatsApp Webhook automation APIs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Webhook & Core Services",
+      "item": [
+        {
+          "name": "Webhook Verification (GET)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/webhook?hub.mode=subscribe&hub.verify_token=automatex_copilot_token&hub.challenge=1158201444",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "webhook"
+              ],
+              "query": [
+                {
+                  "key": "hub.mode",
+                  "value": "subscribe"
+                },
+                {
+                  "key": "hub.verify_token",
+                  "value": "automatex_copilot_token"
+                },
+                {
+                  "key": "hub.challenge",
+                  "value": "1158201444"
+                }
+              ]
+            },
+            "description": "Verifies the Meta (WhatsApp Cloud API) webhook URL. It expects the META_VERIFY_TOKEN (default: `automatex_copilot_token`) and returns the hub.challenge value."
+          }
+        },
+        {
+          "name": "Webhook Ingest (POST)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"919045099111\",\n  \"message\": \"Blue Kurti size L available hai kya?\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/webhook",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "webhook"
+              ]
+            },
+            "description": "Receives incoming WhatsApp message payloads. Accepts multiple structures including standard message strings or Meta Cloud API structure."
+          }
+        },
+        {
+          "name": "Diagnostic Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/logs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "logs"
+              ]
+            },
+            "description": "Retrieves the in-memory diagnostic logs of the running backend server."
+          }
+        },
+        {
+          "name": "System Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Checks the operational status of the gateway API."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mock ERP Data (GET)",
+      "item": [
+        {
+          "name": "Get Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/mock/products?category=Kurti&color=Blue&size=L",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mock",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "Kurti"
+                },
+                {
+                  "key": "subcategory",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "color",
+                  "value": "Blue"
+                },
+                {
+                  "key": "size",
+                  "value": "L"
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Retrieves products from mock data with optional filtering for category, subcategory, color, size, and maxPrice."
+          }
+        },
+        {
+          "name": "Stock Availability Lookup",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/mock/stock-availability?color=Blue&size=L&garmentType=Kurti",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mock",
+                "stock-availability"
+              ],
+              "query": [
+                {
+                  "key": "skuIdOrCode",
+                  "value": "KURTI-FES-BLU-L",
+                  "disabled": true
+                },
+                {
+                  "key": "color",
+                  "value": "Blue"
+                },
+                {
+                  "key": "size",
+                  "value": "L"
+                },
+                {
+                  "key": "garmentType",
+                  "value": "Kurti"
+                }
+              ]
+            },
+            "description": "Checks stock status for items by SKU, color, size, or garment type."
+          }
+        },
+        {
+          "name": "Item Price Lookup",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/mock/item-price?skuId=1&tierId=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mock",
+                "item-price"
+              ],
+              "query": [
+                {
+                  "key": "skuId",
+                  "value": "1"
+                },
+                {
+                  "key": "tierId",
+                  "value": "1",
+                  "description": "Tier ID for discount level (1 for VIP, 2 for retail)"
+                }
+              ]
+            },
+            "description": "Looks up the wholesale or discounted price for a specific product SKU based on customer discount tier."
+          }
+        },
+        {
+          "name": "Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/mock/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mock",
+                "categories"
+              ]
+            },
+            "description": "Returns list of all product categories available."
+          }
+        },
+        {
+          "name": "Subcategories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/mock/subcategories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mock",
+                "subcategories"
+              ]
+            },
+            "description": "Returns list of all subcategories available."
+          }
+        },
+        {
+          "name": "Old Shipment Inquiry",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/mock/old-shipments?phone=919045099111",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mock",
+                "old-shipments"
+              ],
+              "query": [
+                {
+                  "key": "phone",
+                  "value": "919045099111"
+                }
+              ]
+            },
+            "description": "Looks up completed/old shipments associated with a customer's phone number."
+          }
+        },
+        {
+          "name": "Old Ledger Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/mock/old-ledger-status?phone=919045099111",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mock",
+                "old-ledger-status"
+              ],
+              "query": [
+                {
+                  "key": "phone",
+                  "value": "919045099111"
+                }
+              ]
+            },
+            "description": "Looks up the old transaction ledger history for a customer's phone number."
+          }
+        },
+        {
+          "name": "Last Invoice Copy",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/mock/last-invoice-copy?phone=919045099111",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mock",
+                "last-invoice-copy"
+              ],
+              "query": [
+                {
+                  "key": "phone",
+                  "value": "919045099111"
+                }
+              ]
+            },
+            "description": "Retrieves details of the last generated invoice copy for a customer's phone number."
+          }
+        },
+        {
+          "name": "Active Shipment Tracking Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/mock/shipment-status?orderId=1001",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mock",
+                "shipment-status"
+              ],
+              "query": [
+                {
+                  "key": "orderId",
+                  "value": "1001"
+                },
+                {
+                  "key": "phone",
+                  "value": "919045099111",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Retrieves the current shipment tracking status for an active order."
+          }
+        },
+        {
+          "name": "Outstanding Balance Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/mock/outstanding?phone=919045099111",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mock",
+                "outstanding"
+              ],
+              "query": [
+                {
+                  "key": "phone",
+                  "value": "919045099111"
+                }
+              ]
+            },
+            "description": "Retrieves outstanding balance information for a customer's phone number."
+          }
+        }
+      ]
+    },
+    {
+      "name": "ERP Orders (POST)",
+      "item": [
+        {
+          "name": "Create Sales Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "Co_102",
+                "description": "Tenant ID for multi-tenant database connection context"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 1,\n  \"items\": [\n    {\n      \"skuId\": 1,\n      \"quantity\": 24,\n      \"rate\": 480.00\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            },
+            "description": "Creates a new ERP sales order in the tenant database."
+          }
+        },
+        {
+          "name": "Reorder Past Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "Co_102",
+                "description": "Tenant ID for database context"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/reorder",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "reorder"
+              ]
+            },
+            "description": "Reorders all items from a past order by copying the order details into a new sales order."
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://garments-erp-bot.onrender.com",
+      "type": "string"
+    }
+  ]
+}

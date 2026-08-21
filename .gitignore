@@ -23,3 +23,7 @@ node_modules/
 
 # Ignore generated PDF ledger files
 *.pdf
+
+# Ignore Postman workspace local sync directories
+.postman/
+postman/
