@@ -447,15 +447,34 @@ async function processMessageJob(data) {
                 }
                 break;
             case 'SHIPMENT_TRACKING':
+                const queryOrderId = parsed.args && parsed.args.orderId;
+                const queryDispatchId = parsed.args && parsed.args.dispatchId;
+                const queryPhone = (parsed.args && parsed.args.phone) || (parsed.args && parsed.args.overridePhone);
+                const hasExplicitIdentifier = !!(queryOrderId || queryDispatchId || queryPhone);
+
                 try {
                     const port = process.env.PORT || 3000;
                     const res = await axios.get(`${process.env.API_BASE_URL || `http://localhost:${port}`}/api/mock/shipment-status`, {
-                        params: { phone: targetPhone }
+                        params: { 
+                            orderId: queryOrderId,
+                            dispatchId: queryDispatchId,
+                            phone: queryPhone || (hasExplicitIdentifier ? null : targetPhone)
+                        }
                     });
                     resultData = res.data;
                 } catch (e) {
                     const items = require('../mock_data/shipment_status.json');
-                    resultData = items.find(i => i.phone && (i.phone.includes(targetPhone) || targetPhone.includes(i.phone))) || items[0] || {};
+                    resultData = items.find(i => {
+                        if (queryOrderId && i.order_id === parseInt(queryOrderId)) return true;
+                        if (queryDispatchId && (
+                            i.dispatch_id === parseInt(queryDispatchId) ||
+                            (i.tracking_number && i.tracking_number.toLowerCase() === queryDispatchId.toString().toLowerCase()) ||
+                            (i.lr_number && i.lr_number.toLowerCase() === queryDispatchId.toString().toLowerCase())
+                        )) return true;
+                        if (queryPhone && i.phone && (i.phone.includes(queryPhone) || queryPhone.includes(i.phone))) return true;
+                        if (!hasExplicitIdentifier && targetPhone && i.phone && (i.phone.includes(targetPhone) || targetPhone.includes(i.phone))) return true;
+                        return false;
+                    }) || null;
                 }
                 break;
             case 'OUTSTANDING_LOOKUP':

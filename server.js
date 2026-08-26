@@ -208,14 +208,33 @@ app.get('/api/mock/last-invoice-copy', (req, res) => {
 // 9. Get active shipment tracking status
 app.get('/api/mock/shipment-status', (req, res) => {
     const items = require('./mock_data/shipment_status.json');
-    const { orderId, phone } = req.query;
+    const { orderId, dispatchId, trackingNumber, phone } = req.query;
+    if (dispatchId) {
+        const match = items.find(i => 
+            i.dispatch_id === parseInt(dispatchId) || 
+            (i.tracking_number && i.tracking_number.toLowerCase() === dispatchId.toLowerCase()) || 
+            (i.lr_number && i.lr_number.toLowerCase() === dispatchId.toLowerCase())
+        );
+        if (match) return res.json(match);
+        return res.status(404).json({ error: 'Shipment not found' });
+    }
     if (orderId) {
         const match = items.find(i => i.order_id === parseInt(orderId));
         if (match) return res.json(match);
+        return res.status(404).json({ error: 'Shipment not found' });
+    }
+    if (trackingNumber) {
+        const match = items.find(i => 
+            (i.tracking_number && i.tracking_number.toLowerCase() === trackingNumber.toLowerCase()) || 
+            (i.lr_number && i.lr_number.toLowerCase() === trackingNumber.toLowerCase())
+        );
+        if (match) return res.json(match);
+        return res.status(404).json({ error: 'Shipment not found' });
     }
     if (phone) {
         const match = items.find(i => i.phone && (i.phone.includes(phone) || phone.includes(i.phone)));
         if (match) return res.json(match);
+        return res.status(404).json({ error: 'Shipment not found' });
     }
     res.json(items[0] || {});
 });

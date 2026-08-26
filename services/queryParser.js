@@ -670,8 +670,36 @@ Do not include any markdown formatting, comments, or extra text in your output. 
         }
 
         // Shipment tracking / where has it reached queries
-        if (text.includes('track') || text.includes('where') || text.includes('reach') || text.includes('tracking') || text.includes('kahan pahuncha') || text.includes('shipment status') || text.includes('delivery status') || text.includes('lr status')) {
-            return { intent: 'SHIPMENT_TRACKING', args: {} };
+        const explicitOrderMatch = text.match(/(?:order\s*#?|#)\s*(\d{4,})/i) || (text.match(/^#?\d{4}$/) && !text.match(/^20\d{2}$/));
+        const explicitDispatchMatch = text.match(/(?:dispatch|lr|tracking)\s*#?\s*([a-z0-9]+)/i) || text.match(/\b(trk[a-z0-9]+|dlv[a-z0-9]+|sfx[a-z0-9]+|bd[a-z0-9]+)\b/i) || text.match(/^(?:dispatch\s*#?|lr\s*#?)\d+$/i);
+        const isTrackingKeyword = text.startsWith('btn_tracking') || text.includes('5️⃣') ||
+                                  text.includes('track') || text.includes('where') ||
+                                  text.includes('reach') || text.includes('tracking') ||
+                                  text.includes('kahan pahuncha') || text.includes('shipment status') ||
+                                  text.includes('delivery status') || text.includes('lr status') ||
+                                  text.includes('dispatch status') || text === '5';
+
+        if (isTrackingKeyword || explicitDispatchMatch || (explicitOrderMatch && (text.includes('order') || text.startsWith('#') || text.includes('status') || text.includes('delivery')))) {
+            let orderId = null;
+            if (explicitOrderMatch) {
+                const raw = explicitOrderMatch[1] || explicitOrderMatch[0].replace('#', '').replace(/\D/g, '');
+                orderId = raw ? parseInt(raw) : null;
+            }
+            let dispatchId = null;
+            if (explicitDispatchMatch) {
+                dispatchId = (explicitDispatchMatch[1] || explicitDispatchMatch[0]).replace(/^dispatch\s*#?/i, '').replace(/^lr\s*#?/i, '').trim();
+            }
+            const phoneMatch = text.match(/\b(91\d{10}|\d{10})\b/);
+            const phone = phoneMatch ? phoneMatch[1] : null;
+
+            return {
+                intent: 'SHIPMENT_TRACKING',
+                args: {
+                    orderId: orderId,
+                    dispatchId: dispatchId,
+                    phone: phone
+                }
+            };
         }
 
         // Outstanding balance queries
@@ -1266,7 +1294,11 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                     const history = data.tracking_history ? data.tracking_history.map(h => `  • _${h.timestamp}_ [${h.location}]: ${h.details}`).join('\n') : '';
                     return `📍 *Active Shipment Tracking Status* 🚚\n_________________________\n\n📦 *Order ID*: #${data.order_id}\n🔢 *Tracking/LR No*: \`${data.tracking_number || data.lr_number}\`\n🚛 *Transporter*: ${data.transporter_name}\n📅 *Dispatch Date*: ${data.dispatch_date}\n\n⚡ *Current Location*: *${data.current_location}*\n🟢 *Status*: *${data.status}* ✨\n🕒 *Last Updated*: ${data.last_updated}\n📅 *Est. Delivery*: *${data.estimated_delivery_date}*\n\n📊 *Tracking Timeline*:\n${history}\n\n💖 Maal jaldi pahunch jayega, dear!`;
                 }
-                return `📍 *Shipment Tracking*: Oh, no active shipment tracking data found! 🥺\n💬 Try replying with your order number.`;
+                const attemptedQuery = (context.args && (context.args.orderId || context.args.dispatchId || context.args.phone || context.args.overridePhone));
+                if (attemptedQuery) {
+                    return `❌ *Shipment Not Found* 🚚\n_________________________\n\nOh, sorry! We couldn't find any active shipment matching *${attemptedQuery}* in our system.\n\n💡 *Action*: Please check and reply with your valid Order ID (e.g. *#1015*), Dispatch ID (e.g. *104*), or registered Phone Number! 🌸`;
+                }
+                return `📍 *Track Your Shipment* 🚚\n_________________________\n\nDear customer, please reply with any of the following to track your active shipment:\n\n1️⃣ *Order ID* (e.g. *#1015* or *#1016*)\n2️⃣ *Dispatch ID / LR / Tracking No.* (e.g. *104* or *TRK998541200*)\n3️⃣ *Registered Phone Number* (e.g. *917425016636*)\n\nWe'll find your live delivery status instantly! ✨`;
 
             case 'OUTSTANDING_LOOKUP':
                 if (data) {
