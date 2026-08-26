@@ -11,6 +11,10 @@ class QueryParserService {
      * Parses Hinglish/English/Vernacular text queries using Gemini or OpenAI API.
      */
     static async parseMessageWithLLM(messageText) {
+        if (!messageText || typeof messageText !== 'string' || messageText.trim() === '') {
+            return null;
+        }
+
         const geminiKey = process.env.GEMINI_API_KEY;
         const openaiKey = process.env.OPENAI_API_KEY;
         const groqKey = process.env.GROQ_API_KEY;
@@ -281,35 +285,34 @@ Do not include any markdown formatting, comments, or extra text in your output. 
      * Parse incoming message text into structured intent and parameters.
      */
     static async parseMessage(messageText) {
-        const text = messageText.toLowerCase().trim();
+        const text = (messageText || '').toString().toLowerCase().trim();
 
         // PRE-LLM INTERCEPT: Button IDs and list-click patterns should NEVER go to LLM.
-        // AutobotChat sends the list item's id (e.g. cat_pant, stock_saree) or
-        // the Title+Description combined (e.g. "Pant Stock\nCheck availability for Pants").
+        // AutobotChat sends the list item's id (e.g. cat_pant, stock_saree, btn_stock) or
+        // the Title+Description combined (e.g. "2️⃣ Check Stock 📦\nCheck color & size availability", "Pant Stock\nCheck availability for Pants").
         // We detect these deterministically here before LLM is even called.
         const isButtonId = text.startsWith('btn_') || text.startsWith('cat_') ||
-                           text.startsWith('stock_') || text.startsWith('price_');
+                           text.startsWith('stock_') || text.startsWith('price_') ||
+                           text.includes('btn_') || text.includes('stock_') || text.includes('cat_');
 
-        // List-click text is short (<= 80 chars), contains no natural language verbs,
-        // and matches the exact AutobotChat title+description format.
-        // e.g. "4️⃣ Saree 🥻\nSilk & Designer Sarees" or "Pant Stock\nCheck availability for Pants"
-        const hasNaturalLanguage = text.includes('show') || text.includes('check') ||
-                                   text.includes('send') || text.includes('give') ||
-                                   text.includes('kitna') || text.includes('kya') ||
-                                   text.includes('bhai') || text.includes('main') ||
-                                   text.includes('under') || text.includes('above') ||
-                                   text.includes('want') || text.includes('need') ||
-                                   text.includes(' me ') || text.includes('please') ||
-                                   text.includes('mujhe') || text.includes('chahiye');
-        const isCategoryClick = !hasNaturalLanguage && text.length <= 80 &&
-                                 (text.includes('kurti') || text.includes('shirt') ||
-                                  text.includes('pant') || text.includes('saree')) &&
-                                 (text.includes('stock') || text.includes('availability') ||
-                                  text.includes('denim') || text.includes('silk') ||
-                                  text.includes('casual') || text.includes('festive') ||
-                                  text.includes('designer') || text.includes('trouser') ||
-                                  text.includes('cotton shirts') || text.includes('cotton pants'));
-        const isKnownMenuClick = isButtonId || isCategoryClick;
+        const isNumberedMenuItem = /^[1-8]️⃣/.test(text) || /^btn_[a-z_]+/.test(text);
+
+        // General stock inquiry check
+        const isStockInquiry = text.includes('check stock') || text.includes('check_stock') ||
+                              text.includes('stock check') || text.includes('stock status') ||
+                              text.includes('stock list') || text.includes('stock dekhna') ||
+                              text.includes('stock batao') || text.includes('kya stock') ||
+                              text.includes('check inventory') || text.includes('inventory check') ||
+                              text.includes('available stock') || text.includes('stock availability') ||
+                              text === 'stock' || text === 'inventory' || text === '2';
+
+        // Category stock click check (e.g. "👖 Pant Stock\nCheck availability for Pants", "👗 Kurti Stock", etc.)
+        const isCategoryStockClick = (text.includes('kurti') || text.includes('shirt') ||
+                                      text.includes('pant') || text.includes('trouser') ||
+                                      text.includes('saree')) &&
+                                     (text.includes('stock') || text.includes('availability') || text.includes('available'));
+
+        const isKnownMenuClick = isButtonId || isNumberedMenuItem || isStockInquiry || isCategoryStockClick;
 
         let parsed;
         if (isKnownMenuClick) {
@@ -337,7 +340,7 @@ Do not include any markdown formatting, comments, or extra text in your output. 
             parsed = { intent: 'UNKNOWN', args: {} };
         }
 
-        const text = messageText.toLowerCase().trim();
+        const text = (messageText || '').toString().toLowerCase().trim();
         let users;
         try {
             users = require('../mock_data/users.json');
@@ -417,6 +420,12 @@ Do not include any markdown formatting, comments, or extra text in your output. 
             return { intent: 'IDENTITY_NOT_FOUND', args: { phone: cleanDigits } };
         }
 
+        // Safety Fallback: If INVENTORY_LOOKUP has no specific SKU, color, size, or garment type, convert to GUIDE_STOCK
+        if (parsed && parsed.intent === 'INVENTORY_LOOKUP' &&
+            (!parsed.args || (!parsed.args.skuCode && !parsed.args.color && !parsed.args.size && !parsed.args.garmentType))) {
+            parsed = { intent: 'GUIDE_STOCK', args: {} };
+        }
+
         return parsed;
     }
 
@@ -424,7 +433,7 @@ Do not include any markdown formatting, comments, or extra text in your output. 
      * Fallback Regex parser.
      */
     static async parseMessageWithRegex(messageText) {
-        const text = messageText.toLowerCase().trim();
+        const text = (messageText || '').toString().toLowerCase().trim();
 
         // Detect REORDER intent
         if (text.includes('reorder') || text.includes('repeat')) {
@@ -443,18 +452,29 @@ Do not include any markdown formatting, comments, or extra text in your output. 
         // Stock clicks arrive as e.g. "Pant Stock\nCheck availability for Pants".
         // Category rules MUST come before the generic GUIDE_CATALOGUE/GUIDE_STOCK rules.
 
-        // --- DESIGN_AVAILABILITY (Stock checks) — check before PRODUCT_FILTERED ---
-        if (text.includes('stock_kurti') || (text.includes('kurti') && (text.includes('stock') || text.includes('availability')))) {
-            return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'KURTI' } };
-        }
-        if (text.includes('stock_shirt') || (text.includes('shirt') && (text.includes('stock') || text.includes('availability')))) {
-            return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'SHIRT' } };
-        }
-        if (text.includes('stock_pant') || (text.includes('pant') && (text.includes('stock') || text.includes('availability')))) {
-            return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'PANT' } };
-        }
-        if (text.includes('stock_saree') || (text.includes('saree') && (text.includes('stock') || text.includes('availability')))) {
-            return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'SAREE' } };
+        const hasSpecificColorOrSize = text.includes('red') || text.includes('blue') || text.includes('green') ||
+                                       text.includes('white') || text.includes('black') || text.includes('yellow') ||
+                                       text.includes('pink') || text.includes('lal') || text.includes('neela') ||
+                                       text.includes('hara') || text.includes('safed') || text.includes('kala') ||
+                                       text.includes('size') || /(?<![a-z])(xxl|xl|xs|[sml])(?![a-z])/i.test(text);
+
+        // --- DESIGN_AVAILABILITY (Stock checks for specific categories when no specific color/size is requested) ---
+        if (!hasSpecificColorOrSize) {
+            if (text.includes('stock_kurti') || (text.includes('kurti') && (text.includes('stock') || text.includes('availability') || text.includes('available') || text.includes('maal')))) {
+                return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'KURTI' } };
+            }
+            if (text.includes('stock_shirt') || (text.includes('shirt') && (text.includes('stock') || text.includes('availability') || text.includes('available') || text.includes('maal')))) {
+                return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'SHIRT' } };
+            }
+            if (text.includes('stock_pant') || ((text.includes('pant') || text.includes('trouser')) && (text.includes('stock') || text.includes('availability') || text.includes('available') || text.includes('maal')))) {
+                return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'PANT' } };
+            }
+            if (text.includes('stock_saree') || (text.includes('saree') && (text.includes('stock') || text.includes('availability') || text.includes('available') || text.includes('maal')))) {
+                return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'SAREE' } };
+            }
+        } else if (text.startsWith('stock_')) {
+            const cat = text.replace('stock_', '').toUpperCase();
+            return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: cat } };
         }
 
         // --- PRODUCT_FILTERED (Catalog category selections + natural language product filter queries) ---
@@ -506,11 +526,25 @@ Do not include any markdown formatting, comments, or extra text in your output. 
         }
 
         // --- GUIDE_CATALOGUE: Only match when user explicitly asks for catalog (not a category click) ---
-        if (text === 'btn_catalogue' || text === 'product catalog' || text === 'catalogue' ||
+        if (text === 'btn_catalogue' || text === 'product catalog' || text === 'catalogue' || text === '1' ||
+            text.includes('1️⃣ product catalog') || (text.includes('1️⃣') && text.includes('catalog')) ||
             (text.includes('catalog') && !text.includes('pant') && !text.includes('kurti') && !text.includes('shirt') && !text.includes('saree'))) {
             return { intent: 'GUIDE_CATALOGUE', args: {} };
         }
-        if (text === 'btn_stock' || text === 'check stock' || text === '2') {
+
+        // --- GUIDE_STOCK: Check general stock queries ---
+        const isGenericStock = text === 'btn_stock' || text === '2' || text.includes('2️⃣ check stock') ||
+                               (text.includes('2️⃣') && text.includes('stock')) ||
+                               text.includes('check stock') || text.includes('check_stock') ||
+                               text.includes('stock check') || text.includes('stock status') ||
+                               text.includes('stock list') || text.includes('stock dekhna') ||
+                               text.includes('stock batao') || text.includes('kya stock') ||
+                               text.includes('check inventory') || text.includes('inventory check') ||
+                               text.includes('available stock') || text.includes('stock availability') ||
+                               text.includes('maal kitna') || text.includes('kitna maal') ||
+                               text === 'stock' || text === 'inventory';
+        const hasSpecificGarmentType = text.includes('kurti') || text.includes('shirt') || text.includes('pant') || text.includes('trouser') || text.includes('saree');
+        if (isGenericStock && !hasSpecificGarmentType) {
             return { intent: 'GUIDE_STOCK', args: {} };
         }
         // Specific category price list selection buttons
@@ -729,6 +763,13 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                     requestedQty: requestedQty
                 }
             };
+        }
+
+        if (!skuSearch && !detectedGarment && !detectedColor && !detectedSize) {
+            if (text.includes('stock') || text.includes('inventory') || text.includes('maal') || text.includes('available')) {
+                return { intent: 'GUIDE_STOCK', args: {} };
+            }
+            return { intent: 'GREETING', args: {} };
         }
 
         return {
@@ -1089,6 +1130,9 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                         }
                     }
                     return `📦 *Stock Status for You!* ✨\n\n👗 *Product*: ${data.name}\n🎨 *Color*: ${data.color}\n📏 *Size*: ${data.size}\n🆔 *SKU*: ${data.sku_code}\n\n✅ *Current Ready Stock*: *${data.available_qty} Pieces* 🌸\n🚚 *Dispatch Status*: Ready for immediate dispatch in 1-2 days! ✨\n🏬 *Warehouse*: Central Depot (Jaipur)\n\n💬 Reply *"Book 10 pcs"* to reserve this stock for you! 💖`;
+                }
+                if (!data && (!context.args || (!context.args.skuCode && !context.args.color && !context.args.size && !context.args.garmentType))) {
+                    return this.formatResponse('GUIDE_STOCK', null, context);
                 }
                 return `❌ *Stock Status for You!* ✨\n\n👗 *Item*: ${data ? data.sku_code || 'Garment' : 'Requested Combination'}\n⚠️ *Status*: Currently out of stock, so sorry! 🥺\n\n💡 *Recommendation*: Similar gorgeous styles are available. Reply *"Check Stock"* to see them! 🌸`;
 
