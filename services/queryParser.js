@@ -670,8 +670,14 @@ Do not include any markdown formatting, comments, or extra text in your output. 
         }
 
         // Shipment tracking / where has it reached queries
-        const explicitOrderMatch = text.match(/(?:order\s*#?|#)\s*(\d{4,})/i) || (text.match(/^#?\d{4}$/) && !text.match(/^20\d{2}$/));
-        const explicitDispatchMatch = text.match(/(?:dispatch|lr|tracking)\s*#?\s*([a-z0-9]+)/i) || text.match(/\b(trk[a-z0-9]+|dlv[a-z0-9]+|sfx[a-z0-9]+|bd[a-z0-9]+)\b/i) || text.match(/^(?:dispatch\s*#?|lr\s*#?)\d+$/i);
+        const standaloneOrder = text.match(/^#?(\d{4})$/);
+        const orderPrefixMatch = text.match(/(?:order\s*#?|#)\s*(\d{4,})/i);
+        const explicitOrderMatch = orderPrefixMatch || (standaloneOrder && !text.match(/^20\d{2}$/) ? standaloneOrder : null);
+
+        const standaloneDispatch = text.match(/^(?:dispatch\s*#?|lr\s*#?)?(\d{3})$/);
+        const dispatchPrefixMatch = text.match(/(?:dispatch|lr|tracking)\s*#?\s*([a-z0-9]+)/i) || text.match(/\b(trk[a-z0-9]+|dlv[a-z0-9]+|sfx[a-z0-9]+|bd[a-z0-9]+)\b/i);
+        const explicitDispatchMatch = dispatchPrefixMatch || standaloneDispatch;
+
         const isTrackingKeyword = text.startsWith('btn_tracking') || text.includes('5️⃣') ||
                                   text.includes('track') || text.includes('where') ||
                                   text.includes('reach') || text.includes('tracking') ||
@@ -679,7 +685,7 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                                   text.includes('delivery status') || text.includes('lr status') ||
                                   text.includes('dispatch status') || text === '5';
 
-        if (isTrackingKeyword || explicitDispatchMatch || (explicitOrderMatch && (text.includes('order') || text.startsWith('#') || text.includes('status') || text.includes('delivery')))) {
+        if (isTrackingKeyword || explicitDispatchMatch || explicitOrderMatch) {
             let orderId = null;
             if (explicitOrderMatch) {
                 const raw = explicitOrderMatch[1] || explicitOrderMatch[0].replace('#', '').replace(/\D/g, '');

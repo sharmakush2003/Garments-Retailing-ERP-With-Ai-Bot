@@ -452,13 +452,19 @@ async function processMessageJob(data) {
                 const queryPhone = (parsed.args && parsed.args.phone) || (parsed.args && parsed.args.overridePhone);
                 const hasExplicitIdentifier = !!(queryOrderId || queryDispatchId || queryPhone);
 
+                if (!hasExplicitIdentifier) {
+                    // Do NOT auto-query by caller phone. Always prompt user for Order ID / Dispatch ID / Phone first.
+                    resultData = null;
+                    break;
+                }
+
                 try {
                     const port = process.env.PORT || 3000;
                     const res = await axios.get(`${process.env.API_BASE_URL || `http://localhost:${port}`}/api/mock/shipment-status`, {
                         params: { 
                             orderId: queryOrderId,
                             dispatchId: queryDispatchId,
-                            phone: queryPhone || (hasExplicitIdentifier ? null : targetPhone)
+                            phone: queryPhone
                         }
                     });
                     resultData = res.data;
@@ -472,7 +478,6 @@ async function processMessageJob(data) {
                             (i.lr_number && i.lr_number.toLowerCase() === queryDispatchId.toString().toLowerCase())
                         )) return true;
                         if (queryPhone && i.phone && (i.phone.includes(queryPhone) || queryPhone.includes(i.phone))) return true;
-                        if (!hasExplicitIdentifier && targetPhone && i.phone && (i.phone.includes(targetPhone) || targetPhone.includes(i.phone))) return true;
                         return false;
                     }) || null;
                 }
