@@ -14,23 +14,10 @@ const InventoryService = require('../services/inventoryService');
 const QueryParserService = require('../services/queryParser');
 const PDFGeneratorService = require('../services/pdfGenerator');
 const OrderService = require('../services/orderService');
-const { processHealthcareMessage } = require('../services/healthcareEngine');
-const { addLiveWhatsAppMessage } = require('../services/healthcareDatabase');
 const axios = require('axios');
 const EventEmitter = require('events');
 const path = require('path');
 const fs = require('fs');
-
-// Global User Active Bot State: phoneKey -> 'HEALTHCARE' | 'GARMENTS' | null
-const userBotMode = {};
-
-function getMainSelectionMenu() {
-    return `👋 *Welcome to Digify Multi-Service Assistant!*\n_Please choose the service you want to access:_\n\n1️⃣ 🏥 *Healthcare & Medical Assistant*\n     └ Nursing, Caretaker, Physiotherapy, ECG, Lab Tests & Doctor Visits\n\n2️⃣ 👗 *Garments Retailing ERP Assistant*\n     └ Stock Check, Catalog, Orders, Ledgers, Invoices & Dispatch Tracking\n\n───────────────────────\n📲 *Reply with 1 for Healthcare or 2 for Garments ERP.*\n_(Type *menu* or *0* anytime to return here & switch services)_`;
-}
-
-function getGarmentsWelcomeMenu() {
-    return `👗 *Welcome to Digify Garments Retailing ERP Assistant!*\nHow can I help you today?\n\n1️⃣ 📦 *Check Stock Availability*\n     └ e.g. "Check stock for black shirt size L"\n2️⃣ 📑 *Download Ledger / Outstanding Balance*\n     └ e.g. "Send my ledger" or "Outstanding balance"\n3️⃣ 🚚 *Track Shipment & Dispatch*\n     └ e.g. "Where is my order #1001?"\n4️⃣ 🧾 *Get Last Invoice Copy (PDF)*\n\n💬 *You can reply with 1 to 4 or ask directly in English / Hindi!*\n_(Type *menu* or *0* anytime to switch to Healthcare)_`;
-}
 
 const QUEUE_NAME = 'whatsapp-messages';
 const redisOptions = {
@@ -232,92 +219,6 @@ async function processMessageJob(data) {
     };
     
     console.log(`[Worker] Processing message from ${phoneNumber} for tenant ${tenantId} (${role})`);
-
-    let cleanPhone = (phoneNumber || '').toString().replace(/\D/g, '');
-    if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
-    const phoneKey = cleanPhone || phoneNumber;
-
-    const trimmedText = (messageText || '').trim();
-    const lowerText = trimmedText.toLowerCase();
-
-    // 0. Check for global reset / greeting / menu command
-    const RESET_COMMANDS = [
-        'menu', '0', 'reset', 'exit', 'switch', 'main menu', 'restart', 
-        'start over', 'change bot', 'bots', 'hi', 'hii', 'hiii', 'hie', 
-        'hello', 'hey', 'heyy', 'start', 'namaste', 'help'
-    ];
-    if (RESET_COMMANDS.includes(lowerText)) {
-        userBotMode[phoneKey] = null;
-        console.log(`[Router] User ${phoneKey} triggered Main Menu / Reset via: "${trimmedText}"`);
-        const replyText = getMainSelectionMenu();
-        await sendOutboundWhatsAppMessage(phoneNumber, replyText, fallbackPhone);
-        return { replyText };
-    }
-
-    // Direct mode switcher anytime
-    if (lowerText === 'garment' || lowerText === 'garments' || lowerText === 'erp' || lowerText === 'clothes') {
-        userBotMode[phoneKey] = 'GARMENTS';
-        console.log(`[Router] User ${phoneKey} switched to GARMENTS mode`);
-        const replyText = getGarmentsWelcomeMenu();
-        await sendOutboundWhatsAppMessage(phoneNumber, replyText, fallbackPhone);
-        return { replyText };
-    }
-
-    if (lowerText === 'healthcare' || lowerText === 'medical' || lowerText === 'health' || lowerText === 'doctor') {
-        userBotMode[phoneKey] = 'HEALTHCARE';
-        console.log(`[Router] User ${phoneKey} switched to HEALTHCARE mode`);
-        const healthRes = processHealthcareMessage(phoneKey, 'hi');
-        addLiveWhatsAppMessage(phoneKey, messageText, healthRes.text);
-        await sendOutboundWhatsAppMessage(phoneNumber, healthRes.text, fallbackPhone);
-        return { replyText: healthRes.text };
-    }
-
-    // 1. If user hasn't selected a bot mode yet
-    if (!userBotMode[phoneKey]) {
-        // Option 1: Healthcare / Medical Bot
-        if (lowerText === '1' || lowerText.includes('healthcare') || lowerText.includes('medical') || lowerText.includes('doctor') || lowerText.includes('nurse') || lowerText.includes('physio') || lowerText.includes('ecg') || lowerText.includes('lab test') || lowerText.includes('caretaker')) {
-            userBotMode[phoneKey] = 'HEALTHCARE';
-            console.log(`[Router] User ${phoneKey} selected HEALTHCARE mode`);
-            const healthRes = processHealthcareMessage(phoneKey, 'hi');
-            addLiveWhatsAppMessage(phoneKey, messageText, healthRes.text);
-            await sendOutboundWhatsAppMessage(phoneNumber, healthRes.text, fallbackPhone);
-            return { replyText: healthRes.text };
-        }
-
-        // Option 2: Garments Retailing ERP Bot
-        const isGarmentsQuery = lowerText === '2' || 
-            lowerText.includes('garment') || lowerText.includes('garments') || lowerText.includes('erp') || 
-            lowerText.includes('cloth') || lowerText.includes('stock') || lowerText.includes('kurti') || 
-            lowerText.includes('shirt') || lowerText.includes('ledger') || lowerText.includes('invoice') || 
-            lowerText.includes('dispatch') || lowerText.includes('outstanding') || lowerText.includes('order') ||
-            lowerText.includes('track') || lowerText.includes('price') || /\b[6-9]\d{9}\b/.test(lowerText) || /91\d{10}/.test(lowerText);
-
-        if (isGarmentsQuery) {
-            userBotMode[phoneKey] = 'GARMENTS';
-            console.log(`[Router] User ${phoneKey} selected GARMENTS mode`);
-            if (lowerText === '2') {
-                const replyText = getGarmentsWelcomeMenu();
-                await sendOutboundWhatsAppMessage(phoneNumber, replyText, fallbackPhone);
-                return { replyText };
-            }
-            // If they provided a specific Garments query (e.g. "Check stock for red kurti"), proceed to Garments ERP logic below!
-        } else {
-            // Unselected and greeting/general message (e.g. "Hi", "Hello", "Hey") -> Show Main Selection Menu
-            console.log(`[Router] User ${phoneKey} has no active mode. Sending Main Menu.`);
-            const replyText = getMainSelectionMenu();
-            await sendOutboundWhatsAppMessage(phoneNumber, replyText, fallbackPhone);
-            return { replyText };
-        }
-    }
-
-    // 2. If user is currently in HEALTHCARE mode
-    if (userBotMode[phoneKey] === 'HEALTHCARE') {
-        console.log(`[Router] Routing message to Healthcare Engine for ${phoneKey}: "${trimmedText}"`);
-        const healthRes = processHealthcareMessage(phoneKey, messageText);
-        addLiveWhatsAppMessage(phoneKey, messageText, healthRes.text);
-        await sendOutboundWhatsAppMessage(phoneNumber, healthRes.text, fallbackPhone);
-        return { replyText: healthRes.text };
-    }
 
     // 1. Get database instance for tenant
     const db = await getTenantDb(tenantId);
@@ -702,8 +603,5 @@ if (process.env.USE_REDIS === 'true') {
 module.exports = {
     messageQueue,
     processMessageJob,
-    useMemoryFallback,
-    userBotMode,
-    getMainSelectionMenu,
-    getGarmentsWelcomeMenu
+    useMemoryFallback
 };

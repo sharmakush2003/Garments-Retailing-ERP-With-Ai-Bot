@@ -280,72 +280,9 @@ app.post('/api/orders/reorder', async (req, res) => {
     }
 });
 
-// --- Healthcare & Medical Chatbot REST API Endpoints ---
-const HealthcareDB = require('./services/healthcareDatabase');
-
-// 13. Get all Healthcare Bookings
-app.get('/api/bookings', (req, res) => {
-    res.json({ bookings: HealthcareDB.getBookings() });
-});
-
-// 14. Update Healthcare Booking Status
-app.put('/api/bookings/:id', (req, res) => {
-    const { id } = req.params;
-    const { status, staffId } = req.body;
-    const updated = HealthcareDB.updateBookingStatus(id, status, staffId);
-    if (updated) {
-        return res.json({ success: true, booking: updated });
-    }
-    return res.status(404).json({ error: 'Booking not found' });
-});
-
-// 15. Get Live WhatsApp Messages
-app.get('/api/messages', (req, res) => {
-    res.json({ messages: HealthcareDB.getLiveMessages() });
-});
-
-// 16. Get Healthcare Staff Pool
-app.get('/api/staff', (req, res) => {
-    res.json({ staff: HealthcareDB.STAFF_POOL });
-});
-
-// 17. Get Healthcare Services
-app.get('/api/services', (req, res) => {
-    res.json({ services: HealthcareDB.SERVICES });
-});
-
-// 18. Get Emergency Alerts
-app.get('/api/emergency', (req, res) => {
-    res.json({ alerts: HealthcareDB.getEmergencyAlerts() });
-});
-
-// 19. Get Dashboard KPI Stats
-app.get('/api/stats', (req, res) => {
-    const bookings = HealthcareDB.getBookings();
-    const emergency = HealthcareDB.getEmergencyAlerts();
-    const messages = HealthcareDB.getLiveMessages();
-
-    const totalRevenue = bookings.reduce((sum, b) => sum + (b.amount || 0), 0);
-    const activeStaffCount = HealthcareDB.STAFF_POOL.filter(s => s.available).length;
-
-    res.json({
-        totalBookings: bookings.length,
-        pendingBookings: bookings.filter(b => b.status === 'Pending Assignment' || b.status === 'Pending').length,
-        completedBookings: bookings.filter(b => b.status === 'Completed').length,
-        emergencyCount: emergency.length,
-        totalRevenue: totalRevenue,
-        activeStaff: activeStaffCount,
-        recentMessages: messages.slice(0, 10)
-    });
-});
-
 // Health check endpoint
 app.get('/health', (req, res) => {
-    res.status(200).json({ 
-        status: 'OK', 
-        message: 'Digify Soft Dual-Bot API Gateway (Healthcare + Garments ERP) is operational',
-        timestamp: new Date().toISOString()
-    });
+    res.status(200).json({ status: 'OK', message: 'Digify Soft API Gateway is operational' });
 });
 
 // Configure resilient queue fallback if Redis is not used
