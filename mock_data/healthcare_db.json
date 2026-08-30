@@ -1,6 +1,22 @@
 {
   "bookings": [
     {
+      "id": "NS-19646",
+      "serviceId": "1",
+      "serviceName": "Nursing at Home",
+      "category": "nursing",
+      "patientName": "Rajesh Sharma, 58 yrs",
+      "phone": "919876543299",
+      "pincode": "302012",
+      "date": "Today",
+      "slot": "09:00 AM",
+      "amount": 800,
+      "paymentStatus": "Pending",
+      "status": "Pending Assignment",
+      "assignedStaff": null,
+      "createdAt": "2026-08-30T10:48:20.466Z"
+    },
+    {
       "id": "NS-68463",
       "serviceId": "1",
       "serviceName": "Nursing at Home",
@@ -67,6 +83,69 @@
   ],
   "emergencyAlerts": [],
   "liveMessages": [
+    {
+      "id": "MSG-3144",
+      "phone": "919876543299",
+      "senderName": "Patient (919876543299)",
+      "userMessage": "1",
+      "botReplyText": "✅ *BOOKING RECEIVED & PENDING ALLOCATION*\n----------------------------------------\n🆔 *Booking ID*: *NS-19646*\n🩺 *Service*: Nursing at Home\n👤 *Patient*: Rajesh Sharma, 58 yrs\n📅 *Scheduled Date*: Today\n🕘 *Time Slot*: 09:00 AM\n📍 *Pincode*: 302012\n👨‍⚕️ *Assigned Professional*: 🟡 Pending Staff Allocation (Admin will allocate nearby specialist)\n💰 *Total Amount*: ₹800\n💳 *Payment*: Pending (Pay on Visit / Online UPI)\n----------------------------------------\n📱 *A WhatsApp reminder will be sent 1 hour before the visit.*\n\n_(Type *menu* or *0* to switch to Garments ERP or start new booking)_",
+      "timestamp": "04:18 pm",
+      "status": "Auto Replied"
+    },
+    {
+      "id": "MSG-8669",
+      "phone": "919876543299",
+      "senderName": "Patient (919876543299)",
+      "userMessage": "Rajesh Sharma, 58 yrs",
+      "botReplyText": "📋 *HEALTH SAATHI BOOKING QUOTATION*\n----------------------------------------\n• *Service*: Nursing at Home\n• *Patient*: Rajesh Sharma, 58 yrs\n• *Location Pincode*: 302012\n• *Scheduled Visit*: Today @ 09:00 AM\n• *Estimated Charges*: *₹800*\n----------------------------------------\n*Would you like to confirm this booking?*\n\n1️⃣  ✅ *Confirm & Book Now*\n2️⃣  ❌ *Cancel*\n----------------------------------------\n📲 *Reply 1 to Confirm or 2 to Cancel.*",
+      "timestamp": "04:18 pm",
+      "status": "Auto Replied"
+    },
+    {
+      "id": "MSG-4023",
+      "phone": "919876543299",
+      "senderName": "Patient (919876543299)",
+      "userMessage": "1",
+      "botReplyText": "🕘 *Time Slot Reserved*: *09:00 AM*\n----------------------------------------\n👤 *STEP 3 OF 3: PATIENT DETAILS*\n\nPlease enter the **Patient Name & Age** (e.g. *Rajesh Sharma, 58 yrs*):",
+      "timestamp": "04:18 pm",
+      "status": "Auto Replied"
+    },
+    {
+      "id": "MSG-1096",
+      "phone": "919876543299",
+      "senderName": "Patient (919876543299)",
+      "userMessage": "1",
+      "botReplyText": "📅 *Date Reserved*: *Today*\n----------------------------------------\n🕘 *SELECT PREFERRED TIME SLOT* for **Nursing at Home**:\n\n1️⃣ *09:00 AM*\n2️⃣ *11:00 AM*\n3️⃣ *02:00 PM*\n4️⃣ *05:00 PM*\n5️⃣ *08:00 PM*\n----------------------------------------\n📲 *Reply with slot number (1 to 5) or type custom time.*",
+      "timestamp": "04:18 pm",
+      "status": "Auto Replied"
+    },
+    {
+      "id": "MSG-5163",
+      "phone": "919876543299",
+      "senderName": "Patient (919876543299)",
+      "userMessage": "302012",
+      "botReplyText": "📍 *Location Recorded*: *302012*\n----------------------------------------\n📅 *STEP 2 OF 3: PREFERRED DATE*\n\nWhen would you like the healthcare professional to visit?\n\n1️⃣ *Today*\n2️⃣ *Tomorrow*\n3️⃣ *Custom Date*\n----------------------------------------\n📲 *Reply 1 for Today, 2 for Tomorrow, or type a date (e.g. 30 Aug):*",
+      "timestamp": "04:18 pm",
+      "status": "Auto Replied"
+    },
+    {
+      "id": "MSG-6170",
+      "phone": "919876543299",
+      "senderName": "Patient (919876543299)",
+      "userMessage": "1",
+      "botReplyText": "🩺 *SELECTED SERVICE*: *Nursing at Home*\n_Dressing, Injections, IV Infusion, Wound Care, Post-surgery Nursing._\n\n💰 *Tariff*: ₹800 per visit / ₹1,500 for 12-hour shift\n----------------------------------------\n📍 *STEP 1 OF 3: LOCATION PINCODE*\n\nPlease enter the **6-Digit Pincode** or Area Name where the service is required (e.g. *302012*):",
+      "timestamp": "04:18 pm",
+      "status": "Auto Replied"
+    },
+    {
+      "id": "MSG-6115",
+      "phone": "919876543299",
+      "senderName": "Patient (919876543299)",
+      "userMessage": "1",
+      "botReplyText": "👋 *Welcome to Health Saathi Healthcare Assistant*\n_by Digify Soft Solutions_\n\n🩺 *Doctor-Guided Home Healthcare Services*\n----------------------------------------\nWe deliver certified nursing, physiotherapy, caretaker, and diagnostic services directly to your doorstep.\n\n📋 *HOW CAN WE HELP YOU TODAY?*\nPlease reply with a number (*1 to 7*) to select:\n\n1️⃣  *Nursing at Home*\n     └ ₹800 / visit  •  ₹1,500 / 12-hr shift\n\n2️⃣  *Caretaker at Home*\n     └ ₹1,200 / 12-hr  •  ₹2,000 / 24-hr\n\n3️⃣  *Physiotherapy at Home*\n     └ ₹900 / 45-min expert session\n\n4️⃣  *Lab Test / Sample Collection*\n     └ Starts @ ₹500  (Free home collection)\n\n5️⃣  *ECG at Home*\n     └ ₹1,100 / test (Instant digital report)\n\n6️⃣  *Full Tariff Card & Information*\n7️⃣  *Check Booking Status / Track Professional*\n----------------------------------------\n📲 *Reply with option number (1 to 7) to proceed*\n_(Type *menu* or *0* anytime to switch to Garments ERP)_",
+      "timestamp": "04:18 pm",
+      "status": "Auto Replied"
+    },
     {
       "id": "MSG-6734",
       "phone": "919876543299",

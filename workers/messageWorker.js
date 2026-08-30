@@ -240,14 +240,36 @@ async function processMessageJob(data) {
     const trimmedText = (messageText || '').trim();
     const lowerText = trimmedText.toLowerCase();
 
-    // 0. Check for global reset / menu command
-    const RESET_COMMANDS = ['menu', '0', 'reset', 'exit', 'switch', 'main menu', 'restart', 'start over', 'change bot', 'bots'];
+    // 0. Check for global reset / greeting / menu command
+    const RESET_COMMANDS = [
+        'menu', '0', 'reset', 'exit', 'switch', 'main menu', 'restart', 
+        'start over', 'change bot', 'bots', 'hi', 'hii', 'hiii', 'hie', 
+        'hello', 'hey', 'heyy', 'start', 'namaste', 'help'
+    ];
     if (RESET_COMMANDS.includes(lowerText)) {
         userBotMode[phoneKey] = null;
-        console.log(`[Router] User ${phoneKey} requested Main Menu / Reset`);
+        console.log(`[Router] User ${phoneKey} triggered Main Menu / Reset via: "${trimmedText}"`);
         const replyText = getMainSelectionMenu();
         await sendOutboundWhatsAppMessage(phoneNumber, replyText, fallbackPhone);
         return { replyText };
+    }
+
+    // Direct mode switcher anytime
+    if (lowerText === 'garment' || lowerText === 'garments' || lowerText === 'erp' || lowerText === 'clothes') {
+        userBotMode[phoneKey] = 'GARMENTS';
+        console.log(`[Router] User ${phoneKey} switched to GARMENTS mode`);
+        const replyText = getGarmentsWelcomeMenu();
+        await sendOutboundWhatsAppMessage(phoneNumber, replyText, fallbackPhone);
+        return { replyText };
+    }
+
+    if (lowerText === 'healthcare' || lowerText === 'medical' || lowerText === 'health' || lowerText === 'doctor') {
+        userBotMode[phoneKey] = 'HEALTHCARE';
+        console.log(`[Router] User ${phoneKey} switched to HEALTHCARE mode`);
+        const healthRes = processHealthcareMessage(phoneKey, 'hi');
+        addLiveWhatsAppMessage(phoneKey, messageText, healthRes.text);
+        await sendOutboundWhatsAppMessage(phoneNumber, healthRes.text, fallbackPhone);
+        return { replyText: healthRes.text };
     }
 
     // 1. If user hasn't selected a bot mode yet
@@ -273,7 +295,7 @@ async function processMessageJob(data) {
         if (isGarmentsQuery) {
             userBotMode[phoneKey] = 'GARMENTS';
             console.log(`[Router] User ${phoneKey} selected GARMENTS mode`);
-            if (lowerText === '2' || lowerText === 'garments' || lowerText === 'garment' || lowerText === 'erp') {
+            if (lowerText === '2') {
                 const replyText = getGarmentsWelcomeMenu();
                 await sendOutboundWhatsAppMessage(phoneNumber, replyText, fallbackPhone);
                 return { replyText };
