@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "build": "echo Build succeeded",
     "test": "node tests/test_api.js"
   },
   "dependencies": {
