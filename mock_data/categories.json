@@ -1,6 +1,22 @@
 [
-  { "category_id": 1, "name": "Kurti" },
-  { "category_id": 2, "name": "Shirt" },
-  { "category_id": 3, "name": "Pant" },
-  { "category_id": 4, "name": "Saree" }
+  {
+    "category_id": 1,
+    "name": "Kurti"
+  },
+  {
+    "category_id": 2,
+    "name": "Shirt"
+  },
+  {
+    "category_id": 3,
+    "name": "Pant"
+  },
+  {
+    "category_id": 5,
+    "name": "Saree2"
+  },
+  {
+    "category_id": 4,
+    "name": "Saree"
+  }
 ]
