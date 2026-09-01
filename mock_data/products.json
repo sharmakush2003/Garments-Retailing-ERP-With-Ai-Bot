@@ -260,7 +260,7 @@
     "subcategory": "Denim",
     "color": "Blue",
     "size": "S",
-    "price": 700,
+    "price": 7000000,
     "available_qty": 18
   },
   {
@@ -271,7 +271,7 @@
     "subcategory": "Denim",
     "color": "Blue",
     "size": "M",
-    "price": 700,
+    "price": 7000000,
     "available_qty": 35
   },
   {
@@ -304,7 +304,7 @@
     "subcategory": "Denim",
     "color": "Black",
     "size": "M",
-    "price": 700,
+    "price": 7000000,
     "available_qty": 28
   },
   {
@@ -436,7 +436,7 @@
     "subcategory": "Denim",
     "color": "Grey",
     "size": "M",
-    "price": 700,
+    "price": 7000000,
     "available_qty": 15
   },
   {
