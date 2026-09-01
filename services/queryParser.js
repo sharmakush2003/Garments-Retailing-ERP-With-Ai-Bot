@@ -412,17 +412,21 @@ Do not include any markdown formatting, comments, or extra text in your output. 
         });
 
         // 1. Direct button clicks override
-        if (text.startsWith('btn_user_outstanding_')) {
-            return { intent: 'OUTSTANDING_LOOKUP', args: { overridePhone: text.replace('btn_user_outstanding_', '') } };
+        if (text.includes('btn_user_outstanding_') || (text.includes('1️⃣') && text.includes('outstanding'))) {
+            const phoneMatch = text.match(/btn_user_outstanding_(\d+)/);
+            return { intent: 'OUTSTANDING_LOOKUP', args: { overridePhone: phoneMatch ? phoneMatch[1] : null } };
         }
-        if (text.startsWith('btn_user_ledger_')) {
-            return { intent: 'OLD_LEDGER_STATUS', args: { overridePhone: text.replace('btn_user_ledger_', '') } };
+        if (text.includes('btn_user_ledger_') || (text.includes('2️⃣') && (text.includes('ledger') || text.includes('account')))) {
+            const phoneMatch = text.match(/btn_user_ledger_(\d+)/);
+            return { intent: 'OLD_LEDGER_STATUS', args: { overridePhone: phoneMatch ? phoneMatch[1] : null } };
         }
-        if (text.startsWith('btn_user_invoice_')) {
-            return { intent: 'LAST_INVOICE_COPY', args: { overridePhone: text.replace('btn_user_invoice_', '') } };
+        if (text.includes('btn_user_invoice_') || (text.includes('3️⃣') && text.includes('invoice'))) {
+            const phoneMatch = text.match(/btn_user_invoice_(\d+)/);
+            return { intent: 'LAST_INVOICE_COPY', args: { overridePhone: phoneMatch ? phoneMatch[1] : null } };
         }
-        if (text.startsWith('btn_user_shipments_')) {
-            return { intent: 'OLD_SHIPMENT_INQUIRY', args: { overridePhone: text.replace('btn_user_shipments_', '') } };
+        if (text.includes('btn_user_shipments_') || (text.includes('4️⃣') && text.includes('shipment')) || text.includes('past shipment')) {
+            const phoneMatch = text.match(/btn_user_shipments_(\d+)/);
+            return { intent: 'OLD_SHIPMENT_INQUIRY', args: { overridePhone: phoneMatch ? phoneMatch[1] : null } };
         }
 
         // 2. If a customer phone number and an ERP action are both present in the query
@@ -626,22 +630,22 @@ Do not include any markdown formatting, comments, or extra text in your output. 
             return { intent: 'PRICE_LOOKUP', args: { skuCode: skuCode } };
         }
 
-        if (text === 'btn_price' || text.includes('check price') || text.includes('wholesale rates') || text.includes('rate list') || text === '3') {
+        if (text === 'btn_price' || text.includes('check price') || text.includes('wholesale rates') || text.includes('rate list') || text === '3' || text.includes('3️⃣ check price')) {
             return { intent: 'GUIDE_PRICE', args: {} };
         }
-        if (text === 'btn_ledger' || text === '4' || text.includes('4️⃣')) {
+        if (text === 'btn_ledger' || text === '4' || text.includes('4️⃣ ledger status') || text.includes('4️⃣ account ledger') || (text.includes('ledger') && !text.includes('shipment'))) {
             return { intent: 'OLD_LEDGER_STATUS', args: {} };
         }
-        if (text === 'btn_tracking' || text === '5' || text.includes('5️⃣')) {
+        if (text === 'btn_tracking' || text === '5' || text.includes('5️⃣ shipment tracking') || text.includes('5️⃣ track')) {
             return { intent: 'SHIPMENT_TRACKING', args: {} };
         }
-        if (text === 'btn_outstanding' || text === '6' || text.includes('6️⃣')) {
+        if (text === 'btn_outstanding' || text === '6' || text.includes('6️⃣ outstanding credit') || text.includes('1️⃣ outstanding credit')) {
             return { intent: 'OUTSTANDING_LOOKUP', args: {} };
         }
-        if (text === 'btn_invoice' || text === '7' || text.includes('7️⃣')) {
+        if (text === 'btn_invoice' || text === '7' || text.includes('7️⃣ last invoice') || text.includes('3️⃣ last invoice')) {
             return { intent: 'LAST_INVOICE_COPY', args: {} };
         }
-        if (text === 'btn_past_shipments' || text === '8' || text.includes('8️⃣')) {
+        if (text === 'btn_past_shipments' || text === '8' || text.includes('8️⃣ past shipments') || text.includes('4️⃣ past shipments') || text.includes('past shipment')) {
             return { intent: 'OLD_SHIPMENT_INQUIRY', args: {} };
         }
 
