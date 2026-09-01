@@ -12,9 +12,21 @@
     "last_updated": "2026-08-15 18:30:00",
     "estimated_delivery_date": "2026-08-18",
     "tracking_history": [
-      { "timestamp": "2026-08-14 10:00:00", "location": "Warehouse (Surat)", "details": "Shipment picked up by BlueDart" },
-      { "timestamp": "2026-08-14 22:00:00", "location": "Surat Hub", "details": "In transit to destination" },
-      { "timestamp": "2026-08-15 18:30:00", "location": "Delhi Hub Sorting Center", "details": "Arrived at sorting facility" }
+      {
+        "timestamp": "2026-08-14 10:00:00",
+        "location": "Warehouse (Surat)",
+        "details": "Shipment picked up by BlueDart"
+      },
+      {
+        "timestamp": "2026-08-14 22:00:00",
+        "location": "Surat Hub",
+        "details": "In transit to destination"
+      },
+      {
+        "timestamp": "2026-08-15 18:30:00",
+        "location": "Delhi Hub Sorting Center",
+        "details": "Arrived at sorting facility"
+      }
     ]
   },
   {
@@ -22,7 +34,7 @@
     "order_id": 1016,
     "phone": "917425016636",
     "tracking_number": "TRK998541200",
-    "transporter_name": "Delhivery",
+    "transporter_name": "Digify Delhivery",
     "lr_number": "DLV4409123",
     "dispatch_date": "2026-08-15",
     "status": "Dispatched",
@@ -30,7 +42,11 @@
     "last_updated": "2026-08-15 14:00:00",
     "estimated_delivery_date": "2026-08-19",
     "tracking_history": [
-      { "timestamp": "2026-08-15 14:00:00", "location": "Warehouse (Surat)", "details": "Dispatched and manifested" }
+      {
+        "timestamp": "2026-08-15 14:00:00",
+        "location": "Warehouse (Surat)",
+        "details": "Dispatched and manifested"
+      }
     ]
   },
   {
@@ -38,7 +54,7 @@
     "order_id": 1017,
     "phone": "917778889999",
     "tracking_number": "TRK776655443",
-    "transporter_name": "SafeExpress",
+    "transporter_name": "Digify SafeExpress",
     "lr_number": "SFX44332211",
     "dispatch_date": "2026-08-15",
     "status": "In Transit",
@@ -46,8 +62,16 @@
     "last_updated": "2026-08-16 09:00:00",
     "estimated_delivery_date": "2026-08-18",
     "tracking_history": [
-      { "timestamp": "2026-08-15 11:00:00", "location": "Warehouse (Surat)", "details": "Picked up by transporter" },
-      { "timestamp": "2026-08-16 09:00:00", "location": "Gurugram Hub", "details": "Sorting completed, in transit" }
+      {
+        "timestamp": "2026-08-15 11:00:00",
+        "location": "Warehouse (Surat)",
+        "details": "Picked up by transporter"
+      },
+      {
+        "timestamp": "2026-08-16 09:00:00",
+        "location": "Gurugram Hub",
+        "details": "Sorting completed, in transit"
+      }
     ]
   },
   {
@@ -55,7 +79,7 @@
     "order_id": 1018,
     "phone": "916665554444",
     "tracking_number": "TRK112233445",
-    "transporter_name": "BlueDart Express",
+    "transporter_name": "Digify Express",
     "lr_number": "BD88776655",
     "dispatch_date": "2026-08-16",
     "status": "Packed",
@@ -63,7 +87,11 @@
     "last_updated": "2026-08-16 12:00:00",
     "estimated_delivery_date": "2026-08-20",
     "tracking_history": [
-      { "timestamp": "2026-08-16 12:00:00", "location": "Surat Warehouse", "details": "Shipment packed and ready for pickup" }
+      {
+        "timestamp": "2026-08-16 12:00:00",
+        "location": "Surat Warehouse",
+        "details": "Shipment packed and ready for pickup"
+      }
     ]
   }
 ]
