@@ -17,6 +17,18 @@
   },
   {
     "category_id": 5,
-    "name": "Saree2"
+    "name": "Kurta"
+  },
+  {
+    "category_id": 6,
+    "name": "Tshirt"
+  },
+  {
+    "category_id": 7,
+    "name": "Kurti-set"
+  },
+  {
+    "category_id": 8,
+    "name": "Fabric"
   }
 ]
