@@ -9,14 +9,14 @@
   },
   {
     "category_id": 3,
-    "name": "Pants and pants"
-  },
-  {
-    "category_id": 5,
-    "name": "Saree2"
+    "name": "Pant"
   },
   {
     "category_id": 4,
     "name": "Saree"
+  },
+  {
+    "category_id": 5,
+    "name": "Saree2"
   }
 ]

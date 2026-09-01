@@ -370,6 +370,13 @@ async function processMessageJob(data) {
                     resultData = await InventoryService.getProductsByFilters(db, parsed.args);
                 }
                 break;
+            case 'GUIDE_PRICE_CATEGORY':
+            case 'GUIDE_PRICE_KURTI':
+            case 'GUIDE_PRICE_SHIRT':
+            case 'GUIDE_PRICE_PANT':
+            case 'GUIDE_PRICE_SAREE':
+                resultData = await InventoryService.getProductsByFilters(db, { garmentType: parsed.args ? parsed.args.garmentType : null });
+                break;
             case 'PRICE_LOOKUP':
                 // For price lookup, resolve base/tier price
                 const sku = await InventoryService.getStockAvailability(db, parsed.args.skuCode, parsed.args);

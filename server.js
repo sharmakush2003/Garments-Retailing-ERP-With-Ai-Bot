@@ -103,10 +103,17 @@ app.get('/api/mock/products', (req, res) => {
     let items = require('./mock_data/products.json');
     const { category, subcategory, color, size, maxPrice } = req.query;
 
-    if (category) items = items.filter(i => i.category.toLowerCase() === category.toLowerCase());
-    if (subcategory) items = items.filter(i => i.subcategory.toLowerCase() === subcategory.toLowerCase());
-    if (color) items = items.filter(i => i.color.toLowerCase() === color.toLowerCase());
-    if (size) items = items.filter(i => i.size.toLowerCase() === size.toLowerCase());
+    if (category) {
+        const catClean = category.toLowerCase().trim();
+        items = items.filter(i => i.category && (
+            i.category.toLowerCase() === catClean ||
+            i.category.toLowerCase().includes(catClean) ||
+            catClean.includes(i.category.toLowerCase())
+        ));
+    }
+    if (subcategory) items = items.filter(i => i.subcategory && i.subcategory.toLowerCase() === subcategory.toLowerCase());
+    if (color) items = items.filter(i => i.color && i.color.toLowerCase() === color.toLowerCase());
+    if (size) items = items.filter(i => i.size && i.size.toLowerCase() === size.toLowerCase());
     if (maxPrice) items = items.filter(i => i.price <= parseFloat(maxPrice));
 
     res.json(items);

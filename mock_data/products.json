@@ -493,5 +493,27 @@
     "size": "L",
     "price": 550,
     "available_qty": 18
+  },
+  {
+    "sku_id": 46,
+    "sku_code": "SAREE2-SIL-RED-FS",
+    "name": "Designer Saree2 Collection - Red FreeSize",
+    "category": "Saree2",
+    "subcategory": "Designer",
+    "color": "Red",
+    "size": "Free Size",
+    "price": 1450,
+    "available_qty": 20
+  },
+  {
+    "sku_id": 47,
+    "sku_code": "SAREE2-SIL-GLD-FS",
+    "name": "Designer Saree2 Collection - Gold FreeSize",
+    "category": "Saree2",
+    "subcategory": "Designer",
+    "color": "Gold",
+    "size": "Free Size",
+    "price": 1600,
+    "available_qty": 15
   }
 ]

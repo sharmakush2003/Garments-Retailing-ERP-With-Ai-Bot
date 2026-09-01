@@ -8,6 +8,58 @@ const axios = require('axios');
  */
 class QueryParserService {
     /**
+     * Dynamically retrieves all active categories from categories.json (or products.json fallback).
+     */
+    static getCategories() {
+        try {
+            const categoriesData = require('../mock_data/categories.json');
+            if (Array.isArray(categoriesData) && categoriesData.length > 0) {
+                return categoriesData.map(c => ({
+                    id: c.category_id,
+                    name: c.name.trim()
+                }));
+            }
+        } catch (e) {}
+
+        try {
+            const productsData = require('../mock_data/products.json');
+            if (Array.isArray(productsData) && productsData.length > 0) {
+                const set = new Set();
+                const list = [];
+                productsData.forEach(p => {
+                    if (p.category && !set.has(p.category.toLowerCase().trim())) {
+                        set.add(p.category.toLowerCase().trim());
+                        list.push({ id: list.length + 1, name: p.category.trim() });
+                    }
+                });
+                if (list.length > 0) return list;
+            }
+        } catch (e) {}
+
+        return [
+            { id: 1, name: 'Kurti' },
+            { id: 2, name: 'Shirt' },
+            { id: 3, name: 'Pant' },
+            { id: 4, name: 'Saree' }
+        ];
+    }
+
+    /**
+     * Returns a relevant emoji for a given category name.
+     */
+    static getCategoryEmoji(categoryName) {
+        const name = (categoryName || '').toLowerCase();
+        if (name.includes('kurti') || name.includes('kurta') || name.includes('dress')) return '👗';
+        if (name.includes('shirt') || name.includes('top')) return '👔';
+        if (name.includes('pant') || name.includes('trouser') || name.includes('denim') || name.includes('jeans')) return '👖';
+        if (name.includes('saree')) return '🥻';
+        if (name.includes('under') || name.includes('inner') || name.includes('brief') || name.includes('bra')) return '🩲';
+        if (name.includes('kid') || name.includes('child')) return '🧒';
+        if (name.includes('shoe') || name.includes('footwear')) return '👟';
+        return '🛍️';
+    }
+
+    /**
      * Parses Hinglish/English/Vernacular text queries using Gemini or OpenAI API.
      */
     static async parseMessageWithLLM(messageText) {
@@ -23,6 +75,8 @@ class QueryParserService {
             return null;
         }
 
+        const activeCategoriesList = QueryParserService.getCategories().map(c => c.name.toUpperCase()).join(', ');
+
         const systemInstruction = `
 You are an expert NLP parser for a Wholesale Garments Retailing ERP chatbot.
 Your job is to parse Hinglish/English/Vernacular text queries from retailers and salespersons into a structured JSON representation of intents and arguments.
@@ -36,7 +90,7 @@ Available Intents:
 - 'COLOURS_LOOKUP': Querying what colors are available for an item or generally.
 - 'SIZES_LOOKUP': Querying what sizes are available for an item or generally.
 - 'DESIGN_AVAILABILITY': Asking about design/collection availability.
-- 'PRODUCT_FILTERED': Searching for garments filtered by price, fabric (e.g. cotton, silk, denim), and/or garment type (kurti, shirt, pant, saree).
+- 'PRODUCT_FILTERED': Searching for garments filtered by price, fabric (e.g. cotton, silk, denim), and/or garment type (${activeCategoriesList}).
 - 'PRICE_LOOKUP': Looking up the price for a specific SKU/style.
 - 'OLD_SHIPMENT_INQUIRY': Asking about past shipment history or historical dispatches.
 - 'OLD_LEDGER_STATUS': Asking for statement of account, ledger, or balance sheet.
@@ -51,7 +105,7 @@ Parameters to extract in 'args' object (use null if not mentioned):
 - 'skuCode': Standardized style code (e.g. "KURTI-FES-BLU-L") or numeric style/design code (e.g. "102", "110").
 - 'color': Standardized color code, map Hinglish/Hindi words to English codes: RED (lal), BLU (neela/neeli), GRN (hara/hari), WHT (safed), BLK (kala), YLW (peela), PNK (gulabi), or direct English color.
 - 'size': Standardized size code: XS, S, M, L, XL, XXL.
-- 'garmentType': KURTI, SHIRT, PANT, SAREE, or DRESS.
+- 'garmentType': Category name matching one of: ${activeCategoriesList}.
 - 'requestedQty': Integer number of pieces/quantity requested (e.g. "Book 12 pcs" -> 12).
 - 'maxPrice': Numeric maximum price filter (e.g. "under 500" -> 500).
 - 'fabric': Material name (e.g. "cotton", "silk", "denim").
@@ -452,49 +506,66 @@ Do not include any markdown formatting, comments, or extra text in your output. 
         // Stock clicks arrive as e.g. "Pant Stock\nCheck availability for Pants".
         // Category rules MUST come before the generic GUIDE_CATALOGUE/GUIDE_STOCK rules.
 
+        const activeCategories = this.getCategories();
+
         const hasSpecificColorOrSize = text.includes('red') || text.includes('blue') || text.includes('green') ||
                                        text.includes('white') || text.includes('black') || text.includes('yellow') ||
                                        text.includes('pink') || text.includes('lal') || text.includes('neela') ||
                                        text.includes('hara') || text.includes('safed') || text.includes('kala') ||
                                        text.includes('size') || /(?<![a-z])(xxl|xl|xs|[sml])(?![a-z])/i.test(text);
 
+        // Dynamic button prefix resolution (e.g. stock_saree2, cat_underwear, price_cat_shirt)
+        if (text.startsWith('stock_')) {
+            const rawCat = text.replace('stock_', '').trim();
+            const matched = activeCategories.find(c => c.name.toLowerCase() === rawCat.toLowerCase()) ||
+                            activeCategories.find(c => rawCat.toLowerCase().includes(c.name.toLowerCase()) || c.name.toLowerCase().includes(rawCat.toLowerCase()));
+            const garmentType = matched ? matched.name.toUpperCase() : rawCat.toUpperCase();
+            return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: garmentType } };
+        }
+
+        if (text.startsWith('cat_')) {
+            const rawCat = text.replace('cat_', '').trim();
+            const matched = activeCategories.find(c => c.name.toLowerCase() === rawCat.toLowerCase()) ||
+                            activeCategories.find(c => rawCat.toLowerCase().includes(c.name.toLowerCase()) || c.name.toLowerCase().includes(rawCat.toLowerCase()));
+            const garmentType = matched ? matched.name.toUpperCase() : rawCat.toUpperCase();
+            return { intent: 'PRODUCT_FILTERED', args: { garmentType: garmentType } };
+        }
+
+        if (text.startsWith('price_cat_')) {
+            const rawCat = text.replace('price_cat_', '').trim();
+            const matched = activeCategories.find(c => c.name.toLowerCase() === rawCat.toLowerCase()) ||
+                            activeCategories.find(c => rawCat.toLowerCase().includes(c.name.toLowerCase()) || c.name.toLowerCase().includes(rawCat.toLowerCase()));
+            const garmentType = matched ? matched.name : rawCat;
+            return { intent: 'GUIDE_PRICE_CATEGORY', args: { garmentType: garmentType } };
+        }
+
         // --- DESIGN_AVAILABILITY (Stock checks for specific categories when no specific color/size is requested) ---
-        if (!hasSpecificColorOrSize) {
-            if (text.includes('stock_kurti') || (text.includes('kurti') && (text.includes('stock') || text.includes('availability') || text.includes('available') || text.includes('maal')))) {
-                return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'KURTI' } };
+        let matchedCategoryInText = null;
+        for (const c of activeCategories) {
+            const cLower = c.name.toLowerCase();
+            if (text.includes(cLower) || text.includes(cLower + 's') || text.includes(cLower + 'es')) {
+                matchedCategoryInText = c.name.toUpperCase();
+                break;
             }
-            if (text.includes('stock_shirt') || (text.includes('shirt') && (text.includes('stock') || text.includes('availability') || text.includes('available') || text.includes('maal')))) {
-                return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'SHIRT' } };
-            }
-            if (text.includes('stock_pant') || ((text.includes('pant') || text.includes('trouser')) && (text.includes('stock') || text.includes('availability') || text.includes('available') || text.includes('maal')))) {
-                return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'PANT' } };
-            }
-            if (text.includes('stock_saree') || (text.includes('saree') && (text.includes('stock') || text.includes('availability') || text.includes('available') || text.includes('maal')))) {
-                return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: 'SAREE' } };
-            }
-        } else if (text.startsWith('stock_')) {
-            const cat = text.replace('stock_', '').toUpperCase();
-            return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: cat } };
+        }
+        if (!matchedCategoryInText) {
+            if (text.includes('kurta')) matchedCategoryInText = 'KURTI';
+            else if (text.includes('trouser')) matchedCategoryInText = 'PANT';
+        }
+
+        if (!hasSpecificColorOrSize && matchedCategoryInText && (text.includes('stock') || text.includes('availability') || text.includes('available') || text.includes('maal'))) {
+            return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: matchedCategoryInText } };
         }
 
         // --- PRODUCT_FILTERED (Catalog category selections + natural language product filter queries) ---
-        // Detect garment type in text
-        const garmentInText = text.includes('kurti') ? 'KURTI' :
-                              text.includes('shirt') ? 'SHIRT' :
-                              text.includes('pant') || text.includes('trouser') ? 'PANT' :
-                              text.includes('saree') ? 'SAREE' : null;
+        const garmentInText = matchedCategoryInText;
 
         if (garmentInText) {
-            // Check if this is a button ID click
-            if (text.includes('cat_kurti') || text.includes('cat_shirt') || text.includes('cat_pant') || text.includes('cat_saree') ||
-                text.includes('1️⃣ kurti') || text.includes('2️⃣ shirt') || text.includes('3️⃣ pant') || text.includes('4️⃣ saree') ||
-                text === 'kurti' || text === 'kurtis' || text === 'shirt' || text === 'shirts' ||
-                text === 'pant' || text === 'pants' || text === 'saree' || text === 'sarees') {
-                return { intent: 'PRODUCT_FILTERED', args: { garmentType: garmentInText } };
-            }
+            const isCategoryMenuClick = activeCategories.some(c => {
+                const cLower = c.name.toLowerCase();
+                return text === cLower || text === cLower + 's' || text === cLower + 'es' || text.includes(`cat_${cLower}`);
+            });
 
-            // Check if it's a list-click description (short AutobotChat menu text, no inventory keywords)
-            // e.g. "3️⃣ Pant 👖\nCotton & Denim Pants" or "Casual & Cotton Shirts"
             const hasInventoryKeywords = text.includes('available') || text.includes('kitna') ||
                                          text.includes('size') || text.includes('blue') ||
                                          text.includes('red') || text.includes('green') ||
@@ -507,17 +578,14 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                                  !text.includes('show me') && !text.includes('want') &&
                                  text.length <= 80;
 
-            // Extract price filter (e.g. "under 500", "below 400", "₹300 se kam")
             const priceMatch = text.match(/(?:under|below|less than|max|upto|up to|se kam)\s*[₹]?\s*(\d+)/i) ||
                                text.match(/[₹]?\s*(\d+)\s*(?:se kam|tak|max)/i);
             const maxPrice = priceMatch ? parseInt(priceMatch[1]) : null;
 
-            // Extract fabric (cotton, silk, denim, georgette, chiffon, etc.)
             const fabrics = ['cotton', 'silk', 'denim', 'georgette', 'chiffon', 'linen', 'synthetic', 'rayon', 'polyester'];
             const fabric = fabrics.find(f => text.includes(f)) || null;
 
-            if (isListClick || maxPrice !== null || fabric !== null || text.includes('show') || text.includes('filter')) {
-                // Don't match if this is clearly a price lookup (has explicit SKU code)
+            if (isCategoryMenuClick || isListClick || maxPrice !== null || fabric !== null || text.includes('show') || text.includes('filter')) {
                 const hasSKUCode = /[A-Z]{3,}-[A-Z0-9]{2,}-/.test(messageText.toUpperCase());
                 if (!hasSKUCode) {
                     return { intent: 'PRODUCT_FILTERED', args: { garmentType: garmentInText, maxPrice, fabric } };
@@ -526,9 +594,10 @@ Do not include any markdown formatting, comments, or extra text in your output. 
         }
 
         // --- GUIDE_CATALOGUE: Only match when user explicitly asks for catalog (not a category click) ---
-        if (text === 'btn_catalogue' || text === 'product catalog' || text === 'catalogue' || text === '1' ||
-            text.includes('1️⃣ product catalog') || (text.includes('1️⃣') && text.includes('catalog')) ||
-            (text.includes('catalog') && !text.includes('pant') && !text.includes('kurti') && !text.includes('shirt') && !text.includes('saree'))) {
+        const isExplicitCatalog = text === 'btn_catalogue' || text === 'product catalog' || text === 'catalogue' || text === '1' ||
+                                  text.includes('1️⃣ product catalog') || (text.includes('1️⃣') && text.includes('catalog')) ||
+                                  (text.includes('catalog') && !activeCategories.some(c => text.includes(c.name.toLowerCase())));
+        if (isExplicitCatalog) {
             return { intent: 'GUIDE_CATALOGUE', args: {} };
         }
 
@@ -543,22 +612,13 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                                text.includes('available stock') || text.includes('stock availability') ||
                                text.includes('maal kitna') || text.includes('kitna maal') ||
                                text === 'stock' || text === 'inventory';
-        const hasSpecificGarmentType = text.includes('kurti') || text.includes('shirt') || text.includes('pant') || text.includes('trouser') || text.includes('saree');
-        if (isGenericStock && !hasSpecificGarmentType) {
+        if (isGenericStock && !garmentInText) {
             return { intent: 'GUIDE_STOCK', args: {} };
         }
-        // Specific category price list selection buttons
-        if (text === 'price_cat_kurti' || (text.includes('kurti') && text.includes('price') && !text.includes('check') && !text.includes('kurti-'))) {
-            return { intent: 'GUIDE_PRICE_KURTI', args: {} };
-        }
-        if (text === 'price_cat_shirt' || (text.includes('shirt') && text.includes('price') && !text.includes('check') && !text.includes('shirt-'))) {
-            return { intent: 'GUIDE_PRICE_SHIRT', args: {} };
-        }
-        if (text === 'price_cat_pant' || (text.includes('pant') && text.includes('price') && !text.includes('check') && !text.includes('pant-'))) {
-            return { intent: 'GUIDE_PRICE_PANT', args: {} };
-        }
-        if (text === 'price_cat_saree' || (text.includes('saree') && text.includes('price') && !text.includes('check') && !text.includes('saree-'))) {
-            return { intent: 'GUIDE_PRICE_SAREE', args: {} };
+
+        // Category price list selection queries
+        if (garmentInText && text.includes('price') && !text.includes('check') && !text.includes('-')) {
+            return { intent: 'GUIDE_PRICE_CATEGORY', args: { garmentType: garmentInText } };
         }
 
         if (text.startsWith('price_sku_')) {
@@ -863,6 +923,14 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                 };
 
             case 'ORDER_FLOW_TRIGGER':
+                const flowCatRows = QueryParserService.getCategories().slice(0, 10).map((c, index) => {
+                    const emoji = QueryParserService.getCategoryEmoji(c.name);
+                    return {
+                        id: `cat_${c.name.toLowerCase()}`,
+                        title: `${index + 1}️⃣ ${c.name} ${emoji}`,
+                        description: `Browse latest ${c.name} designs`
+                    };
+                });
                 if (!process.env.META_FLOW_ID || process.env.META_FLOW_ID === '1234567890') {
                     // Fallback to Guide Catalogue interactive list if Flow is not configured
                     return {
@@ -884,12 +952,7 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                                 sections: [
                                     {
                                         title: 'Categories 🏷️',
-                                        rows: [
-                                            { id: 'cat_kurti', title: '1️⃣ Kurti 👗', description: 'Festive & Casual Kurtis' },
-                                            { id: 'cat_shirt', title: '2️⃣ Shirt 👔', description: 'Casual & Cotton Shirts' },
-                                            { id: 'cat_pant', title: '3️⃣ Pant 👖', description: 'Cotton & Denim Pants' },
-                                            { id: 'cat_saree', title: '4️⃣ Saree 🥻', description: 'Silk & Designer Sarees' }
-                                        ]
+                                        rows: flowCatRows
                                     }
                                 ]
                             }
@@ -959,6 +1022,14 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                     const title = `📖 *${cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase()} Catalog* 👗✨`;
                     return `${title}\n_________________________\n\nHere is our catalog for you, dear! 🌸:\n\n${sections}`;
                 }
+                const catMenuRows = QueryParserService.getCategories().slice(0, 10).map((c, index) => {
+                    const emoji = QueryParserService.getCategoryEmoji(c.name);
+                    return {
+                        id: `cat_${c.name.toLowerCase()}`,
+                        title: `${index + 1}️⃣ ${c.name} ${emoji}`,
+                        description: `View ${c.name} wholesale collection`
+                    };
+                });
                 return {
                     type: 'interactive',
                     interactive: {
@@ -978,12 +1049,7 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                             sections: [
                                 {
                                     title: 'Categories 🏷️',
-                                    rows: [
-                                        { id: 'cat_kurti', title: '1️⃣ Kurti 👗', description: 'Festive & Casual Kurtis' },
-                                        { id: 'cat_shirt', title: '2️⃣ Shirt 👔', description: 'Casual & Cotton Shirts' },
-                                        { id: 'cat_pant', title: '3️⃣ Pant 👖', description: 'Cotton & Denim Pants' },
-                                        { id: 'cat_saree', title: '4️⃣ Saree 🥻', description: 'Silk & Designer Sarees' }
-                                    ]
+                                    rows: catMenuRows
                                 }
                             ]
                         }
@@ -991,6 +1057,14 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                 };
 
             case 'GUIDE_STOCK':
+                const stockCategoriesList = QueryParserService.getCategories().slice(0, 10).map(c => {
+                    const emoji = QueryParserService.getCategoryEmoji(c.name);
+                    return {
+                        id: `stock_${c.name.toLowerCase()}`,
+                        title: `${emoji} ${c.name} Stock`,
+                        description: `Check availability for ${c.name}`
+                    };
+                });
                 return {
                     type: 'interactive',
                     interactive: {
@@ -1010,12 +1084,7 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                             sections: [
                                 {
                                     title: 'Stock Categories 📦',
-                                    rows: [
-                                        { id: 'stock_kurti', title: '👗 Kurti Stock', description: 'Check availability for Kurtis' },
-                                        { id: 'stock_shirt', title: '👔 Shirt Stock', description: 'Check availability for Shirts' },
-                                        { id: 'stock_pant', title: '👖 Pant Stock', description: 'Check availability for Pants' },
-                                        { id: 'stock_saree', title: '🥻 Saree Stock', description: 'Check availability for Sarees' }
-                                    ]
+                                    rows: stockCategoriesList
                                 }
                             ]
                         }
@@ -1023,6 +1092,14 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                 };
 
             case 'GUIDE_PRICE':
+                const priceCategoriesList = QueryParserService.getCategories().slice(0, 10).map(c => {
+                    const emoji = QueryParserService.getCategoryEmoji(c.name);
+                    return {
+                        id: `price_cat_${c.name.toLowerCase()}`,
+                        title: `${emoji} ${c.name} Price Card`,
+                        description: `Wholesale rates for ${c.name}`
+                    };
+                });
                 return {
                     type: 'interactive',
                     interactive: {
@@ -1042,110 +1119,62 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                             sections: [
                                 {
                                     title: 'Price Categories 🏷️',
-                                    rows: [
-                                        { id: 'price_cat_kurti', title: '👗 Kurti Price Card', description: 'Wholesale rates for Kurtis' },
-                                        { id: 'price_cat_shirt', title: '👔 Shirt Price Card', description: 'Wholesale rates for Shirts' },
-                                        { id: 'price_cat_pant', title: '👖 Pant Price Card', description: 'Wholesale rates for Pants' },
-                                        { id: 'price_cat_saree', title: '🥻 Saree Price Card', description: 'Wholesale rates for Sarees' }
-                                    ]
+                                    rows: priceCategoriesList
                                 }
                             ]
                         }
                     }
                 };
 
+            case 'GUIDE_PRICE_CATEGORY':
             case 'GUIDE_PRICE_KURTI':
-                return {
-                    type: 'interactive',
-                    interactive: {
-                        type: 'list',
-                        header: { type: 'text', text: 'Kurti Wholesale Prices 👗' },
-                        body: { text: 'Please select which Kurti design\'s wholesale price you want to check, dear! 💖👇' },
-                        footer: { text: 'Digify Soft Solutions Kaira 💁‍♀️ Chatbot' },
-                        action: {
-                            button: 'Select Kurti 👗',
-                            sections: [
-                                {
-                                    title: 'Kurti Designs 👗',
-                                    rows: [
-                                        { id: 'price_sku_KURTI-FES-BLU-L', title: 'Festive Silk - Blue L', description: 'SKU: KURTI-FES-BLU-L' },
-                                        { id: 'price_sku_KURTI-FES-RED-M', title: 'Festive Silk - Red M', description: 'SKU: KURTI-FES-RED-M' },
-                                        { id: 'price_sku_KURTI-FES-GRN-S', title: 'Festive Silk - Green S', description: 'SKU: KURTI-FES-GRN-S' },
-                                        { id: 'price_sku_KURTI-FES-PUR-M', title: 'Festive Silk - Purple M', description: 'SKU: KURTI-FES-PUR-M' }
-                                    ]
-                                }
-                            ]
-                        }
-                    }
-                };
-
             case 'GUIDE_PRICE_SHIRT':
-                return {
-                    type: 'interactive',
-                    interactive: {
-                        type: 'list',
-                        header: { type: 'text', text: 'Shirt Wholesale Prices 👔' },
-                        body: { text: 'Please select which Shirt design\'s wholesale price you want to check, dear! 💖👇' },
-                        footer: { text: 'Digify Soft Solutions Kaira 💁‍♀️ Chatbot' },
-                        action: {
-                            button: 'Select Shirt 👔',
-                            sections: [
-                                {
-                                    title: 'Shirt Designs 👔',
-                                    rows: [
-                                        { id: 'price_sku_SHIRT-COT-WHT-L', title: 'Casual Cotton - White L', description: 'SKU: SHIRT-COT-WHT-L' },
-                                        { id: 'price_sku_SHIRT-COT-BLK-XL', title: 'Casual Cotton - Black XL', description: 'SKU: SHIRT-COT-BLK-XL' },
-                                        { id: 'price_sku_SHIRT-COT-BLU-M', title: 'Casual Cotton - Blue M', description: 'SKU: SHIRT-COT-BLU-M' },
-                                        { id: 'price_sku_SHIRT-COT-PNK-M', title: 'Casual Cotton - Pink M', description: 'SKU: SHIRT-COT-PNK-M' }
-                                    ]
-                                }
-                            ]
-                        }
-                    }
-                };
-
             case 'GUIDE_PRICE_PANT':
-                return {
-                    type: 'interactive',
-                    interactive: {
-                        type: 'list',
-                        header: { type: 'text', text: 'Pant Wholesale Prices 👖' },
-                        body: { text: 'Please select which Pant design\'s wholesale price you want to check, dear! 💖👇' },
-                        footer: { text: 'Digify Soft Solutions Kaira 💁‍♀️ Chatbot' },
-                        action: {
-                            button: 'Select Pant 👖',
-                            sections: [
-                                {
-                                    title: 'Pant Designs 👖',
-                                    rows: [
-                                        { id: 'price_sku_PANT-DEN-BLU-L', title: 'Slim Fit Denim - Blue L', description: 'SKU: PANT-DEN-BLU-L' },
-                                        { id: 'price_sku_PANT-DEN-BLK-M', title: 'Slim Fit Denim - Black M', description: 'SKU: PANT-DEN-BLK-M' },
-                                        { id: 'price_sku_PANT-DEN-GRY-M', title: 'Slim Fit Denim - Grey M', description: 'SKU: PANT-DEN-GRY-M' }
-                                    ]
-                                }
-                            ]
-                        }
-                    }
-                };
-
             case 'GUIDE_PRICE_SAREE':
+                const selectedCatName = (context.args && context.args.garmentType) || 
+                                         intent.replace('GUIDE_PRICE_', '');
+                const catEmoji = QueryParserService.getCategoryEmoji(selectedCatName);
+                
+                let designItems = Array.isArray(data) ? data : [];
+                if (designItems.length === 0) {
+                    try {
+                        const allProds = require('../mock_data/products.json');
+                        const targetLower = selectedCatName.toLowerCase();
+                        designItems = allProds.filter(p => 
+                            p.category && (
+                                p.category.toLowerCase() === targetLower ||
+                                p.category.toLowerCase().includes(targetLower) ||
+                                targetLower.includes(p.category.toLowerCase())
+                            )
+                        );
+                    } catch (e) {
+                        designItems = [];
+                    }
+                }
+
+                const priceRows = designItems.slice(0, 10).map(item => ({
+                    id: `price_sku_${item.sku_code}`,
+                    title: `${item.name.length > 24 ? item.name.substring(0, 21) + '...' : item.name}`,
+                    description: `SKU: ${item.sku_code} | ₹${item.price || item.base_price}`
+                }));
+
+                if (priceRows.length === 0) {
+                    return `🏷️ *Wholesale Price List for ${selectedCatName}* ${catEmoji}\n_________________________\n\nSo sorry dear, no designs currently active under *${selectedCatName}*! 🌸`;
+                }
+
                 return {
                     type: 'interactive',
                     interactive: {
                         type: 'list',
-                        header: { type: 'text', text: 'Saree Wholesale Prices 🥻' },
-                        body: { text: 'Please select which Saree design\'s wholesale price you want to check, dear! 💖👇' },
+                        header: { type: 'text', text: `${selectedCatName} Wholesale Prices ${catEmoji}` },
+                        body: { text: `Please select which ${selectedCatName} design's wholesale price you want to check, dear! 💖👇` },
                         footer: { text: 'Digify Soft Solutions Kaira 💁‍♀️ Chatbot' },
                         action: {
-                            button: 'Select Saree 🥻',
+                            button: `Select ${selectedCatName} ${catEmoji}`,
                             sections: [
                                 {
-                                    title: 'Saree Designs 🥻',
-                                    rows: [
-                                        { id: 'price_sku_SAREE-SIL-RED-FS', title: 'Traditional Silk - Red FreeSize', description: 'SKU: SAREE-SIL-RED-FS' },
-                                        { id: 'price_sku_SAREE-SIL-PNK-FS', title: 'Traditional Silk - Pink FreeSize', description: 'SKU: SAREE-SIL-PNK-FS' },
-                                        { id: 'price_sku_SAREE-SIL-YLW-FS', title: 'Traditional Silk - Yellow FreeSize', description: 'SKU: SAREE-SIL-YLW-FS' }
-                                    ]
+                                    title: `${selectedCatName} Designs ${catEmoji}`,
+                                    rows: priceRows
                                 }
                             ]
                         }
