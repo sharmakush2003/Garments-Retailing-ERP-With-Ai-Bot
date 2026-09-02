@@ -14,8 +14,14 @@
         "total_qty": 120,
         "destination": "New Delhi",
         "items": [
-          { "sku_code": "KURTI-FES-BLU-L", "qty": 50 },
-          { "sku_code": "KURTI-FES-RED-M", "qty": 70 }
+          {
+            "sku_code": "KURTI-FES-BLU-L",
+            "qty": 50
+          },
+          {
+            "sku_code": "KURTI-FES-RED-M",
+            "qty": 70
+          }
         ]
       },
       {
@@ -30,8 +36,14 @@
         "total_qty": 65,
         "destination": "Mumbai",
         "items": [
-          { "sku_code": "SHIRT-COT-WHT-L", "qty": 40 },
-          { "sku_code": "SHIRT-COT-BLK-XL", "qty": 25 }
+          {
+            "sku_code": "SHIRT-COT-WHT-L",
+            "qty": 40
+          },
+          {
+            "sku_code": "SHIRT-COT-BLK-XL",
+            "qty": 25
+          }
         ]
       }
     ]
@@ -42,17 +54,23 @@
       {
         "dispatch_id": 107,
         "order_id": 1006,
-        "transporter_name": "Delhivery",
+        "transporter_name": "Digify Delhivery",
         "lr_number": "DLV9944001",
-        "dispatch_date": "2026-07-18",
+        "dispatch_date": "2026-07-20",
         "estimated_delivery": "2026-07-22",
         "delivered_date": "2026-07-21",
-        "status": "Delivered",
+        "status": "Delivered hogya h bhai!",
         "total_qty": 95,
         "destination": "Jaipur",
         "items": [
-          { "sku_code": "KURTI-FES-BLU-L", "qty": 50 },
-          { "sku_code": "KURTI-FES-RED-M", "qty": 45 }
+          {
+            "sku_code": "KURTI-FES-BLU-L",
+            "qty": 50
+          },
+          {
+            "sku_code": "KURTI-FES-RED-M",
+            "qty": 45
+          }
         ]
       }
     ]
@@ -72,8 +90,14 @@
         "total_qty": 170,
         "destination": "New Delhi",
         "items": [
-          { "sku_code": "SHIRT-COT-WHT-L", "qty": 100 },
-          { "sku_code": "SHIRT-COT-BLK-XL", "qty": 70 }
+          {
+            "sku_code": "SHIRT-COT-WHT-L",
+            "qty": 100
+          },
+          {
+            "sku_code": "SHIRT-COT-BLK-XL",
+            "qty": 70
+          }
         ]
       }
     ]
@@ -93,7 +117,10 @@
         "total_qty": 15,
         "destination": "Pune",
         "items": [
-          { "sku_code": "SAREE-SIL-RED-FS", "qty": 15 }
+          {
+            "sku_code": "SAREE-SIL-RED-FS",
+            "qty": 15
+          }
         ]
       }
     ]
@@ -113,7 +140,10 @@
         "total_qty": 20,
         "destination": "Bengaluru",
         "items": [
-          { "sku_code": "PANT-DEN-BLU-L", "qty": 20 }
+          {
+            "sku_code": "PANT-DEN-BLU-L",
+            "qty": 20
+          }
         ]
       }
     ]
