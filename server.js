@@ -101,7 +101,9 @@ const fs = require('fs');
 function loadMockData(filename) {
     try {
         const filePath = path.join(__dirname, 'mock_data', filename);
-        const data = fs.readFileSync(filePath, 'utf8');
+        let data = fs.readFileSync(filePath, 'utf8');
+        // Strip single-line (//) and multi-line (/* */) comments to allow human-readable JSON section dividers
+        data = data.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
         return JSON.parse(data);
     } catch (err) {
         console.error(`[Mock Data] Failed to load ${filename}:`, err.message);

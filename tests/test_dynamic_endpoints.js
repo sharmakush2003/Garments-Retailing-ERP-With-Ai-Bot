@@ -85,7 +85,7 @@ async function runTests() {
 
     const productsFilePath = path.join(__dirname, '..', 'mock_data', 'products.json');
     const originalContent = fs.readFileSync(productsFilePath, 'utf8');
-    const productsData = JSON.parse(originalContent);
+    const productsData = JSON.parse(originalContent.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, ''));
 
     const testTimestamp = Date.now();
     const testSkuName = `TEST_KURTI_DYNAMIC_${testTimestamp}`;

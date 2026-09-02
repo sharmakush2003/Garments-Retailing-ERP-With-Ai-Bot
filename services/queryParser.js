@@ -15,7 +15,8 @@ class QueryParserService {
         try {
             const categoriesPath = path.join(__dirname, '..', 'mock_data', 'categories.json');
             if (fs.existsSync(categoriesPath)) {
-                const categoriesData = JSON.parse(fs.readFileSync(categoriesPath, 'utf8'));
+                let raw = fs.readFileSync(categoriesPath, 'utf8').replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
+                const categoriesData = JSON.parse(raw);
                 if (Array.isArray(categoriesData) && categoriesData.length > 0) {
                     return categoriesData.map(c => ({
                         id: c.category_id,
@@ -28,7 +29,8 @@ class QueryParserService {
         try {
             const productsPath = path.join(__dirname, '..', 'mock_data', 'products.json');
             if (fs.existsSync(productsPath)) {
-                const productsData = JSON.parse(fs.readFileSync(productsPath, 'utf8'));
+                let raw = fs.readFileSync(productsPath, 'utf8').replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
+                const productsData = JSON.parse(raw);
                 if (Array.isArray(productsData) && productsData.length > 0) {
                     const set = new Set();
                     const list = [];
