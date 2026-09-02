@@ -385,7 +385,7 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                               text.includes('stock batao') || text.includes('kya stock') ||
                               text.includes('check inventory') || text.includes('inventory check') ||
                               text.includes('available stock') || text.includes('stock availability') ||
-                              text === 'stock' || text === 'inventory' || text === '2';
+                              text === 'stock' || text === 'inventory';
 
         // Category stock click check (e.g. "👖 Pant Stock\nCheck availability for Pants", "👗 Kurti Stock", etc.)
         const isCategoryStockClick = (text.includes('kurti') || text.includes('shirt') ||
@@ -633,8 +633,19 @@ Do not include any markdown formatting, comments, or extra text in your output. 
             return { intent: 'GUIDE_CATALOGUE', args: {} };
         }
 
+        // Shipment tracking sub-option selection (Option 2: Dispatch ID / LR No.)
+        if (text === 'dispatch' || text === 'dispatch id' || text === 'lr' || text === 'lr number' || text === 'tracking number' || text === 'option 2' || text === '2️⃣' || text === '2') {
+            return { intent: 'PROMPT_DISPATCH_ID', args: {} };
+        }
+        if (text === 'order' || text === 'order id' || text === 'option 1' || text === '1️⃣') {
+            return { intent: 'PROMPT_ORDER_ID', args: {} };
+        }
+        if (text === 'phone' || text === 'phone number' || text === 'registered phone' || text === 'option 3' || text === '3️⃣') {
+            return { intent: 'PROMPT_PHONE_NUMBER', args: {} };
+        }
+
         // --- GUIDE_STOCK: Check general stock queries ---
-        const isGenericStock = text === 'btn_stock' || text === '2' || text.includes('2️⃣ check stock') ||
+        const isGenericStock = text === 'btn_stock' || text.includes('2️⃣ check stock') ||
                                (text.includes('2️⃣') && text.includes('stock')) ||
                                text.includes('check stock') || text.includes('check_stock') ||
                                text.includes('stock check') || text.includes('stock status') ||
@@ -1366,6 +1377,15 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                     return `❌ *Shipment Not Found* 🚚\n_________________________\n\nOh, sorry! We couldn't find any active shipment matching *${attemptedQuery}* in our system.\n\n💡 *Action*: Please check and reply with your valid Order ID (e.g. *#1015*), Dispatch ID (e.g. *104*), or registered Phone Number! 🌸`;
                 }
                 return `📍 *Track Your Shipment* 🚚\n_________________________\n\nDear customer, please reply with any of the following to track your active shipment:\n\n1️⃣ *Order ID* (e.g. *#1015* or *#1016*)\n2️⃣ *Dispatch ID / LR / Tracking No.* (e.g. *104* or *TRK998541200*)\n3️⃣ *Registered Phone Number* (e.g. *917425016636*)\n\nWe'll find your live delivery status instantly! ✨`;
+
+            case 'PROMPT_DISPATCH_ID':
+                return `📍 *Track by Dispatch ID / LR No.* 🚚\n_________________________\n\nPlease reply with your **Dispatch ID** (e.g. *104*), **LR Number** (e.g. *DLV4409123*), or **Tracking Number** (e.g. *TRK998541200*)! 🌸`;
+
+            case 'PROMPT_ORDER_ID':
+                return `📍 *Track by Order ID* 📦\n_________________________\n\nPlease reply with your **Order ID** (e.g. *#1015* or *1016*)! 🌸`;
+
+            case 'PROMPT_PHONE_NUMBER':
+                return `📍 *Track by Registered Phone Number* 📱\n_________________________\n\nPlease reply with your 10-digit or 12-digit **Registered Phone Number** (e.g. *917425016636*)! 🌸`;
 
             case 'OUTSTANDING_LOOKUP':
                 if (data) {
