@@ -21,6 +21,10 @@
   },
   {
     "category_id": 6,
+    "name": "Underwear"
+  },
+  {
+    "category_id": 7,
     "name": "Tshirt"
   }
 ]
