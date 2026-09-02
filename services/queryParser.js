@@ -626,22 +626,11 @@ Do not include any markdown formatting, comments, or extra text in your output. 
         }
 
         // --- GUIDE_CATALOGUE: Only match when user explicitly asks for catalog (not a category click) ---
-        const isExplicitCatalog = text === 'btn_catalogue' || text === 'product catalog' || text === 'catalogue' || text === '1' ||
+        const isExplicitCatalog = text === 'btn_catalogue' || text === 'product catalog' || text === 'catalogue' ||
                                   text.includes('1️⃣ product catalog') || (text.includes('1️⃣') && text.includes('catalog')) ||
                                   (text.includes('catalog') && !activeCategories.some(c => text.includes(c.name.toLowerCase())));
         if (isExplicitCatalog) {
             return { intent: 'GUIDE_CATALOGUE', args: {} };
-        }
-
-        // Shipment tracking sub-option selection (Option 2: Dispatch ID / LR No.)
-        if (text === 'dispatch' || text === 'dispatch id' || text === 'lr' || text === 'lr number' || text === 'tracking number' || text === 'option 2' || text === '2️⃣' || text === '2') {
-            return { intent: 'PROMPT_DISPATCH_ID', args: {} };
-        }
-        if (text === 'order' || text === 'order id' || text === 'option 1' || text === '1️⃣') {
-            return { intent: 'PROMPT_ORDER_ID', args: {} };
-        }
-        if (text === 'phone' || text === 'phone number' || text === 'registered phone' || text === 'option 3' || text === '3️⃣') {
-            return { intent: 'PROMPT_PHONE_NUMBER', args: {} };
         }
 
         // --- GUIDE_STOCK: Check general stock queries ---
@@ -669,22 +658,22 @@ Do not include any markdown formatting, comments, or extra text in your output. 
             return { intent: 'PRICE_LOOKUP', args: { skuCode: skuCode } };
         }
 
-        if (text === 'btn_price' || text.includes('check price') || text.includes('wholesale rates') || text.includes('rate list') || text === '3' || text.includes('3️⃣ check price')) {
+        if (text === 'btn_price' || text.includes('check price') || text.includes('wholesale rates') || text.includes('rate list') || text.includes('3️⃣ check price')) {
             return { intent: 'GUIDE_PRICE', args: {} };
         }
-        if (text === 'btn_ledger' || text === '4' || text.includes('4️⃣ ledger status') || text.includes('4️⃣ account ledger') || (text.includes('ledger') && !text.includes('shipment'))) {
+        if (text === 'btn_ledger' || text.includes('4️⃣ ledger status') || text.includes('4️⃣ account ledger') || (text.includes('ledger') && !text.includes('shipment'))) {
             return { intent: 'OLD_LEDGER_STATUS', args: {} };
         }
-        if (text === 'btn_tracking' || text === '5' || text.includes('5️⃣ shipment tracking') || text.includes('5️⃣ track')) {
+        if (text === 'btn_tracking' || text.includes('5️⃣ shipment tracking') || text.includes('5️⃣ track')) {
             return { intent: 'SHIPMENT_TRACKING', args: {} };
         }
-        if (text === 'btn_outstanding' || text === '6' || text.includes('6️⃣ outstanding credit') || text.includes('1️⃣ outstanding credit')) {
+        if (text === 'btn_outstanding' || text.includes('6️⃣ outstanding credit') || text.includes('1️⃣ outstanding credit')) {
             return { intent: 'OUTSTANDING_LOOKUP', args: {} };
         }
-        if (text === 'btn_invoice' || text === '7' || text.includes('7️⃣ last invoice') || text.includes('3️⃣ last invoice')) {
+        if (text === 'btn_invoice' || text.includes('7️⃣ last invoice') || text.includes('3️⃣ last invoice')) {
             return { intent: 'LAST_INVOICE_COPY', args: {} };
         }
-        if (text === 'btn_past_shipments' || text === '8' || text.includes('8️⃣ past shipments') || text.includes('4️⃣ past shipments') || text.includes('past shipment')) {
+        if (text === 'btn_past_shipments' || text.includes('8️⃣ past shipments') || text.includes('4️⃣ past shipments') || text.includes('past shipment')) {
             return { intent: 'OLD_SHIPMENT_INQUIRY', args: {} };
         }
 
@@ -951,13 +940,11 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                                     title: 'Menu Options 📋',
                                     rows: [
                                         { id: 'btn_catalogue', title: '1️⃣ Product Catalog 📖', description: 'View full wholesale catalog' },
-                                        { id: 'btn_stock', title: '2️⃣ Check Stock 📦', description: 'Check color & size availability' },
-                                        { id: 'btn_price', title: '3️⃣ Check Price 🏷️', description: 'Get wholesale rate card' },
-                                        { id: 'btn_ledger', title: '4️⃣ Ledger Status 📒', description: 'Statement of accounts/ledger' },
-                                        { id: 'btn_tracking', title: '5️⃣ Shipment Tracking 📍', description: 'Track active shipment status' },
-                                        { id: 'btn_outstanding', title: '6️⃣ Outstanding Credit 💰', description: 'Check outstanding/credit limit' },
-                                        { id: 'btn_invoice', title: '7️⃣ Last Invoice Copy 📄', description: 'Get copy of latest invoice' },
-                                        { id: 'btn_past_shipments', title: '8️⃣ Past Shipments 🚚', description: 'View past shipment history' }
+                                        { id: 'btn_ledger', title: '2️⃣ Ledger Status 📒', description: 'Statement of accounts/ledger' },
+                                        { id: 'btn_tracking', title: '3️⃣ Shipment Tracking 📍', description: 'Track active shipment status' },
+                                        { id: 'btn_outstanding', title: '4️⃣ Outstanding Credit 💰', description: 'Check outstanding/credit limit' },
+                                        { id: 'btn_invoice', title: '5️⃣ Last Invoice Copy 📄', description: 'Get copy of latest invoice' },
+                                        { id: 'btn_past_shipments', title: '6️⃣ Past Shipments 🚚', description: 'View past shipment history' }
                                     ]
                                 }
                             ]
@@ -1370,22 +1357,13 @@ Do not include any markdown formatting, comments, or extra text in your output. 
             case 'SHIPMENT_TRACKING':
                 if (data && data.status) {
                     const history = data.tracking_history ? data.tracking_history.map(h => `  • _${h.timestamp}_ [${h.location}]: ${h.details}`).join('\n') : '';
-                    return `📍 *Active Shipment Tracking Status* 🚚\n_________________________\n\n📦 *Order ID*: #${data.order_id}\n🔢 *Tracking/LR No*: \`${data.tracking_number || data.lr_number}\`\n🚛 *Transporter*: ${data.transporter_name}\n📅 *Dispatch Date*: ${data.dispatch_date}\n\n⚡ *Current Location*: *${data.current_location}*\n🟢 *Status*: *${data.status}* ✨\n🕒 *Last Updated*: ${data.last_updated}\n📅 *Est. Delivery*: *${data.estimated_delivery_date}*\n\n📊 *Tracking Timeline*:\n${history}\n\n💖 Maal jaldi pahunch jayega, dear!`;
+                    return `📍 *Shipment Tracking Status* 🚚\n_________________________\n\n📦 *Order ID*: #${data.order_id}\n🔢 *Dispatch ID / LR No*: \`${data.dispatch_id || data.lr_number || data.tracking_number}\`\n🚛 *Transporter*: ${data.transporter_name}\n📅 *Dispatch Date*: ${data.dispatch_date}\n\n⚡ *Current Location / Status*: *${data.current_location || data.status}*\n🟢 *Status*: *${data.status}* ✨\n🕒 *Last Updated*: ${data.last_updated || data.dispatch_date}\n📅 *Est. Delivery*: *${data.estimated_delivery_date || data.estimated_delivery}*\n\n📊 *Tracking History*:\n${history}\n\n💖 Maal jaldi pahunch jayega, dear!`;
                 }
                 const attemptedQuery = (context.args && (context.args.orderId || context.args.dispatchId || context.args.phone || context.args.overridePhone));
                 if (attemptedQuery) {
-                    return `❌ *Shipment Not Found* 🚚\n_________________________\n\nOh, sorry! We couldn't find any active shipment matching *${attemptedQuery}* in our system.\n\n💡 *Action*: Please check and reply with your valid Order ID (e.g. *#1015*), Dispatch ID (e.g. *104*), or registered Phone Number! 🌸`;
+                    return `❌ *Shipment Not Found* 🚚\n_________________________\n\nOh, sorry! We couldn't find any shipment matching Dispatch ID / LR *${attemptedQuery}* in our system.\n\n💡 *Action*: Please check and reply with your valid Dispatch ID (e.g. *104*, *107*) or LR Number (e.g. *DLV9944001*)! 🌸`;
                 }
-                return `📍 *Track Your Shipment* 🚚\n_________________________\n\nDear customer, please reply with any of the following to track your active shipment:\n\n1️⃣ *Order ID* (e.g. *#1015* or *#1016*)\n2️⃣ *Dispatch ID / LR / Tracking No.* (e.g. *104* or *TRK998541200*)\n3️⃣ *Registered Phone Number* (e.g. *917425016636*)\n\nWe'll find your live delivery status instantly! ✨`;
-
-            case 'PROMPT_DISPATCH_ID':
-                return `📍 *Track by Dispatch ID / LR No.* 🚚\n_________________________\n\nPlease reply with your **Dispatch ID** (e.g. *104*), **LR Number** (e.g. *DLV4409123*), or **Tracking Number** (e.g. *TRK998541200*)! 🌸`;
-
-            case 'PROMPT_ORDER_ID':
-                return `📍 *Track by Order ID* 📦\n_________________________\n\nPlease reply with your **Order ID** (e.g. *#1015* or *1016*)! 🌸`;
-
-            case 'PROMPT_PHONE_NUMBER':
-                return `📍 *Track by Registered Phone Number* 📱\n_________________________\n\nPlease reply with your 10-digit or 12-digit **Registered Phone Number** (e.g. *917425016636*)! 🌸`;
+                return `📍 *Track Your Shipment* 🚚\n_________________________\n\nDear customer, please reply with your **Dispatch ID** or **LR / Tracking Number** (e.g. *104*, *107*, *DLV9944001*, or *TRK998541200*) to track your shipment status! ✨`;
 
             case 'OUTSTANDING_LOOKUP':
                 if (data) {
@@ -1464,13 +1442,11 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                                     title: 'Menu Options 📋',
                                     rows: [
                                         { id: 'btn_catalogue', title: '1️⃣ Product Catalog 📖', description: 'View full wholesale catalog' },
-                                        { id: 'btn_stock', title: '2️⃣ Check Stock 📦', description: 'Check color & size availability' },
-                                        { id: 'btn_price', title: '3️⃣ Check Price 🏷️', description: 'Get wholesale rate card' },
-                                        { id: 'btn_ledger', title: '4️⃣ Ledger Status 📒', description: 'Statement of accounts/ledger' },
-                                        { id: 'btn_tracking', title: '5️⃣ Shipment Tracking 📍', description: 'Track active shipment status' },
-                                        { id: 'btn_outstanding', title: '6️⃣ Outstanding Credit 💰', description: 'Check outstanding/credit limit' },
-                                        { id: 'btn_invoice', title: '7️⃣ Last Invoice Copy 📄', description: 'Get copy of latest invoice' },
-                                        { id: 'btn_past_shipments', title: '8️⃣ Past Shipments 🚚', description: 'View past shipment history' }
+                                        { id: 'btn_ledger', title: '2️⃣ Ledger Status 📒', description: 'Statement of accounts/ledger' },
+                                        { id: 'btn_tracking', title: '3️⃣ Shipment Tracking 📍', description: 'Track active shipment status' },
+                                        { id: 'btn_outstanding', title: '4️⃣ Outstanding Credit 💰', description: 'Check outstanding/credit limit' },
+                                        { id: 'btn_invoice', title: '5️⃣ Last Invoice Copy 📄', description: 'Get copy of latest invoice' },
+                                        { id: 'btn_past_shipments', title: '6️⃣ Past Shipments 🚚', description: 'View past shipment history' }
                                     ]
                                 }
                             ]

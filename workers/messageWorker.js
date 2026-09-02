@@ -477,7 +477,36 @@ async function processMessageJob(data) {
                     resultData = res.data;
                 } catch (e) {
                     const items = require('../mock_data/shipment_status.json');
-                    resultData = items.find(i => {
+                    const oldItemsRaw = require('../mock_data/old_shipment_inquiry.json');
+                    const oldItems = [];
+                    if (Array.isArray(oldItemsRaw)) {
+                        oldItemsRaw.forEach(userGroup => {
+                            if (Array.isArray(userGroup.shipments)) {
+                                userGroup.shipments.forEach(s => {
+                                    oldItems.push({
+                                        dispatch_id: s.dispatch_id,
+                                        order_id: s.order_id,
+                                        phone: userGroup.phone,
+                                        tracking_number: s.lr_number,
+                                        transporter_name: s.transporter_name,
+                                        lr_number: s.lr_number,
+                                        dispatch_date: s.dispatch_date,
+                                        status: s.status,
+                                        current_location: s.destination || 'Destination Hub',
+                                        last_updated: s.delivered_date || s.dispatch_date,
+                                        estimated_delivery_date: s.estimated_delivery || s.estimated_delivery_date,
+                                        tracking_history: [
+                                            { timestamp: `${s.dispatch_date} 10:00:00`, location: 'Warehouse (Surat)', details: 'Dispatched via ' + s.transporter_name },
+                                            { timestamp: `${s.delivered_date || s.dispatch_date} 18:00:00`, location: s.destination || 'Destination Hub', details: s.status }
+                                        ]
+                                    });
+                                });
+                            }
+                        });
+                    }
+                    const allShipments = [...items, ...oldItems];
+
+                    resultData = allShipments.find(i => {
                         if (queryOrderId && i.order_id === parseInt(queryOrderId)) return true;
                         if (queryDispatchId && (
                             i.dispatch_id === parseInt(queryDispatchId) ||
