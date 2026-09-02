@@ -22,17 +22,6 @@
     "available_qty": 450000
   },
   {
-    "sku_id": 21,
-    "sku_code": "KURTI-FES-BLUE-Mooooooooooo",
-    "name": "Festive Silk Kurti - Blue M",
-    "category": "Kurti",
-    "subcategory": "Festive",
-    "color": "Blue",
-    "size": "M",
-    "price": 500,
-    "available_qty": 45
-  },
-  {
     "sku_id": 3,
     "sku_code": "KURTI-FES-BLU-L",
     "name": "Festive Silk Kurti - Blue L",
@@ -141,6 +130,94 @@
     "size": "L",
     "price": 500,
     "available_qty": 20
+  },
+  {
+    "sku_id": 21,
+    "sku_code": "KURTI-FES-BLUE-Mooooooooooo",
+    "name": "Festive Silk Kurti - Blue M",
+    "category": "Kurti",
+    "subcategory": "Festive",
+    "color": "Blue",
+    "size": "M",
+    "price": 500,
+    "available_qty": 45
+  },
+  {
+    "sku_id": 33,
+    "sku_code": "KURTI-COT-PNK-S",
+    "name": "Casual Cotton Kurti - Pink S",
+    "category": "Kurti",
+    "subcategory": "Cotton",
+    "color": "Pink",
+    "size": "S",
+    "price": 350,
+    "available_qty": 20
+  },
+  {
+    "sku_id": 34,
+    "sku_code": "KURTI-COT-PNK-M",
+    "name": "Casual Cotton Kurti - Pink M",
+    "category": "Kurti",
+    "subcategory": "Cotton",
+    "color": "Pink",
+    "size": "M",
+    "price": 350,
+    "available_qty": 30
+  },
+  {
+    "sku_id": 35,
+    "sku_code": "KURTI-COT-PNK-L",
+    "name": "Casual Cotton Kurti - Pink L",
+    "category": "Kurti",
+    "subcategory": "Cotton",
+    "color": "Pink",
+    "size": "L",
+    "price": 380,
+    "available_qty": 25
+  },
+  {
+    "sku_id": 36,
+    "sku_code": "KURTI-COT-YLW-M",
+    "name": "Casual Cotton Kurti - Yellow M",
+    "category": "Kurti",
+    "subcategory": "Cotton",
+    "color": "Yellow",
+    "size": "M",
+    "price": 350,
+    "available_qty": 15
+  },
+  {
+    "sku_id": 37,
+    "sku_code": "KURTI-COT-YLW-L",
+    "name": "Casual Cotton Kurti - Yellow L",
+    "category": "Kurti",
+    "subcategory": "Cotton",
+    "color": "Yellow",
+    "size": "L",
+    "price": 380,
+    "available_qty": 22
+  },
+  {
+    "sku_id": 44,
+    "sku_code": "KURTI-FES-PUR-M",
+    "name": "Festive Silk Kurti - Purple M",
+    "category": "Kurti",
+    "subcategory": "Festive",
+    "color": "Purple",
+    "size": "M",
+    "price": 550,
+    "available_qty": 12
+  },
+  {
+    "sku_id": 45,
+    "sku_code": "KURTI-FES-PUR-L",
+    "name": "Festive Silk Kurti - Purple L",
+    "category": "Kurti",
+    "subcategory": "Festive",
+    "color": "Purple",
+    "size": "L",
+    "price": 550,
+    "available_qty": 18
   },
   {
     "sku_id": 13,
@@ -264,6 +341,28 @@
     "available_qty": 38
   },
   {
+    "sku_id": 38,
+    "sku_code": "SHIRT-COT-PNK-M",
+    "name": "Casual Cotton Shirt - Pink M",
+    "category": "Shirt",
+    "subcategory": "Cotton",
+    "color": "Pink",
+    "size": "M",
+    "price": 380,
+    "available_qty": 20
+  },
+  {
+    "sku_id": 39,
+    "sku_code": "SHIRT-COT-PNK-L",
+    "name": "Casual Cotton Shirt - Pink L",
+    "category": "Shirt",
+    "subcategory": "Cotton",
+    "color": "Pink",
+    "size": "L",
+    "price": 400,
+    "available_qty": 18
+  },
+  {
     "sku_id": 24,
     "sku_code": "PANT2-DEN-BLU-S",
     "name": "Slim Fit Denim Pant - Blue S",
@@ -330,6 +429,28 @@
     "available_qty": 32
   },
   {
+    "sku_id": 40,
+    "sku_code": "PANT-DEN-GRY-M",
+    "name": "Slim Fit Denim Pant - Grey M",
+    "category": "Pant",
+    "subcategory": "Denim",
+    "color": "Grey",
+    "size": "M",
+    "price": 7000000,
+    "available_qty": 15
+  },
+  {
+    "sku_id": 41,
+    "sku_code": "PANT-DEN-GRY-L",
+    "name": "Slim Fit Denim Pant - Grey L",
+    "category": "Pant",
+    "subcategory": "Denim",
+    "color": "Grey",
+    "size": "L",
+    "price": 750,
+    "available_qty": 20
+  },
+  {
     "sku_id": 30,
     "sku_code": "SAREE-SIL-RED-FS",
     "name": "Traditional Silk Saree - Red FreeSize",
@@ -363,105 +484,6 @@
     "available_qty": 12
   },
   {
-    "sku_id": 33,
-    "sku_code": "KURTI-COT-PNK-S",
-    "name": "Casual Cotton Kurti - Pink S",
-    "category": "Kurti",
-    "subcategory": "Cotton",
-    "color": "Pink",
-    "size": "S",
-    "price": 350,
-    "available_qty": 20
-  },
-  {
-    "sku_id": 34,
-    "sku_code": "KURTI-COT-PNK-M",
-    "name": "Casual Cotton Kurti - Pink M",
-    "category": "Kurti",
-    "subcategory": "Cotton",
-    "color": "Pink",
-    "size": "M",
-    "price": 350,
-    "available_qty": 30
-  },
-  {
-    "sku_id": 35,
-    "sku_code": "KURTI-COT-PNK-L",
-    "name": "Casual Cotton Kurti - Pink L",
-    "category": "Kurti",
-    "subcategory": "Cotton",
-    "color": "Pink",
-    "size": "L",
-    "price": 380,
-    "available_qty": 25
-  },
-  {
-    "sku_id": 36,
-    "sku_code": "KURTI-COT-YLW-M",
-    "name": "Casual Cotton Kurti - Yellow M",
-    "category": "Kurti",
-    "subcategory": "Cotton",
-    "color": "Yellow",
-    "size": "M",
-    "price": 350,
-    "available_qty": 15
-  },
-  {
-    "sku_id": 37,
-    "sku_code": "KURTI-COT-YLW-L",
-    "name": "Casual Cotton Kurti - Yellow L",
-    "category": "Kurti",
-    "subcategory": "Cotton",
-    "color": "Yellow",
-    "size": "L",
-    "price": 380,
-    "available_qty": 22
-  },
-  {
-    "sku_id": 38,
-    "sku_code": "SHIRT-COT-PNK-M",
-    "name": "Casual Cotton Shirt - Pink M",
-    "category": "Shirt",
-    "subcategory": "Cotton",
-    "color": "Pink",
-    "size": "M",
-    "price": 380,
-    "available_qty": 20
-  },
-  {
-    "sku_id": 39,
-    "sku_code": "SHIRT-COT-PNK-L",
-    "name": "Casual Cotton Shirt - Pink L",
-    "category": "Shirt",
-    "subcategory": "Cotton",
-    "color": "Pink",
-    "size": "L",
-    "price": 400,
-    "available_qty": 18
-  },
-  {
-    "sku_id": 40,
-    "sku_code": "PANT-DEN-GRY-M",
-    "name": "Slim Fit Denim Pant - Grey M",
-    "category": "Pant",
-    "subcategory": "Denim",
-    "color": "Grey",
-    "size": "M",
-    "price": 7000000,
-    "available_qty": 15
-  },
-  {
-    "sku_id": 41,
-    "sku_code": "PANT-DEN-GRY-L",
-    "name": "Slim Fit Denim Pant - Grey L",
-    "category": "Pant",
-    "subcategory": "Denim",
-    "color": "Grey",
-    "size": "L",
-    "price": 750,
-    "available_qty": 20
-  },
-  {
     "sku_id": 42,
     "sku_code": "SAREE-SIL-BLU-FS",
     "name": "Traditional Silk Saree - Blue FreeSize",
@@ -482,28 +504,6 @@
     "size": "Free Size",
     "price": 1200,
     "available_qty": 14
-  },
-  {
-    "sku_id": 44,
-    "sku_code": "KURTI-FES-PUR-M",
-    "name": "Festive Silk Kurti - Purple M",
-    "category": "Kurti",
-    "subcategory": "Festive",
-    "color": "Purple",
-    "size": "M",
-    "price": 550,
-    "available_qty": 12
-  },
-  {
-    "sku_id": 45,
-    "sku_code": "KURTI-FES-PUR-L",
-    "name": "Festive Silk Kurti - Purple L",
-    "category": "Kurti",
-    "subcategory": "Festive",
-    "color": "Purple",
-    "size": "L",
-    "price": 550,
-    "available_qty": 18
   },
   {
     "sku_id": 46,
