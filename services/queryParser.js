@@ -52,6 +52,24 @@ class QueryParserService {
     }
 
     /**
+     * Ensures row titles do not exceed Meta WhatsApp API max 24 character limit.
+     */
+    static formatRowTitle(title, maxLen = 24) {
+        if (!title) return '';
+        const str = String(title).trim();
+        return str.length > maxLen ? str.slice(0, maxLen - 1) + '…' : str;
+    }
+
+    /**
+     * Ensures row descriptions do not exceed Meta WhatsApp API max 72 character limit.
+     */
+    static formatRowDesc(desc, maxLen = 72) {
+        if (!desc) return '';
+        const str = String(desc).trim();
+        return str.length > maxLen ? str.slice(0, maxLen - 1) + '…' : str;
+    }
+
+    /**
      * Returns a relevant emoji for a given category name.
      */
     static getCategoryEmoji(categoryName) {
@@ -938,8 +956,8 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                     const emoji = QueryParserService.getCategoryEmoji(c.name);
                     return {
                         id: `cat_${c.name.toLowerCase()}`,
-                        title: `${index + 1}️⃣ ${c.name} ${emoji}`,
-                        description: `Browse latest ${c.name} designs`
+                        title: QueryParserService.formatRowTitle(`${index + 1}️⃣ ${c.name} ${emoji}`),
+                        description: QueryParserService.formatRowDesc(`Browse latest ${c.name} designs`)
                     };
                 });
                 if (!process.env.META_FLOW_ID || process.env.META_FLOW_ID === '1234567890') {
@@ -1037,8 +1055,8 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                     const emoji = QueryParserService.getCategoryEmoji(c.name);
                     return {
                         id: `cat_${c.name.toLowerCase()}`,
-                        title: `${index + 1}️⃣ ${c.name} ${emoji}`,
-                        description: `View ${c.name} wholesale collection`
+                        title: QueryParserService.formatRowTitle(`${index + 1}️⃣ ${c.name} ${emoji}`),
+                        description: QueryParserService.formatRowDesc(`View ${c.name} wholesale collection`)
                     };
                 });
                 return {
@@ -1072,8 +1090,8 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                     const emoji = QueryParserService.getCategoryEmoji(c.name);
                     return {
                         id: `stock_${c.name.toLowerCase()}`,
-                        title: `${emoji} ${c.name} Stock`,
-                        description: `Check availability for ${c.name}`
+                        title: QueryParserService.formatRowTitle(`${emoji} ${c.name} Stock`),
+                        description: QueryParserService.formatRowDesc(`Check availability for ${c.name}`)
                     };
                 });
                 return {
@@ -1107,8 +1125,8 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                     const emoji = QueryParserService.getCategoryEmoji(c.name);
                     return {
                         id: `price_cat_${c.name.toLowerCase()}`,
-                        title: `${emoji} ${c.name} Price Card`,
-                        description: `Wholesale rates for ${c.name}`
+                        title: QueryParserService.formatRowTitle(`${emoji} ${c.name} Price Card`),
+                        description: QueryParserService.formatRowDesc(`Wholesale rates for ${c.name}`)
                     };
                 });
                 return {
