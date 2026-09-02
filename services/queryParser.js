@@ -544,10 +544,12 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                                        text.includes('size') || /(?<![a-z])(xxl|xl|xs|[sml])(?![a-z])/i.test(text);
 
         // Dynamic button prefix resolution (e.g. stock_saree2, cat_underwear, price_cat_shirt)
+        const sortedCategories = [...activeCategories].sort((a, b) => b.name.length - a.name.length);
+
         if (text.startsWith('stock_')) {
             const rawCat = text.replace('stock_', '').trim();
             const matched = activeCategories.find(c => c.name.toLowerCase() === rawCat.toLowerCase()) ||
-                            activeCategories.find(c => rawCat.toLowerCase().includes(c.name.toLowerCase()) || c.name.toLowerCase().includes(rawCat.toLowerCase()));
+                            sortedCategories.find(c => rawCat.toLowerCase().includes(c.name.toLowerCase()) || c.name.toLowerCase().includes(rawCat.toLowerCase()));
             const garmentType = matched ? matched.name.toUpperCase() : rawCat.toUpperCase();
             return { intent: 'DESIGN_AVAILABILITY', args: { garmentType: garmentType } };
         }
@@ -555,7 +557,7 @@ Do not include any markdown formatting, comments, or extra text in your output. 
         if (text.startsWith('cat_')) {
             const rawCat = text.replace('cat_', '').trim();
             const matched = activeCategories.find(c => c.name.toLowerCase() === rawCat.toLowerCase()) ||
-                            activeCategories.find(c => rawCat.toLowerCase().includes(c.name.toLowerCase()) || c.name.toLowerCase().includes(rawCat.toLowerCase()));
+                            sortedCategories.find(c => rawCat.toLowerCase().includes(c.name.toLowerCase()) || c.name.toLowerCase().includes(rawCat.toLowerCase()));
             const garmentType = matched ? matched.name.toUpperCase() : rawCat.toUpperCase();
             return { intent: 'PRODUCT_FILTERED', args: { garmentType: garmentType } };
         }
@@ -563,14 +565,14 @@ Do not include any markdown formatting, comments, or extra text in your output. 
         if (text.startsWith('price_cat_')) {
             const rawCat = text.replace('price_cat_', '').trim();
             const matched = activeCategories.find(c => c.name.toLowerCase() === rawCat.toLowerCase()) ||
-                            activeCategories.find(c => rawCat.toLowerCase().includes(c.name.toLowerCase()) || c.name.toLowerCase().includes(rawCat.toLowerCase()));
+                            sortedCategories.find(c => rawCat.toLowerCase().includes(c.name.toLowerCase()) || c.name.toLowerCase().includes(rawCat.toLowerCase()));
             const garmentType = matched ? matched.name : rawCat;
             return { intent: 'GUIDE_PRICE_CATEGORY', args: { garmentType: garmentType } };
         }
 
         // --- DESIGN_AVAILABILITY (Stock checks for specific categories when no specific color/size is requested) ---
         let matchedCategoryInText = null;
-        for (const c of activeCategories) {
+        for (const c of sortedCategories) {
             const cLower = c.name.toLowerCase();
             if (text.includes(cLower) || text.includes(cLower + 's') || text.includes(cLower + 'es')) {
                 matchedCategoryInText = c.name.toUpperCase();
@@ -578,8 +580,7 @@ Do not include any markdown formatting, comments, or extra text in your output. 
             }
         }
         if (!matchedCategoryInText) {
-            if (text.includes('kurta')) matchedCategoryInText = 'KURTI';
-            else if (text.includes('trouser')) matchedCategoryInText = 'PANT';
+            if (text.includes('trouser')) matchedCategoryInText = 'PANT';
         }
 
         if (!hasSpecificColorOrSize && matchedCategoryInText && (text.includes('stock') || text.includes('availability') || text.includes('available') || text.includes('maal'))) {

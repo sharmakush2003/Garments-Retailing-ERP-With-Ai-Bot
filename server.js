@@ -118,11 +118,17 @@ app.get('/api/mock/products', (req, res) => {
 
     if (category) {
         const catClean = category.toLowerCase().trim();
-        items = items.filter(i => i.category && (
-            i.category.toLowerCase() === catClean ||
-            i.category.toLowerCase().includes(catClean) ||
-            catClean.includes(i.category.toLowerCase())
-        ));
+        items = items.filter(i => {
+            if (!i.category) return false;
+            const itemCat = i.category.toLowerCase().trim();
+            if (itemCat === catClean) return true;
+            // Handle hyphens & spaces (e.g. "kurti-set" vs "kurti set")
+            if (itemCat.replace(/[-\s]/g, '') === catClean.replace(/[-\s]/g, '')) return true;
+            // Handle plurals (e.g. "kurtis" vs "kurti")
+            if (catClean.endsWith('s') && itemCat === catClean.slice(0, -1)) return true;
+            if (itemCat.endsWith('s') && itemCat.slice(0, -1) === catClean) return true;
+            return false;
+        });
     }
     if (subcategory) items = items.filter(i => i.subcategory && i.subcategory.toLowerCase() === subcategory.toLowerCase());
     if (color) items = items.filter(i => i.color && i.color.toLowerCase() === color.toLowerCase());
