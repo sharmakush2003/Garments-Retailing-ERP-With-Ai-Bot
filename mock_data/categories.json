@@ -22,5 +22,13 @@
   {
     "category_id": 6,
     "name": "Underwear"
+  },
+  {
+    "category_id": 7,
+    "name": "T-Shirt"
+  },
+  {
+    "category_id": 8,
+    "name": "Dupatta"
   }
 ]
