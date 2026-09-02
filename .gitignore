@@ -27,3 +27,6 @@ node_modules/
 # Ignore Postman workspace local sync directories
 .postman/
 postman/
+
+# Ignore local files checked status log
+files_checked.txt
