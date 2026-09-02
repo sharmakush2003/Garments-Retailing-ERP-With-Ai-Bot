@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "build": "echo Build succeeded",
-    "test": "node tests/test_api.js"
+    "test": "node tests/test_dynamic_endpoints.js"
   },
   "dependencies": {
     "axios": "^1.7.2",

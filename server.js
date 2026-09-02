@@ -96,11 +96,24 @@ app.get('/', (req, res) => {
     `);
 });
 
+// Helper to dynamically read mock data from disk without Node require() cache
+const fs = require('fs');
+function loadMockData(filename) {
+    try {
+        const filePath = path.join(__dirname, 'mock_data', filename);
+        const data = fs.readFileSync(filePath, 'utf8');
+        return JSON.parse(data);
+    } catch (err) {
+        console.error(`[Mock Data] Failed to load ${filename}:`, err.message);
+        return [];
+    }
+}
+
 // --- Mock REST API Endpoints for ERP Customer Journey ---
 
 // 1. Get all products (with optional filters)
 app.get('/api/mock/products', (req, res) => {
-    let items = require('./mock_data/products.json');
+    let items = loadMockData('products.json');
     const { category, subcategory, color, size, maxPrice } = req.query;
 
     if (category) {
@@ -130,7 +143,7 @@ app.get('/api/mock/stock-availability', (req, res) => {
     if (size === 'null' || size === 'undefined') size = null;
     if (garmentType === 'null' || garmentType === 'undefined') garmentType = null;
 
-    const items = require('./mock_data/products.json');
+    const items = loadMockData('products.json');
 
     if (skuIdOrCode) {
         const match = items.find(i => i.sku_id === parseInt(skuIdOrCode) || i.sku_code.toLowerCase().includes(skuIdOrCode.toLowerCase()));
@@ -153,7 +166,7 @@ app.get('/api/mock/stock-availability', (req, res) => {
 // 3. Item Price Lookup
 app.get('/api/mock/item-price', (req, res) => {
     const { skuId, tierId } = req.query;
-    const items = require('./mock_data/products.json');
+    const items = loadMockData('products.json');
     const matchedItem = items.find(i => i.sku_id === parseInt(skuId));
     const base = matchedItem ? matchedItem.price : 480.00;
     
@@ -169,19 +182,19 @@ app.get('/api/mock/item-price', (req, res) => {
 
 // 4. Get all categories
 app.get('/api/mock/categories', (req, res) => {
-    const items = require('./mock_data/categories.json');
+    const items = loadMockData('categories.json');
     res.json(items);
 });
 
 // 5. Get all subcategories
 app.get('/api/mock/subcategories', (req, res) => {
-    const items = require('./mock_data/subcategories.json');
+    const items = loadMockData('subcategories.json');
     res.json(items);
 });
 
 // 6. Get old shipment inquiry (all/completed shipments)
 app.get('/api/mock/old-shipments', (req, res) => {
-    const items = require('./mock_data/old_shipment_inquiry.json');
+    const items = loadMockData('old_shipment_inquiry.json');
     const { phone } = req.query;
     if (phone) {
         const match = items.find(i => i.phone && (i.phone.includes(phone) || phone.includes(i.phone)));
@@ -192,7 +205,7 @@ app.get('/api/mock/old-shipments', (req, res) => {
 
 // 7. Get old ledger status
 app.get('/api/mock/old-ledger-status', (req, res) => {
-    const items = require('./mock_data/old_ledger_status.json');
+    const items = loadMockData('old_ledger_status.json');
     const { phone } = req.query;
     if (phone) {
         const match = items.find(i => i.phone && (i.phone.includes(phone) || phone.includes(i.phone)));
@@ -203,7 +216,7 @@ app.get('/api/mock/old-ledger-status', (req, res) => {
 
 // 8. Get last invoice copy
 app.get('/api/mock/last-invoice-copy', (req, res) => {
-    const items = require('./mock_data/last_invoice_copy.json');
+    const items = loadMockData('last_invoice_copy.json');
     const { phone } = req.query;
     if (phone) {
         const match = items.find(i => i.phone && (i.phone.includes(phone) || phone.includes(i.phone)));
@@ -214,7 +227,7 @@ app.get('/api/mock/last-invoice-copy', (req, res) => {
 
 // 9. Get active shipment tracking status
 app.get('/api/mock/shipment-status', (req, res) => {
-    const items = require('./mock_data/shipment_status.json');
+    const items = loadMockData('shipment_status.json');
     const { orderId, dispatchId, trackingNumber, phone } = req.query;
     if (dispatchId) {
         const match = items.find(i => 
@@ -248,13 +261,24 @@ app.get('/api/mock/shipment-status', (req, res) => {
 
 // 10. Get outstanding balance status
 app.get('/api/mock/outstanding', (req, res) => {
-    const items = require('./mock_data/outstanding.json');
+    const items = loadMockData('outstanding.json');
     const { phone } = req.query;
     if (phone) {
         const match = items.find(i => i.phone && (i.phone.includes(phone) || phone.includes(i.phone)));
         if (match) return res.json(match);
     }
     res.json(items[0] || {});
+});
+
+// 10b. Get users list
+app.get('/api/mock/users', (req, res) => {
+    const items = loadMockData('users.json');
+    const { phone } = req.query;
+    if (phone) {
+        const match = items.find(i => i.phone_number && (i.phone_number.includes(phone) || phone.includes(i.phone_number)));
+        if (match) return res.json(match);
+    }
+    res.json(items);
 });
 
 // 11. Create a new Sales Order
