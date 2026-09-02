@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 
@@ -12,27 +13,33 @@ class QueryParserService {
      */
     static getCategories() {
         try {
-            const categoriesData = require('../mock_data/categories.json');
-            if (Array.isArray(categoriesData) && categoriesData.length > 0) {
-                return categoriesData.map(c => ({
-                    id: c.category_id,
-                    name: c.name.trim()
-                }));
+            const categoriesPath = path.join(__dirname, '..', 'mock_data', 'categories.json');
+            if (fs.existsSync(categoriesPath)) {
+                const categoriesData = JSON.parse(fs.readFileSync(categoriesPath, 'utf8'));
+                if (Array.isArray(categoriesData) && categoriesData.length > 0) {
+                    return categoriesData.map(c => ({
+                        id: c.category_id,
+                        name: c.name.trim()
+                    }));
+                }
             }
         } catch (e) {}
 
         try {
-            const productsData = require('../mock_data/products.json');
-            if (Array.isArray(productsData) && productsData.length > 0) {
-                const set = new Set();
-                const list = [];
-                productsData.forEach(p => {
-                    if (p.category && !set.has(p.category.toLowerCase().trim())) {
-                        set.add(p.category.toLowerCase().trim());
-                        list.push({ id: list.length + 1, name: p.category.trim() });
-                    }
-                });
-                if (list.length > 0) return list;
+            const productsPath = path.join(__dirname, '..', 'mock_data', 'products.json');
+            if (fs.existsSync(productsPath)) {
+                const productsData = JSON.parse(fs.readFileSync(productsPath, 'utf8'));
+                if (Array.isArray(productsData) && productsData.length > 0) {
+                    const set = new Set();
+                    const list = [];
+                    productsData.forEach(p => {
+                        if (p.category && !set.has(p.category.toLowerCase().trim())) {
+                            set.add(p.category.toLowerCase().trim());
+                            list.push({ id: list.length + 1, name: p.category.trim() });
+                        }
+                    });
+                    if (list.length > 0) return list;
+                }
             }
         } catch (e) {}
 
