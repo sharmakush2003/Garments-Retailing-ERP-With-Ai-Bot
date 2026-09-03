@@ -6,8 +6,8 @@
     "category": "KURTI",
     "subcategory": "Festive",
     "color": "Blue",
-    "size": "S",
-    "price": 5009999999999999,
+    "size": "Small",
+    "price": 5000,
     "available_qty": 25
   },
   {
@@ -15,7 +15,7 @@
     "sku_code": "KURTI-FES-BLUE-M",
     "name": "Festive Silk KURTI - Blue M",
     "category": "KURTI",
-    "subcategory": "Festive",
+    "subcategory": "Local",
     "color": "Blue",
     "size": "M",
     "price": 500078,

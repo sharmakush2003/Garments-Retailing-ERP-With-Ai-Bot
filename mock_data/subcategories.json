@@ -2,7 +2,7 @@
   {
     "sub_category_id": 1,
     "category_id": 1,
-    "name": "Festive Category"
+    "name": "Festive"
   },
   {
     "sub_category_id": 2,
@@ -18,5 +18,10 @@
     "sub_category_id": 4,
     "category_id": 4,
     "name": "Silk"
+  },
+  {
+    "sub_category_id": 5,
+    "category_id": 5,
+    "name": "Local"
   }
 ]
