@@ -9,15 +9,19 @@
   },
   {
     "category_id": 3,
-    "name": "Pant"
+    "name": "Pants"
   },
   {
     "category_id": 4,
-    "name": "Saree"
+    "name": "Sarees"
   },
   {
     "category_id": 5,
     "name": "Kurta"
+  },
+  {
+    "category_id": 6,
+    "name": "Underwear"
   },
   {
     "category_id": 7,

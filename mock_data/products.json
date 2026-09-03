@@ -1,9 +1,9 @@
 [
   {
     "sku_id": 1,
-    "sku_code": "KURTI1-FES-BLUE-S",
-    "name": "Festive Silk Kurti1 - Blue S",
-    "category": "Kurti1",
+    "sku_code": "KURTI-FES-BLUE-S",
+    "name": "Festive Silk KURTI - Blue S",
+    "category": "KURTI",
     "subcategory": "Festive",
     "color": "Blue",
     "size": "S",
@@ -12,9 +12,9 @@
   },
   {
     "sku_id": 2,
-    "sku_code": "KURTI1-FES-BLUE-M",
-    "name": "Festive Silk Kurti1 - Blue M",
-    "category": "Kurti1",
+    "sku_code": "KURTI-FES-BLUE-M",
+    "name": "Festive Silk KURTI - Blue M",
+    "category": "KURTI",
     "subcategory": "Festive",
     "color": "Blue",
     "size": "M",
@@ -23,9 +23,9 @@
   },
   {
     "sku_id": 3,
-    "sku_code": "KURTI1-FES-BLU-L",
-    "name": "Festive Silk Kurti1 - Blue L",
-    "category": "Kurti1",
+    "sku_code": "KURTI-FES-BLU-L",
+    "name": "Festive Silk KURTI - Blue L",
+    "category": "KURTI",
     "subcategory": "Festive",
     "color": "Blue",
     "size": "L",
@@ -34,7 +34,7 @@
   },
   {
     "sku_id": 4,
-    "sku_code": "KURTI1-FES-BLU-XL",
+    "sku_code": "KURTI-FES-BLU-XL",
     "name": "Festive Silk Kurti - Blue XL",
     "category": "Kurti",
     "subcategory": "Festive",
@@ -45,7 +45,7 @@
   },
   {
     "sku_id": 5,
-    "sku_code": "KURTI1-FES-BLU-XXL",
+    "sku_code": "KURTI-FES-BLU-XXL",
     "name": "Festive Silk Kurti - Blue XXL",
     "category": "Kurti",
     "subcategory": "Festive",
