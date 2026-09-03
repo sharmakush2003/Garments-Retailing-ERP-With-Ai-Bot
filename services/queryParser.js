@@ -1222,7 +1222,7 @@ Do not include any markdown formatting, comments, or extra text in your output. 
                             return `📦 *Stock Status for You!* ✨\n\n👗 *Product*: ${data.name}\n⚠️ *Status*: Oh, partial stock available!\n\nWe have *${data.available_qty} Pieces* ready (shortfall of *${shortfall} Pieces*). 🌸\n🔄 *Replenishment*: Fresh new batch will be ready in 3-4 days! 💖`;
                         }
                     }
-                    return `📦 *Stock Status for You!* ✨\n\n👗 *Product*: ${data.name}\n🎨 *Color*: ${data.color}\n📏 *Size*: ${data.size}\n🆔 *SKU*: ${data.sku_code}\n\n✅ *Current Ready Stock*: *${data.available_qty} Pieces* 🌸\n🚚 *Dispatch Status*: Ready for immediate dispatch in 1-2 days! ✨\n🏬 *Warehouse*: Central Depot (Jaipur)\n\n💬 Reply *"Book 10 pcs"* to reserve this stock for you! 💖`;
+                    return `📦 *Stock Status for You!* ✨\n\n👗 *Product*: ${data.name}\n🧵 *Fabric / Subcategory*: ${data.subcategory || 'Standard'}\n🎨 *Color*: ${data.color}\n📏 *Size*: ${data.size}\n🆔 *SKU*: ${data.sku_code}\n\n✅ *Current Ready Stock*: *${data.available_qty} Pieces* 🌸\n🚚 *Dispatch Status*: Ready for immediate dispatch in 1-2 days! ✨\n🏬 *Warehouse*: Central Depot (Jaipur)\n\n💬 Reply *"Book 10 pcs"* to reserve this stock for you! 💖`;
                 }
                 if (!data && (!context.args || (!context.args.skuCode && !context.args.color && !context.args.size && !context.args.garmentType))) {
                     return this.formatResponse('GUIDE_STOCK', null, context);
