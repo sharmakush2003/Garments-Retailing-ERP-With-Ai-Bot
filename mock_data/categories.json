@@ -5,26 +5,26 @@
   },
   {
     "category_id": 2,
-    "name": "Shirt1"
+    "name": "Shirt"
   },
   {
     "category_id": 3,
-    "name": "Pant1"
+    "name": "Pant"
   },
   {
     "category_id": 4,
-    "name": "Saree1"
+    "name": "Saree"
   },
   {
     "category_id": 5,
-    "name": "Kurta1"
+    "name": "Kurta"
   },
   {
     "category_id": 6,
-    "name": "Underwear1"
+    "name": "Underwear"
   },
   {
     "category_id": 7,
-    "name": "T-Shirt1"
+    "name": "T-Shirt"
   }
 ]
